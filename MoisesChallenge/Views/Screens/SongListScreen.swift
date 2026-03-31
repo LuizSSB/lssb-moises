@@ -38,6 +38,16 @@ struct SongListScreen: View {
             }
         }
         .listStyle(.plain)
+        .searchable(
+            text: .init(
+                get: { viewModel.state.workingSearchTerm },
+                set: { viewModel.updateWorkingSearchTerm(to: $0) }
+            ),
+            placement: .navigationBarDrawer
+        )
+        .onSubmit(of: .search) {
+            viewModel.search()
+        }
         .refreshable {
             await viewModel.refresh()
         }
@@ -83,7 +93,6 @@ struct SongListScreen: View {
 
 #Preview {
     NavigationStack {
-//        SongListScreen(viewModel: .init())
-        Text("asd")
+        SongListScreen(viewModel: .init())
     }
 }
