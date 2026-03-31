@@ -11,7 +11,7 @@ import SwiftUI
 protocol ViewModelState: Equatable, Hashable {
 }
 
-protocol ViewModel: Equatable, Hashable {
+@MainActor protocol ViewModel: Observable, AnyObject {
     associatedtype State: ViewModelState
     var state: State { get }
 }

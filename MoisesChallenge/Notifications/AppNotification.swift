@@ -7,8 +7,7 @@
 
 import Foundation
 
-protocol AppNotification: Equatable, Codable {
-
+protocol AppNotification: Equatable, Codable, Sendable {
 }
 
 extension AppNotification {

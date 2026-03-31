@@ -12,11 +12,13 @@ class AppViewModel: ViewModel {
     }
     
     var state = State()
+    
+    var songList = Container.shared.songListViewModel()
 }
 
 extension Container {
     var appViewModel: Factory<AppViewModel> {
-        self { AppViewModel() }
+        self { @MainActor in AppViewModel() }
             .singleton
     }
 }

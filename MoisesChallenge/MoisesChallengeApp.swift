@@ -30,7 +30,7 @@ struct MoisesChallengeApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                Text("asda")
+                SongListScreen(viewModel: viewModel.songList)
             }
         }
         .modelContainer(sharedModelContainer)

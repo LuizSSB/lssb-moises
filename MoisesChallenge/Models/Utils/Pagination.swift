@@ -5,7 +5,7 @@
 //  Created by Luiz SSB on 19/04/25.
 //
 
-struct Pagination<TParams: Equatable & Hashable>: Equatable, Hashable {
+struct Pagination<TParams: Equatable & Hashable & Sendable>: Equatable, Hashable {
     var params: TParams
     var offset: Int
     var limit: Int?
