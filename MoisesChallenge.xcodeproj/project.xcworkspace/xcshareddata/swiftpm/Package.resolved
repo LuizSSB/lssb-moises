@@ -1,6 +1,15 @@
 {
-  "originHash" : "11128a2ceba3c42f2a6d1104b1f856442b35faff72d0f19d98d37345f7c6d324",
+  "originHash" : "57b8f221baa28030669a82d1e13e042a98813db12d4c00bcc17c1ad34a83ffdc",
   "pins" : [
+    {
+      "identity" : "alamofire?tab=readme-ov-file",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire?tab=readme-ov-file",
+      "state" : {
+        "revision" : "3f99050e75bbc6fe71fc323adabb039756680016",
+        "version" : "5.11.1"
+      }
+    },
     {
       "identity" : "factory",
       "kind" : "remoteSourceControl",
