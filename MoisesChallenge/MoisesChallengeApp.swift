@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import FactoryKit
 
 @main
 struct MoisesChallengeApp: App {
@@ -22,10 +23,15 @@ struct MoisesChallengeApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    
+    @State var viewModel = Container.shared.appViewModel()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                Text("asda")
+            }
         }
         .modelContainer(sharedModelContainer)
     }
