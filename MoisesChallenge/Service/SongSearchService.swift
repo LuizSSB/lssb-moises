@@ -91,7 +91,7 @@ struct SongSearchService {
                 )
             }
             return .init(
-                entries: Array(songs[pagination.offset..<limit]),
+                entries: Array(songs[pagination.offset..<min(songs.count, pagination.offset + limit)]),
                 pagination: .init(
                     params: .init(
                         searchTerm: pagination.params.searchTerm,

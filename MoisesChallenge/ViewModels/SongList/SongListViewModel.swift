@@ -14,8 +14,11 @@ private let defaultSizePage = 5
 @Observable
 final class SongListViewModel {
     private(set) var recentList: PaginatedListViewModel<Song, NullPaginationParams>
-    private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
+    
     var searchText = ""
+    private var currentQuery = ""
+    private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
+    
     private(set) var player: SongPlayerViewModel?
 
     private let service: SongSearchService
@@ -56,6 +59,7 @@ final class SongListViewModel {
             guard searchList != nil else { return }
             searchList = nil
             searchText = ""
+            currentQuery = ""
             Task {
                 await recentList.refresh()
             }
@@ -64,7 +68,12 @@ final class SongListViewModel {
     
     func onSearchSubmitted() {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty, let searchList else { return }
+        guard !query.isEmpty,
+              query != currentQuery,
+              let searchList
+        else { return }
+        
+        currentQuery = query
         Task {
             await searchList.refresh()
         }
