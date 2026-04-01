@@ -74,14 +74,12 @@ struct SongListScreen: View {
             viewModel.onAppear()
         }
         .navigationDestination(
-            isPresented: .init(
-                get: { viewModel.playerQueue != nil },
+            nonHashableItem: .init(
+                get: { viewModel.player },
                 set: { _ in viewModel.onDismissPlayer()}
             )
         ) {
-            if let playerQueue = viewModel.playerQueue {
-                SongPlayerScreen(viewModel: .init(queue: playerQueue))
-            }
+            SongPlayerScreen(viewModel: $0)
         }
     }
 }

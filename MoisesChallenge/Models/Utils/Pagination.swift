@@ -47,6 +47,10 @@ struct NullPaginationParams: Hashable, Sendable {
 }
 
 extension Pagination where TParams == NullPaginationParams {
+    init(offset: Int, limit: Int? = nil) {
+        self.init(params: .instance, offset: offset, limit: limit)
+    }
+    
     static func first(limit: Int? = nil) -> Self {
         return .init(params: .instance, offset: 0, limit: limit)
     }

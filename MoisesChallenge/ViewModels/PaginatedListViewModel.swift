@@ -5,7 +5,7 @@
 //  Created by Luiz SSB on 31/03/26.
 //
 
-import Foundation
+import SwiftUI
 import Observation
 
 enum PaginatedListLoadState: Equatable {
@@ -48,9 +48,18 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
         load(mode: .nextPage)
     }
 
-    func refresh() {
+    // Ideally, wouldn't need to be async, but view refreshing stuff requires it.
+    func refresh() async {
         guard loadState != .refreshing else { return }
+        let didAlreadyHaveStuff = latestResult != nil
+        
         load(mode: .refresh)
+        
+        // HACK: after refreshing, if nothing has changed, the top items won't be rerendered, and, as such, their onAppear will not be triggered, so if all of the page's results fit into the list, it won't load more by itself.
+        if case .success = await activeFetchTask?.result,
+           didAlreadyHaveStuff {
+           loadNextPage()
+        }
     }
 
     private enum LoadMode { case firstPage, nextPage, refresh }
@@ -72,7 +81,10 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
         }
         guard let fetchConfig else { return }
         
-        loadState = fetchConfig.loadState
+        withAnimation {
+            loadState = fetchConfig.loadState
+        }
+        
         let currentFetch = fetch
 
         activeFetchTask = Task {
@@ -81,21 +93,25 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
 
                 guard !Task.isCancelled else { return }
 
-                switch mode {
-                case .firstPage, .refresh:
-                    items = result.entries
-                case .nextPage:
-                    items.append(contentsOf: result.entries)
+                withAnimation {
+                    switch mode {
+                    case .firstPage, .refresh:
+                        items = result.entries
+                    case .nextPage:
+                        items.append(contentsOf: result.entries)
+                    }
+                    
+                    latestResult = result
+                    loadState = items.isEmpty ? .empty : .loaded
                 }
-                
-                latestResult = result
-                loadState = items.isEmpty ? .empty : .loaded
 
             } catch is CancellationError {
                 // Ignore cancelled task
             } catch {
                 guard !Task.isCancelled else { return }
-                loadState = .error(error.localizedDescription)
+                withAnimation {
+                    loadState = .error(error.localizedDescription)
+                }
             }
         }
     }

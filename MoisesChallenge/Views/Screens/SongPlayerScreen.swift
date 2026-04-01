@@ -113,7 +113,6 @@ struct SongPlayerScreen: View {
     
     private var controlsSection: some View {
         HStack(spacing: 48) {
-            // Previous
             Button {
                 viewModel.previousSong()
             } label: {
@@ -122,7 +121,6 @@ struct SongPlayerScreen: View {
             }
             .disabled(!viewModel.hasPrevious)
             
-            // Play / Pause
             Button {
                 viewModel.togglePlayPause()
             } label: {
@@ -132,7 +130,6 @@ struct SongPlayerScreen: View {
             }
             .disabled(viewModel.playbackState == .loading)
             
-            // Next
             Button {
                 viewModel.nextSong()
             } label: {
@@ -213,10 +210,3 @@ private struct SeekbarView: View {
     }
 }
 
-// MARK: - Helpers
-
-private extension Comparable {
-    func clamped(to range: ClosedRange<Self>) -> Self {
-        min(max(self, range.lowerBound), range.upperBound)
-    }
-}

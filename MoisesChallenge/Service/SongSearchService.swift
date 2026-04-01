@@ -30,7 +30,7 @@ private let defaultITunesEntity = "song"
 private let defaultITunesAPILimit = 50
 private let maxITunesAPILimit = 200
 
-struct SongDataSource {
+struct SongSearchService {
     struct SearchParams: Equatable, Hashable {
         let searchTerm: String
         fileprivate var allResults: [Song]?
@@ -48,6 +48,8 @@ struct SongDataSource {
         let limit = pagination.limit ?? defaultITunesAPILimit
         
         if let allResults = pagination.params.allResults {
+            try? await Task.sleep(for: .seconds(3)) // just for the thrill
+            
             return .init(
                 entries: Array(allResults[pagination.offset..<min(allResults.count, pagination.offset + limit)]),
                 pagination: .init(
@@ -105,15 +107,8 @@ struct SongDataSource {
     }
 }
 
-extension SongDataSource.SearchParams {
+extension SongSearchService.SearchParams {
     init(searchTerm: String) {
         self.init(searchTerm: searchTerm, allResults: nil)
-    }
-}
-
-extension Container {
-    var songDataSource: Factory<SongDataSource> {
-        self { SongDataSource() }
-            .singleton
     }
 }

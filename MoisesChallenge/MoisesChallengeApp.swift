@@ -25,7 +25,7 @@ struct MoisesChallengeApp: App {
     }()
     
     @State private var songListViewModel = SongListViewModel(
-        dataSource: SongDataSource(),
+        service: SongSearchService(),
     )
 
     var body: some Scene {

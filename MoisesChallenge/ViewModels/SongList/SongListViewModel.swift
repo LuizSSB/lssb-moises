@@ -8,21 +8,37 @@
 import Foundation
 import Observation
 
+private let defaultSizePage = 5
+
 @MainActor
 @Observable
 final class SongListViewModel {
     private(set) var recentList: PaginatedListViewModel<Song, NullPaginationParams>
-    private(set) var searchList: PaginatedListViewModel<Song, SongDataSource.SearchParams>?
+    private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
     var searchText = ""
-    var playerQueue: (any SongPlayerQueue)?
+    private(set) var player: SongPlayerViewModel?
 
-    private let dataSource: SongDataSource
+    private let service: SongSearchService
 
-    init(dataSource: SongDataSource) {
-        self.dataSource = dataSource
+    init(service: SongSearchService) {
+        self.service = service
         self.recentList = PaginatedListViewModel(
-            fetch: {
-                .init(entries: [], pagination: $0 ?? .first())
+            fetch: { @MainActor in
+                let result = try await service.search(
+                    .init(
+                        params: .init(searchTerm: "foo"),
+                        offset: $0?.offset ?? 0,
+                        limit: $0?.limit ?? 10
+                    )
+                )
+                return .init(
+                    entries: result.entries,
+                    pagination: .init(
+                        params: .instance,
+                        offset: result.pagination.offset,
+                        limit: result.pagination.limit
+                    )
+                )
             }
         )
     }
@@ -40,31 +56,42 @@ final class SongListViewModel {
             guard searchList != nil else { return }
             searchList = nil
             searchText = ""
-            recentList.refresh()
+            Task {
+                await recentList.refresh()
+            }
         }
     }
     
     func onSearchSubmitted() {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty, let searchList else { return }
-        searchList.refresh()
+        Task {
+            await searchList.refresh()
+        }
     }
     
     func onSelect(song: Song) {
-        playerQueue = if let searchList {
+        let queue: any SongPlayerQueue = if let searchList {
             SongListPlayerQueue(list: searchList, selectedSong: song)
         } else {
             SongListPlayerQueue(list: recentList, selectedSong: song)
         }
+        player = SongPlayerViewModel(queue: queue)
     }
     
     func onDismissPlayer() {
-        playerQueue = nil
+        player = nil
     }
     
     private func fetchSearch(
-        page: Pagination<SongDataSource.SearchParams>?
-    ) async throws -> Pagination<SongDataSource.SearchParams>.Page<Song> {
-        try await dataSource.search(page ?? .first(params: .init(searchTerm: searchText)))
+        page: Pagination<SongSearchService.SearchParams>?
+    ) async throws -> Pagination<SongSearchService.SearchParams>.Page<Song> {
+        try await service.search(
+            page
+            ?? .first(
+                params: .init(searchTerm: searchText),
+                limit: defaultSizePage
+            )
+        )
     }
 }

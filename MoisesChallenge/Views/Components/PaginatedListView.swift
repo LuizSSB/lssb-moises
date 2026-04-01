@@ -50,8 +50,9 @@ struct PaginatedListView<Item: Identifiable & Sendable, RowContent: View, Placeh
                     }
                     
                     if loadState == .loadingNextPage {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
+                        Text("Loading more...")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                             .listRowSeparator(.hidden)
                     }
                 }
