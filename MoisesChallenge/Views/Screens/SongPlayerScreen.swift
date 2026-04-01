@@ -34,10 +34,13 @@ struct SongPlayerScreen: View {
             
             Spacer(minLength: 40)
         }
-        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.onAppear() }
-        .onDisappear { viewModel.onDisappear() }
+        .onAppear {
+            viewModel.onAppear()
+        }
+        .onDisappear {
+            viewModel.onDisappear()
+        }
     }
     
     // MARK: - Artwork
@@ -97,9 +100,9 @@ struct SongPlayerScreen: View {
             }
             
             HStack {
-                Text(viewModel.elapsed.formattedTime)
+                Text(viewModel.elapsed.formattedDuration)
                 Spacer()
-                Text(viewModel.duration.map { $0.formattedTime } ?? "--:--")
+                Text(viewModel.duration.map { $0.formattedDuration } ?? "--:--")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -211,15 +214,6 @@ private struct SeekbarView: View {
 }
 
 // MARK: - Helpers
-
-private extension TimeInterval {
-    var formattedTime: String {
-        let total = Int(self)
-        let m = total / 60
-        let s = total % 60
-        return String(format: "%d:%02d", m, s)
-    }
-}
 
 private extension Comparable {
     func clamped(to range: ClosedRange<Self>) -> Self {

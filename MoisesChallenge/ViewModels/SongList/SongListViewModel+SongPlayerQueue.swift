@@ -8,7 +8,7 @@
 import Foundation
 
 extension SongListViewModel {
-    class SongListPlayerQueue<PaginationParams: Hashable & Sendable>: PlayerQueue {
+    class SongListPlayerQueue<PaginationParams: Hashable & Sendable>: SongPlayerQueue {
         var selectedSongID: String?
         
         var selectedSong: Song? {
@@ -20,8 +20,9 @@ extension SongListViewModel {
         
         let list: PaginatedListViewModel<Song, PaginationParams>
         
-        init(list: PaginatedListViewModel<Song, PaginationParams>) {
+        init(list: PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
             self.list = list
+            self.selectedSong = selectedSong
         }
         
         // MARK: - PlayerQueue conformance

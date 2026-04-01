@@ -9,7 +9,6 @@ import SwiftUI
 
 struct SongListScreen: View {
     @State var viewModel: SongListViewModel
-    var onSongSelected: (Song) -> Void = { _ in }
 
     var body: some View {
         SearchBarContentContainer {
@@ -20,7 +19,7 @@ struct SongListScreen: View {
                     hasMore: searchList.latestResult?.hasMore ?? false
                 ) { song in
                     Button {
-                        onSongSelected(song)
+                        viewModel.onSelect(song: song)
                     } label: {
                         SongRowView(song: song)
                     }
@@ -47,7 +46,7 @@ struct SongListScreen: View {
                     hasMore: recentList.latestResult?.hasMore ?? false
                 ) { song in
                     Button {
-                        onSongSelected(song)
+                        viewModel.onSelect(song: song)
                     } label: {
                         SongRowView(song: song)
                     }
@@ -73,6 +72,16 @@ struct SongListScreen: View {
         }
         .onAppear {
             viewModel.onAppear()
+        }
+        .navigationDestination(
+            isPresented: .init(
+                get: { viewModel.playerQueue != nil },
+                set: { _ in viewModel.onDismissPlayer()}
+            )
+        ) {
+            if let playerQueue = viewModel.playerQueue {
+                SongPlayerScreen(viewModel: .init(queue: playerQueue))
+            }
         }
     }
 }

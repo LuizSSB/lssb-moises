@@ -6,7 +6,7 @@
 //
 
 @MainActor
-protocol PlayerQueue: AnyObject {
+protocol SongPlayerQueue: AnyObject {
     var currentItem: Song? { get }
     var currentIndex: Int? { get }
     var hasPrevious: Bool { get }

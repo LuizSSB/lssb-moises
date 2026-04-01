@@ -42,7 +42,7 @@ final class SongPlayerViewModel {
     
     // MARK: - Private state
     
-    private let queue: any PlayerQueue
+    private let queue: any SongPlayerQueue
     private var player: AVPlayer?
     private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
@@ -50,7 +50,7 @@ final class SongPlayerViewModel {
     
     // MARK: - Lifecycle
     
-    init(queue: any PlayerQueue) {
+    init(queue: any SongPlayerQueue) {
         self.queue = queue
     }
     

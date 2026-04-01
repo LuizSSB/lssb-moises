@@ -29,18 +29,9 @@ struct MoisesChallengeApp: App {
     )
 
     var body: some Scene {
-        let bindable = Bindable(songListViewModel)
         WindowGroup {
             NavigationStack {
-                SongListScreen(viewModel: songListViewModel) { song in
-                    // TODO: Navigate to PlayerView (Feature 2)
-                    print("Selected: \(song.title)")
-                }
-                .navigationDestination(item: $songListViewModel.player) { _ in
-//                    SongPlayerScreen(
-//                        viewModel: PlayerViewModel(queue: songListViewModel)
-//                    )
-                }
+                SongListScreen(viewModel: songListViewModel)
             }
         }
         .modelContainer(sharedModelContainer)

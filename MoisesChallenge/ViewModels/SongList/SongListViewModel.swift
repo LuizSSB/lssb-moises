@@ -14,8 +14,7 @@ final class SongListViewModel {
     private(set) var recentList: PaginatedListViewModel<Song, NullPaginationParams>
     private(set) var searchList: PaginatedListViewModel<Song, SongDataSource.SearchParams>?
     var searchText = ""
-    
-    var player: SongPlayerViewModel?
+    var playerQueue: (any SongPlayerQueue)?
 
     private let dataSource: SongDataSource
 
@@ -49,6 +48,18 @@ final class SongListViewModel {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty, let searchList else { return }
         searchList.refresh()
+    }
+    
+    func onSelect(song: Song) {
+        playerQueue = if let searchList {
+            SongListPlayerQueue(list: searchList, selectedSong: song)
+        } else {
+            SongListPlayerQueue(list: recentList, selectedSong: song)
+        }
+    }
+    
+    func onDismissPlayer() {
+        playerQueue = nil
     }
     
     private func fetchSearch(
