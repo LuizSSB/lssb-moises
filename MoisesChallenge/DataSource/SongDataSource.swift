@@ -11,11 +11,12 @@ import Alamofire
 private struct ITunesSongSearchResponse: Decodable {
     struct Item: Codable, Hashable {
         let trackId: Int
-        let artistName: String
-        let trackName: String
-        let artworkUrl30: String
-        let artworkUrl100: String
-        let trackTimeMillis: Int
+        let artistName: String?
+        let trackName: String?
+        let artworkUrl30: String?
+        let artworkUrl100: String?
+        let trackTimeMillis: Int?
+        let previewUrl: String?
     }
     
     let resultCount: Int
@@ -78,7 +79,13 @@ struct SongDataSource {
                     title: $0.trackName,
                     itemArtwork: $0.artworkUrl30,
                     mainArtwork: $0.artworkUrl100,
-                    durationSeconds: Double($0.trackTimeMillis) / 1000
+                    durationSeconds: {
+                        if let trackTimeMillis = $0.trackTimeMillis {
+                            return Double(trackTimeMillis) / 1000
+                        }
+                        return nil
+                    }($0),
+                    preview: $0.previewUrl
                 )
             }
             return .init(

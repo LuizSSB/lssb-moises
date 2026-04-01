@@ -43,7 +43,7 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
 
     func loadNextPage() {
         guard loadState == .loaded,
-              let latestResult, !latestResult.reachedEnd
+              let latestResult, latestResult.hasMore
         else { return }
         load(mode: .nextPage)
     }
@@ -63,7 +63,7 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
             (.loadingFirstPage, nil)
         case .nextPage:
             if let latestResult {
-                (.loadingNextPage, latestResult.reachedEnd ? nil : latestResult.pagination.next)
+                (.loadingNextPage, latestResult.hasMore ? latestResult.pagination.next :  nil)
             } else {
                 nil
             }

@@ -1,5 +1,5 @@
 //
-//  SongsListViewModel.swift
+//  SongListViewModel.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 31/03/26.
@@ -10,10 +10,12 @@ import Observation
 
 @MainActor
 @Observable
-final class SongsListViewModel {
+final class SongListViewModel {
     private(set) var recentList: PaginatedListViewModel<Song, NullPaginationParams>
     private(set) var searchList: PaginatedListViewModel<Song, SongDataSource.SearchParams>?
     var searchText = ""
+    
+    var player: SongPlayerViewModel?
 
     private let dataSource: SongDataSource
 

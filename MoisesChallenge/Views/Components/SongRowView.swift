@@ -15,19 +15,15 @@ struct SongRowView: View {
             artworkView
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title)
+                Text(song.title ?? "Unknown title")
                     .font(.body)
                     .lineLimit(1)
-                Text(song.artist)
+                Text(song.artist ?? "Unknown artist")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Text(song.durationSeconds.formattedDuration)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }

@@ -33,9 +33,9 @@ struct Pagination<TParams: Equatable & Hashable & Sendable>: Equatable, Hashable
         let entries: [TEntry]
         let pagination: Pagination
         
-        var reachedEnd: Bool {
+        var hasMore: Bool {
             if let limit = pagination.limit {
-                return limit > entries.count
+                return limit == entries.count
             }
             return false
         }

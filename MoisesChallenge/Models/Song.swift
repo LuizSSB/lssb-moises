@@ -9,17 +9,22 @@ import Foundation
 
 struct Song: Identifiable, Codable, Hashable, Sendable {
     let id: String
-    let artist: String
-    let title: String
-    let itemArtwork: String
-    let mainArtwork: String
-    let durationSeconds: TimeInterval
+    let artist: String?
+    let title: String?
+    let itemArtwork: String?
+    let mainArtwork: String?
+    let durationSeconds: TimeInterval?
+    let preview: String?
     
     var itemArtworkURL: URL? {
-        .init(string: itemArtwork)
+        .init(string: itemArtwork ?? "")
     }
     
     var mainArtworkURL: URL? {
-        .init(string: mainArtwork)
+        .init(string: mainArtwork ?? "")
+    }
+    
+    var previewURL: URL? {
+        .init(string: preview ?? "")
     }
 }

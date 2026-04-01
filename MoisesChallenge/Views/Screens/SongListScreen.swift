@@ -1,5 +1,5 @@
 //
-//  SongsListScreen.swift
+//  SongListScreen.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 31/03/26.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct SongsListScreen: View {
-    @State var viewModel: SongsListViewModel
+struct SongListScreen: View {
+    @State var viewModel: SongListViewModel
     var onSongSelected: (Song) -> Void = { _ in }
 
     var body: some View {
@@ -17,7 +17,7 @@ struct SongsListScreen: View {
                 PaginatedListView(
                     items: searchList.items,
                     loadState: searchList.loadState,
-                    hasMore: !(searchList.latestResult?.reachedEnd ?? true)
+                    hasMore: searchList.latestResult?.hasMore ?? false
                 ) { song in
                     Button {
                         onSongSelected(song)
@@ -26,7 +26,14 @@ struct SongsListScreen: View {
                     }
                     .buttonStyle(.plain)
                 } placeholderContent: {
-                    searchPromptView
+                    VStack {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.secondary)
+                        Text("Search on iTunes")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                    }
                 } loadNextPage: {
                     searchList.loadNextPage()
                 } refresh: {
@@ -37,7 +44,7 @@ struct SongsListScreen: View {
                 PaginatedListView(
                     items: recentList.items,
                     loadState: recentList.loadState,
-                    hasMore: !(recentList.latestResult?.reachedEnd ?? true)
+                    hasMore: recentList.latestResult?.hasMore ?? false
                 ) { song in
                     Button {
                         onSongSelected(song)
@@ -66,17 +73,6 @@ struct SongsListScreen: View {
         }
         .onAppear {
             viewModel.onAppear()
-        }
-    }
-
-    private var searchPromptView: some View {
-        VStack {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
-            Text("Search on iTunes")
-                .font(.title3)
-                .foregroundStyle(.secondary)
         }
     }
 }

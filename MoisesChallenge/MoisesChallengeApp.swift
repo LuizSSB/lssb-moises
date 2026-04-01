@@ -24,16 +24,22 @@ struct MoisesChallengeApp: App {
         }
     }()
     
-    private let songsListViewModel = SongsListViewModel(
+    @State private var songListViewModel = SongListViewModel(
         dataSource: SongDataSource(),
     )
 
     var body: some Scene {
+        let bindable = Bindable(songListViewModel)
         WindowGroup {
             NavigationStack {
-                SongsListScreen(viewModel: songsListViewModel) { song in
+                SongListScreen(viewModel: songListViewModel) { song in
                     // TODO: Navigate to PlayerView (Feature 2)
                     print("Selected: \(song.title)")
+                }
+                .navigationDestination(item: $songListViewModel.player) { _ in
+//                    SongPlayerScreen(
+//                        viewModel: PlayerViewModel(queue: songListViewModel)
+//                    )
                 }
             }
         }
