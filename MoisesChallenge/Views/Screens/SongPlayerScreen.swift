@@ -9,14 +9,15 @@ import SwiftUI
 
 struct SongPlayerScreen: View {
     @State var viewModel: SongPlayerViewModel
+    var showsOptions = true
     
-    @State var actionSheetSong: Song?
+    @State private var actionSheetSong: Song?
     
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 24)
             
-            artworkSection
+            ArtworkView(artworkURL: viewModel.currentSong?.mainArtworkURL)
             
             Spacer(minLength: 24)
             
@@ -45,7 +46,8 @@ struct SongPlayerScreen: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                if let currentSong = viewModel.currentSong{
+                if showsOptions,
+                   let currentSong = viewModel.currentSong{
                     Button {
                         actionSheetSong = currentSong
                     } label: {
@@ -55,42 +57,15 @@ struct SongPlayerScreen: View {
                 }
             }
         }
-        .songActionSheet(for: $actionSheetSong) { action in
-            
-        }
-    }
-    
-    // MARK: - Artwork
-    
-    private var artworkSection: some View {
-        Group {
-            if let url = viewModel.currentSong?.mainArtworkURL {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                } placeholder: {
-                    artworkPlaceholder
-                }
-            } else {
-                artworkPlaceholder
+        .songActionSheet(for: $actionSheetSong) { song, action in
+            switch action {
+            case .viewAlbum:
+                viewModel.onSelectAlbum(of: song)
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 300)
-        .padding(.horizontal, 32)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(radius: 12, y: 6)
-    }
-    
-    private var artworkPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .fill(Color(.systemGray5))
-            .overlay {
-                Image(systemName: "music.note")
-                    .font(.system(size: 72))
-                    .foregroundStyle(.secondary)
-            }
+        .navigationDestination(presentationViewModel: viewModel.album) {
+            AlbumScreen(viewModel: $0)
+        }
     }
     
     // MARK: - Song info

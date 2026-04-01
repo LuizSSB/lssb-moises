@@ -32,6 +32,7 @@ struct MoisesChallengeApp: App {
         WindowGroup {
             NavigationStack {
                 SongListScreen(viewModel: songListViewModel)
+//                AlbumScreen(viewModel: .init(albumId: "362133451", service: .init()))
             }
         }
         .modelContainer(sharedModelContainer)

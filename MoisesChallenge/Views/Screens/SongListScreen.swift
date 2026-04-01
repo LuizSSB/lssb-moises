@@ -10,7 +10,7 @@ import SwiftUI
 struct SongListScreen: View {
     @State var viewModel: SongListViewModel
     
-    @State var actionSheetSong: Song?
+    @State private var actionSheetSong: Song?
     
     var body: some View {
         SearchBarContentContainer {
@@ -72,16 +72,17 @@ struct SongListScreen: View {
         .onAppear {
             viewModel.onAppear()
         }
-        .songActionSheet(for: $actionSheetSong) { action in
-            
+        .songActionSheet(for: $actionSheetSong) { song, action in
+            switch action {
+            case .viewAlbum:
+                viewModel.onSelectAlbum(of: song)
+            }
         }
-        .navigationDestination(
-            nonHashableItem: .init(
-                get: { viewModel.player },
-                set: { _ in viewModel.onDismissPlayer()}
-            )
-        ) {
+        .navigationDestination(presentationViewModel: viewModel.player) {
             SongPlayerScreen(viewModel: $0)
+        }
+        .navigationDestination(presentationViewModel: viewModel.album) {
+            AlbumScreen(viewModel: $0)
         }
     }
     
@@ -95,11 +96,13 @@ struct SongListScreen: View {
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
             
-            Button {
-                actionSheetSong = song
-            } label: {
-                Image(systemName: "ellipsis")
-                    .foregroundStyle(.secondary)
+            if song.album != nil {
+                Button {
+                    actionSheetSong = song
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

@@ -8,7 +8,7 @@
 import Foundation
 
 extension SongListViewModel {
-    class SongListPlayerQueue<PaginationParams: Hashable & Sendable>: SongPlayerQueue {
+    class SongPlayerQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.SongPlayerQueue {
         var selectedSongID: String?
         
         var selectedSong: Song? {
@@ -28,13 +28,13 @@ extension SongListViewModel {
         // MARK: - PlayerQueue conformance
         
         var currentItem: Song? {
-            guard let index = currentIndex else { return nil }
-            return list.items[safe: index]
+            guard let currentIndex else { return nil }
+            return list.items[safe: currentIndex]
         }
         
         var currentIndex: Int? {
-            guard let id = selectedSongID else { return nil }
-            return list.items.firstIndex(where: { $0.id == id })
+            guard let selectedSongID else { return nil }
+            return list.items.firstIndex(where: { $0.id == selectedSongID })
         }
         
         var hasPrevious: Bool {
@@ -43,8 +43,8 @@ extension SongListViewModel {
         }
         
         var hasNext: Bool {
-            guard let index = currentIndex else { return false }
-            if index != list.items.count - 1 {
+            guard let currentIndex else { return false }
+            if currentIndex != list.items.count - 1 {
                 return true
             }
             
@@ -56,17 +56,17 @@ extension SongListViewModel {
         }
         
         func moveToPrevious() {
-            guard let index = currentIndex,
-                  index > 0
+            guard let currentIndex,
+                  currentIndex > 0
             else { return }
             
-            selectedSongID = list.items[index - 1].id
+            selectedSongID = list.items[currentIndex - 1].id
         }
         
         func moveToNext() {
-            guard let index = currentIndex else { return }
+            guard let currentIndex else { return }
             
-            let nextIndex = index + 1
+            let nextIndex = currentIndex + 1
             if nextIndex < list.items.count {
                 selectedSongID = list.items[nextIndex].id
             } else if list.latestResult?.hasMore == true {
@@ -75,19 +75,15 @@ extension SongListViewModel {
             }
         }
         
-        func select(songID: String) {
-            selectedSongID = songID
-        }
-        
         // MARK: - Internal pagination advance
         
         func advanceIfPending() {
             guard pendingAdvanceAfterLoad,
-                  let index = currentIndex,
-                  index + 1 < list.items.count
+                  let currentIndex,
+                  currentIndex + 1 < list.items.count
             else { return }
             pendingAdvanceAfterLoad = false
-            selectedSongID = list.items[index + 1].id
+            selectedSongID = list.items[currentIndex + 1].id
         }
     }
 }

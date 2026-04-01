@@ -17,7 +17,7 @@ extension Album {
         self = album
     }
     
-    init?(fromResponseResult r: ITunesAPIResponse.Result, checkWrapperType: Bool = false) {
+    init?(fromResponseResult r: ITunesAPIResponse.Result, checkWrapperType: Bool = true) {
         guard let collectionId = r.collectionId,
               !checkWrapperType || r.wrapperType == .collection
         else { return nil }

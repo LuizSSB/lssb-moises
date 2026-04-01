@@ -9,9 +9,9 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class AlbumSongListViewModel {
-    private(set) var album: ActionStatus<Album, String> = .none
-    private(set) var player: SongPlayerViewModel?
+class AlbumViewModel {
+    var album: ActionStatus<Album, String> = .none
+    private(set) var player = PresentationViewModel<SongPlayerViewModel>()
     
     private let albumId: String
     private let service: AlbumSearchService
@@ -22,6 +22,13 @@ final class AlbumSongListViewModel {
     }
     
     func onAppear() {
+        guard case .none = album else { return }
+        loadAlbum()
+    }
+    
+    func loadAlbum() {
+        guard !album.isRunning else { return }
+        
         album = .running
         
         Task {
@@ -39,9 +46,11 @@ final class AlbumSongListViewModel {
     }
     
     func onSelect(song: Song) {
-    }
-    
-    func onDismissPlayer() {
-        player = nil
+        guard case let .success(album) = album,
+              let songs = album.songs,
+              let queue = SongPlayerQueue(songs: songs, selectedSong: song)
+        else { return }
+        
+        player.present(.init(queue: queue))
     }
 }

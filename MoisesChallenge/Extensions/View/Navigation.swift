@@ -24,4 +24,17 @@ extension View {
             }
         )
     }
+    
+    func navigationDestination<T, Destination: View>(
+        presentationViewModel: PresentationViewModel<T>,
+        @ViewBuilder destination: @escaping (T) -> Destination
+    ) -> some View {
+        self.navigationDestination(
+            nonHashableItem: .init(
+                get: { presentationViewModel.presented },
+                set: { _ in presentationViewModel.onDismiss() }
+            ),
+            destination: destination
+        )
+    }
 }

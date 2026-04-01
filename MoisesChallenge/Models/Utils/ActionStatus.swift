@@ -14,3 +14,19 @@ enum ActionStatus<
          success(TResult),
          failure(TError)
 }
+
+extension ActionStatus {
+    var isRunning: Bool {
+        if case .running = self {
+            return true
+        }
+        return false
+    }
+    
+    var result: TResult? {
+        if case let .success(result) = self {
+            return result
+        }
+        return nil
+    }
+}

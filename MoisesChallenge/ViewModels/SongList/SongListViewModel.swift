@@ -19,7 +19,8 @@ final class SongListViewModel {
     private var currentQuery = ""
     private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
     
-    private(set) var player: SongPlayerViewModel?
+    private(set) var player = PresentationViewModel<SongPlayerViewModel>()
+    private(set) var album = PresentationViewModel<AlbumViewModel>()
 
     private let service: SongSearchService
 
@@ -80,16 +81,17 @@ final class SongListViewModel {
     }
     
     func onSelect(song: Song) {
-        let queue: any SongPlayerQueue = if let searchList {
-            SongListPlayerQueue(list: searchList, selectedSong: song)
+        let queue: any MoisesChallenge.SongPlayerQueue = if let searchList {
+            SongPlayerQueue(list: searchList, selectedSong: song)
         } else {
-            SongListPlayerQueue(list: recentList, selectedSong: song)
+            SongPlayerQueue(list: recentList, selectedSong: song)
         }
-        player = SongPlayerViewModel(queue: queue)
+        player.present(.init(queue: queue))
     }
     
-    func onDismissPlayer() {
-        player = nil
+    func onSelectAlbum(of song: Song) {
+        guard let albumId = song.album?.id else { return }
+        album.present(.init(albumId: albumId, service: .init()))
     }
     
     private func fetchSearch(

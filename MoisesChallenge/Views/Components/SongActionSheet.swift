@@ -33,26 +33,19 @@ enum SongAction: CaseIterable, Identifiable {
 
 private struct SongActionSheetModifier: ViewModifier {
     @Binding var song: Song?
-    let onAction: (SongAction) -> Void
+    let onAction: (Song, SongAction) -> Void
     
     func body(content: Content) -> some View {
         content
-            .sheet(
-                isPresented: .init(
-                    get: { song != nil },
-                    set: { _ in song = nil }
-                )
-            ) {
-                if let song {
-                    SongActionSheetContent(song: song) { action in
-                        self.song = nil
-                        onAction(action)
-                    }
-                    // Snap to a compact height — just tall enough for the header + rows
-                    .presentationDetents([.height(SongActionSheetContent.preferredHeight)])
-                    .presentationDragIndicator(.visible)
-                    .presentationCornerRadius(nil)
+            .sheet(item: $song) { song in
+                SongActionSheetContent(song: song) { action in
+                    self.song = nil
+                    onAction(song, action)
                 }
+                // Snap to a compact height — just tall enough for the header + rows
+                .presentationDetents([.height(SongActionSheetContent.preferredHeight)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(nil)
             }
     }
 }
@@ -123,7 +116,7 @@ private struct SongActionSheetContent: View {
 // MARK: - View extension
 
 extension View {
-    func songActionSheet(for song: Binding<Song?>, onAction: @escaping (SongAction) -> Void) -> some View {
+    func songActionSheet(for song: Binding<Song?>, onAction: @escaping (Song, SongAction) -> Void) -> some View {
         modifier(SongActionSheetModifier(song: song, onAction: onAction))
     }
 }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Observation
 
 enum PaginatedListLoadState: Equatable {
     case idle

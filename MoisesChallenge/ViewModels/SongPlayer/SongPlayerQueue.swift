@@ -14,5 +14,4 @@ protocol SongPlayerQueue: AnyObject {
     var isLoadingNextForPlayer: Bool { get }
     func moveToPrevious()
     func moveToNext()
-    func select(songID: String)
 }
