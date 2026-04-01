@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SongListScreen: View {
+struct SongListView: View {
     @State var viewModel: SongListViewModel
     
     var body: some View {
@@ -24,7 +24,10 @@ struct SongListScreen: View {
                     listSong(offset, song)
                 }
             } else if viewModel.state.songsFetchStatus != .running {
-                Text("Pull to refresh")
+                Image(systemName: "magnifyingglass")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                
+                Text("Search on iTunes Store")
                     .frame(maxWidth: .infinity, alignment: .center)
                     .listRowSeparator(.hidden)
             }
@@ -38,23 +41,7 @@ struct SongListScreen: View {
             }
         }
         .listStyle(.plain)
-        .searchable(
-            text: .init(
-                get: { viewModel.state.workingSearchTerm },
-                set: { viewModel.updateWorkingSearchTerm(to: $0) }
-            ),
-            placement: .navigationBarDrawer
-        )
-        .onSubmit(of: .search) {
-            viewModel.search()
-        }
         .refreshable {
-            await viewModel.refresh()
-        }
-        .navigationTitle("Songs")
-        .toolbar {
-        }
-        .firstTask {
             await viewModel.refresh()
         }
         .alert(
@@ -88,11 +75,5 @@ struct SongListScreen: View {
                 viewModel.loadMore()
             }
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        SongListScreen(viewModel: .init())
     }
 }

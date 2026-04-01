@@ -12,8 +12,7 @@ private let defaultSearchLimit = 10
 
 @Observable class SongListViewModel: ViewModel {
     struct State: ViewModelState {
-        var currentSearchTerm: String?
-        var workingSearchTerm = ""
+        var searchTerm: String?
         
         var songs: [Song]?
         var songsFetchStatus: ActionStatus<SongDataSource.PaginationResult, String> = .none
@@ -48,12 +47,20 @@ private let defaultSearchLimit = 10
     @ObservationIgnored
     @Injected(\.songDataSource) private var songDataSource
     
-    // Ideally, this wouldn't need to be async, but view refreshing view layer requires it.
+    func listSongs(with searchTerm: String?) {
+        state.searchTerm = searchTerm
+        Task {
+            await self.refresh(force: true)
+        }
+    }
+    
+    // Ideally, this wouldn't need to be async, but the view layer requires it.
     func refresh(force: Bool = false) async {
-        guard let searchTerm = state.currentSearchTerm else {
-            state.songs = nil
-            state.songsFetchStatus = .none
-            // TODO: load recently played songs
+        guard let searchTerm = state.searchTerm else {
+            update {
+                self.state.songs = nil
+                self.state.songsFetchStatus = .none
+            }
             return
         }
         
@@ -94,7 +101,7 @@ private let defaultSearchLimit = 10
         do {
             let page = try await songDataSource.list(pagination)
             
-            guard force || pagination.params.searchTerm == state.currentSearchTerm else { return nil }
+            guard force || pagination.params.searchTerm == state.searchTerm else { return nil }
             state.songsFetchStatus = .success(page)
             return page
         } catch {
@@ -105,17 +112,6 @@ private let defaultSearchLimit = 10
     
     func abandonLoading() {
         state.songsFetchStatus = .none
-    }
-    
-    func updateWorkingSearchTerm(to text: String) {
-        state.workingSearchTerm = text
-    }
-    
-    func search() {
-        state.currentSearchTerm = state.workingSearchTerm
-        Task {
-            await self.refresh(force: true)
-        }
     }
     
     func select(_ song: Song) {

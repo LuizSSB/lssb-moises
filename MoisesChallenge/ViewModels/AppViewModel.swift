@@ -13,7 +13,7 @@ class AppViewModel: ViewModel {
     
     var state = State()
     
-    var songList = Container.shared.songListViewModel()
+    var songList = Container.shared.rootViewModel()
 }
 
 extension Container {
