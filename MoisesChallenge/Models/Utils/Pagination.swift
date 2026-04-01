@@ -1,6 +1,6 @@
 //
 //  Pagination.swift
-//  SFR3
+//  MoisesChallenge
 //
 //  Created by Luiz SSB on 19/04/25.
 //

@@ -7,22 +7,15 @@
 
 import Foundation
 
-struct Song: Identifiable, Codable, Hashable, Sendable {
+struct Song: Identifiable, Codable, Hashable, ArtistBearer, AlbumBearer, ArtworkBearer {
     let id: String
-    let artist: String?
-    let title: String?
-    let itemArtwork: String?
-    let mainArtwork: String?
-    let durationSeconds: TimeInterval?
-    let preview: String?
-    
-    var itemArtworkURL: URL? {
-        .init(string: itemArtwork ?? "")
-    }
-    
-    var mainArtworkURL: URL? {
-        .init(string: mainArtwork ?? "")
-    }
+    var title: String?
+    var artist: Artist?
+    var album: Album?
+    var itemArtwork: String?
+    var mainArtwork: String?
+    var durationSeconds: TimeInterval?
+    var preview: String?
     
     var previewURL: URL? {
         .init(string: preview ?? "")
@@ -30,9 +23,5 @@ struct Song: Identifiable, Codable, Hashable, Sendable {
     
     var displayTitle: String {
         title ?? "Unknown title"
-    }
-    
-    var displayArtist: String {
-        artist ?? "Unknown artist"
     }
 }

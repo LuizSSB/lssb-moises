@@ -84,7 +84,7 @@ private struct SongActionSheetContent: View {
             Text(song.displayTitle)
                 .font(.headline)
                 .lineLimit(1)
-            Text(song.displayArtist)
+            Text(song.displayArtistName)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

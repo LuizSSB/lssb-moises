@@ -14,10 +14,10 @@ struct SongRowView: View {
             artworkView
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title ?? "Unknown title")
+                Text(song.displayTitle)
                     .font(.body)
                     .lineLimit(1)
-                Text(song.artist ?? "Unknown artist")
+                Text(song.displayArtistName)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-private let defaultSizePage = 5
+private let defaultSizePage = 10
 
 @MainActor
 @Observable

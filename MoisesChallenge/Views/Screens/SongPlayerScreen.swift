@@ -35,6 +35,7 @@ struct SongPlayerScreen: View {
             
             Spacer(minLength: 40)
         }
+        .navigationTitle(viewModel.currentSong?.displayAlbumTitle ?? "-")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
@@ -96,10 +97,10 @@ struct SongPlayerScreen: View {
     
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(viewModel.currentSong?.title ?? "—")
+            Text(viewModel.currentSong?.displayTitle ?? "—")
                 .font(.title2.bold())
                 .lineLimit(1)
-            Text(viewModel.currentSong?.artist ?? "—")
+            Text(viewModel.currentSong?.displayArtistName ?? "—")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
