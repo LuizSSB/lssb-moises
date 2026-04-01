@@ -24,13 +24,17 @@ struct MoisesChallengeApp: App {
         }
     }()
     
-    
-    @State var viewModel = Container.shared.appViewModel()
+    private let songsListViewModel = SongsListViewModel(
+        dataSource: SongDataSource(),
+    )
 
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                SongListScreen(viewModel: viewModel.songList)
+                SongsListScreen(viewModel: songsListViewModel) { song in
+                    // TODO: Navigate to PlayerView (Feature 2)
+                    print("Selected: \(song.title)")
+                }
             }
         }
         .modelContainer(sharedModelContainer)

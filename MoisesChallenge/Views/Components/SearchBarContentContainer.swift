@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-struct SearchBarContentContainer: View {
+struct SearchBarContentContainer<Content: View>: View {
     @Environment(\.isSearching) private var isSearching
     
-    let content: any View
+    let content: Content
     let onSearchStatusChanged: (_ enabled: Bool) -> Void
     
     var body: some View {
-        AnyView(content)
+        content
             .onChange(of: isSearching) {
                 onSearchStatusChanged($1)
             }
@@ -23,7 +23,7 @@ struct SearchBarContentContainer: View {
 
 extension SearchBarContentContainer {
     init(
-        @ViewBuilder content: () -> any View,
+        @ViewBuilder content: () -> Content,
         onSearchStatusChanged: @escaping (_ enabled: Bool) -> Void
     ) {
         self.init(content: content(), onSearchStatusChanged: onSearchStatusChanged)

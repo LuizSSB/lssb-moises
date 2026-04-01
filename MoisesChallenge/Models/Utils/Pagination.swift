@@ -29,7 +29,7 @@ struct Pagination<TParams: Equatable & Hashable & Sendable>: Equatable, Hashable
         return .init(params: params, offset: 0, limit: limit)
     }
     
-    struct Page<TEntry: Equatable & Hashable>: Equatable, Hashable {
+    struct Page<TEntry: Equatable & Hashable & Sendable>: Equatable, Hashable {
         let entries: [TEntry]
         let pagination: Pagination
         
@@ -39,5 +39,15 @@ struct Pagination<TParams: Equatable & Hashable & Sendable>: Equatable, Hashable
             }
             return false
         }
+    }
+}
+
+struct NullPaginationParams: Hashable, Sendable {
+    static let instance = Self()
+}
+
+extension Pagination where TParams == NullPaginationParams {
+    static func first(limit: Int? = nil) -> Self {
+        return .init(params: .instance, offset: 0, limit: limit)
     }
 }
