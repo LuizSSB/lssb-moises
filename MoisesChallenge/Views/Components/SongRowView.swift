@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct SongRowView: View {
-
     let song: Song
 
     var body: some View {

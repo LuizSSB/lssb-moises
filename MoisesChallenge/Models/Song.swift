@@ -27,4 +27,12 @@ struct Song: Identifiable, Codable, Hashable, Sendable {
     var previewURL: URL? {
         .init(string: preview ?? "")
     }
+    
+    var displayTitle: String {
+        title ?? "Unknown title"
+    }
+    
+    var displayArtist: String {
+        artist ?? "Unknown artist"
+    }
 }

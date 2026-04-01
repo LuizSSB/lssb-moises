@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct SongPlayerScreen: View {
-    
     @State var viewModel: SongPlayerViewModel
+    
+    @State var actionSheetSong: Song?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -40,6 +41,21 @@ struct SongPlayerScreen: View {
         }
         .onDisappear {
             viewModel.onDisappear()
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if let currentSong = viewModel.currentSong{
+                    Button {
+                        actionSheetSong = currentSong
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
+        }
+        .songActionSheet(for: $actionSheetSong) { action in
+            
         }
     }
     

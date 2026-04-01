@@ -9,56 +9,55 @@ import SwiftUI
 
 struct SongListScreen: View {
     @State var viewModel: SongListViewModel
-
+    
+    @State var actionSheetSong: Song?
+    
     var body: some View {
         SearchBarContentContainer {
-            if let searchList = viewModel.searchList {
-                PaginatedListView(
-                    items: searchList.items,
-                    loadState: searchList.loadState,
-                    hasMore: searchList.latestResult?.hasMore ?? false
-                ) { song in
-                    Button {
-                        viewModel.onSelect(song: song)
-                    } label: {
-                        SongRowView(song: song)
-                    }
-                    .buttonStyle(.plain)
-                } placeholderContent: {
-                    VStack {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 40))
-                            .foregroundStyle(.secondary)
-                        Text("Search on iTunes")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                    }
-                } loadNextPage: {
-                    searchList.loadNextPage()
-                } refresh: {
-                    await searchList.refresh()
-                }
+            let (items, loadState, hasMore, placeholder, loadNextPage) = if let searchList = viewModel.searchList {
+                (
+                    searchList.items,
+                    searchList.loadState,
+                    searchList.latestResult?.hasMore ?? false,
+                    AnyView(
+                        VStack {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.secondary)
+                            Text("Search on iTunes")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                    ),
+                    { searchList.loadNextPage() }
+                )
             } else {
-                let recentList = viewModel.recentList
-                PaginatedListView(
-                    items: recentList.items,
-                    loadState: recentList.loadState,
-                    hasMore: recentList.latestResult?.hasMore ?? false
-                ) { song in
-                    Button {
-                        viewModel.onSelect(song: song)
-                    } label: {
-                        SongRowView(song: song)
-                    }
-                    .buttonStyle(.plain)
-                } placeholderContent: {
-                    EmptyView()
-                } loadNextPage: {
-                    recentList.loadNextPage()
-                } refresh: {
-                    await recentList.refresh()
-                }
+                (
+                    viewModel.recentList.items,
+                    viewModel.recentList.loadState,
+                    viewModel.recentList.latestResult?.hasMore ?? false,
+                    AnyView(EmptyView()),
+                    { viewModel.recentList.loadNextPage() }
+                )
             }
+            
+            PaginatedListView(
+                items: items,
+                loadState: loadState,
+                hasMore: hasMore,
+                rowContent: songRow,
+                placeholderContent: {
+                    placeholder
+                },
+                loadNextPage: loadNextPage,
+                refresh: {
+                    if let searchList = viewModel.searchList {
+                        return { await searchList.refresh() }
+                    }
+                    
+                    return { await viewModel.recentList.refresh()}
+                }()
+            )
         } onSearchStatusChanged: {
             viewModel.onSearchBar(focused: $0)
         }
@@ -73,6 +72,9 @@ struct SongListScreen: View {
         .onAppear {
             viewModel.onAppear()
         }
+        .songActionSheet(for: $actionSheetSong) { action in
+            
+        }
         .navigationDestination(
             nonHashableItem: .init(
                 get: { viewModel.player },
@@ -80,6 +82,25 @@ struct SongListScreen: View {
             )
         ) {
             SongPlayerScreen(viewModel: $0)
+        }
+    }
+    
+    @ViewBuilder func songRow(_ song: Song) -> some View {
+        HStack {
+            Button {
+                viewModel.onSelect(song: song)
+            } label: {
+                SongRowView(song: song)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            
+            Button {
+                actionSheetSong = song
+            } label: {
+                Image(systemName: "ellipsis")
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }
