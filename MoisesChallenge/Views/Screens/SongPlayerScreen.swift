@@ -103,15 +103,29 @@ struct SongPlayerScreen: View {
     
     // MARK: - Controls
     
+    private func moveButton(direction: SongQueuePlaybackDirection) -> some View {
+        Button {
+            viewModel.move(to: direction)
+        } label: {
+            if viewModel.isLoading(direction) {
+                ProgressView()
+                    .frame(width: 28, height: 28)
+            } else {
+                Image(systemName: {
+                    switch direction {
+                    case .previous: return "backward.fill"
+                    case .next: return "forward.fill"
+                    }
+                }())
+                .font(.system(size: 28))
+            }
+        }
+        .disabled(!viewModel.has(direction) || viewModel.isLoading(direction))
+    }
+    
     private var controlsSection: some View {
         HStack(spacing: 48) {
-            Button {
-                viewModel.previousSong()
-            } label: {
-                Image(systemName: "backward.fill")
-                    .font(.system(size: 28))
-            }
-            .disabled(!viewModel.hasPrevious)
+            moveButton(direction: .previous)
             
             Button {
                 viewModel.togglePlayPause()
@@ -122,18 +136,7 @@ struct SongPlayerScreen: View {
             }
             .disabled(viewModel.playbackState == .loading)
             
-            Button {
-                viewModel.nextSong()
-            } label: {
-                if viewModel.isLoadingNext {
-                    ProgressView()
-                        .frame(width: 28, height: 28)
-                } else {
-                    Image(systemName: "forward.fill")
-                        .font(.system(size: 28))
-                }
-            }
-            .disabled(!viewModel.hasNext && !viewModel.isLoadingNext)
+            moveButton(direction: .next)
         }
         .frame(maxWidth: .infinity)
     }

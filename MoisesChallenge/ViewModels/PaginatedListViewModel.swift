@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 enum PaginatedListLoadState: Equatable {
     case idle
@@ -20,13 +21,20 @@ enum PaginatedListLoadState: Equatable {
 @MainActor
 @Observable
 final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable> {
+    typealias PageResult = Pagination<PaginationParams>.Page<Item>
+    
     typealias PageFetch = @Sendable (
         _ page: Pagination<PaginationParams>? // a `nil` page means the first one (or whatever one the client feels like.
     ) async throws -> Pagination<PaginationParams>.Page<Item>
     
     private(set) var items: [Item] = []
     private(set) var loadState: PaginatedListLoadState = .idle
-    private(set) var latestResult: Pagination<PaginationParams>.Page<Item>?
+    private(set) var latestResult: PageResult?
+    
+    private let onPageLoadedSubject = PassthroughSubject<Result<PageResult, Error>, Never>()
+    var onPageLoadedPublisher: AnyPublisher<Result<PageResult, Error>, Never> {
+        onPageLoadedSubject.eraseToAnyPublisher()
+    }
     
     private var activeFetchTask: Task<Void, Never>?
     private let fetch: PageFetch
@@ -66,32 +74,32 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
     private func load(mode: LoadMode) {
         activeFetchTask?.cancel()
 
-        let fetchConfig: (loadState: PaginatedListLoadState, pageToFetch: Pagination<PaginationParams>?)? = switch mode {
-        case .firstPage:
-            (.loadingFirstPage, nil)
-        case .nextPage:
-            if let latestResult {
-                (.loadingNextPage, latestResult.hasMore ? latestResult.pagination.next :  nil)
-            } else {
-                nil
-            }
-        case .refresh:
-            (.refreshing, nil)
-        }
-        guard let fetchConfig else { return }
-        
-        withAnimation {
-            loadState = fetchConfig.loadState
-        }
-        
-        let currentFetch = fetch
-
         activeFetchTask = Task {
+            let fetchConfig: (loadState: PaginatedListLoadState, pageToFetch: Pagination<PaginationParams>?)? = switch mode {
+            case .firstPage:
+                (.loadingFirstPage, nil)
+            case .nextPage:
+                if let latestResult {
+                    (.loadingNextPage, latestResult.hasMore ? latestResult.pagination.next :  nil)
+                } else {
+                    nil
+                }
+            case .refresh:
+                (.refreshing, nil)
+            }
+            guard let fetchConfig else { return }
+            
+            withAnimation {
+                loadState = fetchConfig.loadState
+            }
+            
+            let currentFetch = fetch
+            
             do {
                 let result = try await currentFetch(fetchConfig.pageToFetch)
 
                 guard !Task.isCancelled else { return }
-
+                
                 withAnimation {
                     switch mode {
                     case .firstPage, .refresh:
@@ -102,14 +110,19 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
                     
                     latestResult = result
                     loadState = items.isEmpty ? .empty : .loaded
+                    
+                    onPageLoadedSubject.send(.success(result))
                 }
 
             } catch is CancellationError {
                 // Ignore cancelled task
             } catch {
                 guard !Task.isCancelled else { return }
+                
                 withAnimation {
                     loadState = .error(error.localizedDescription)
+                    
+                    onPageLoadedSubject.send(.failure(error))
                 }
             }
         }

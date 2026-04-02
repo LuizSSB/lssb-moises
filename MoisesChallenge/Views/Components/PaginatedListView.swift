@@ -43,11 +43,11 @@ struct PaginatedListView<Item: Identifiable & Sendable, RowContent: View, Placeh
                         rowContent(item)
                     }
                     
-                    if hasMore && loadState != .loadingNextPage {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear(perform: loadNextPage)
-                    }
+//                    if hasMore && loadState != .loadingNextPage {
+//                        Color.clear
+//                            .frame(height: 1)
+//                            .onAppear(perform: loadNextPage)
+//                    }
                     
                     if loadState == .loadingNextPage {
                         Text("Loading more...")

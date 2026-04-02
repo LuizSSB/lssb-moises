@@ -6,8 +6,8 @@
 //
 
 import AVFoundation
-import Observation
-import Foundation
+import Combine
+import SwiftUI
 
 @MainActor
 @Observable
@@ -29,18 +29,6 @@ final class SongPlayerViewModel {
     private(set) var duration: TimeInterval? // nil until AVPlayer resolve it
     private(set) var album = PresentationViewModel<AlbumViewModel>()
     
-    var hasPrevious: Bool {
-        queue.hasPrevious
-    }
-    
-    var hasNext: Bool {
-        queue.hasNext
-    }
-    
-    var isLoadingNext: Bool {
-        queue.isLoadingNextForPlayer
-    }
-    
     // MARK: - Private state
     
     private let queue: any SongPlayerQueue
@@ -48,6 +36,7 @@ final class SongPlayerViewModel {
     private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
     private var queueWatchTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Lifecycle
     
@@ -57,7 +46,23 @@ final class SongPlayerViewModel {
     
     func onAppear() {
         syncWithQueue()
-        startWatchingQueue()
+        
+        guard cancellables.isEmpty else { return }
+        
+        queue.onCurrentItemChanged.sink { [weak self] _ in
+            guard let self else { return }
+            self.syncWithQueue()
+        }
+        .store(in: &cancellables)
+        
+        // TODO: if error, show message?
+//        queue.onLoadedMore.sink { [weak self] direction, result in
+//            guard let self,
+//                  direction != nil,
+//                  case let .failure(error) = result
+//            else { return }
+//        }
+//        .store(in: &cancellables)
     }
     
     func onDisappear() {
@@ -73,6 +78,14 @@ final class SongPlayerViewModel {
     }
     
     // MARK: - Controls
+    
+    func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool {
+        queue.isLoading(direction)
+    }
+    
+    func has(_ direction: SongQueuePlaybackDirection) -> Bool {
+        queue.has(direction)
+    }
     
     func togglePlayPause() {
         switch playbackState {
@@ -92,36 +105,11 @@ final class SongPlayerViewModel {
         player?.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
     }
     
-    func previousSong() {
-        queue.moveToPrevious()
-        syncWithQueue()
-    }
-    
-    func nextSong() {
-        queue.moveToNext()
-        syncWithQueue()
+    func move(to direction: SongQueuePlaybackDirection) {
+        queue.move(to: direction)
     }
     
     // MARK: - Private: queue observation
-    
-    private func startWatchingQueue() {
-        queueWatchTask = Task { @MainActor [weak self] in
-            // Poll using withObservationTracking to respond to @Observable changes
-            // on the queue's currentItem.
-            while !Task.isCancelled {
-                await withCheckedContinuation { continuation in
-                    withObservationTracking {
-                        _ = self?.queue.currentItem
-                        _ = self?.queue.isLoadingNextForPlayer
-                    } onChange: {
-                        continuation.resume()
-                    }
-                }
-                guard !Task.isCancelled else { break }
-                self?.syncWithQueue()
-            }
-        }
-    }
     
     private func syncWithQueue() {
         let song = queue.currentItem
@@ -133,23 +121,31 @@ final class SongPlayerViewModel {
     
     private func loadSong(_ song: Song?) {
         stopCurrentPlayback()
-        currentSong = song
-        progress = 0
-        elapsed = 0
-        duration = nil
+        withAnimation {
+            currentSong = song
+            progress = 0
+            elapsed = 0
+            duration = nil
+        }
         
         guard let song else {
-            playbackState = .idle
+            withAnimation {
+                playbackState = .idle
+            }
             return
         }
         
+        // Not meant to happen. Would it make sense to move to next song?
         guard let url = song.previewURL else {
-            // No preview URL — show as paused at 0, user can still navigate
-            playbackState = .paused
+            withAnimation {
+                playbackState = .paused
+            }
             return
         }
         
-        playbackState = .loading
+        withAnimation {
+            playbackState = .loading
+        }
         let item = AVPlayerItem(url: url)
         let newPlayer = AVPlayer(playerItem: item)
         player = newPlayer
@@ -158,7 +154,10 @@ final class SongPlayerViewModel {
         attachTimeObserver(to: newPlayer)
         
         newPlayer.play()
-        playbackState = .playing
+        
+        withAnimation {
+            playbackState = .playing
+        }
     }
     
     private func play() {
@@ -209,6 +208,10 @@ final class SongPlayerViewModel {
         duration = total
         elapsed = current
         progress = current / total
+        
+        if progress >= 1 && queue.has(.next) {
+            queue.move(to: .next)
+        }
     }
     
     // MARK: - Private: item status observation
@@ -220,11 +223,15 @@ final class SongPlayerViewModel {
                 switch status {
                 case .readyToPlay:
                     if self.playbackState == .loading {
-                        self.playbackState = .playing
+                        withAnimation {
+                            self.playbackState = .playing
+                        }
                     }
                 case .failed:
                     let message = item.error?.localizedDescription ?? "Playback failed"
-                    self.playbackState = .error(message)
+                    withAnimation {
+                        self.playbackState = .error(message)
+                    }
                 default:
                     break
                 }
