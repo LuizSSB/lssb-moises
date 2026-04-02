@@ -14,21 +14,11 @@ struct SongListScreen: View {
     
     var body: some View {
         SearchBarContentContainer {
-            let (items, loadState, hasMore, placeholder, loadNextPage) = if let searchList = viewModel.searchList {
+            let (items, loadState, hasMore, loadNextPage) = if let searchList = viewModel.searchList {
                 (
                     searchList.items,
                     searchList.loadState,
                     searchList.latestResult?.hasMore ?? false,
-                    AnyView(
-                        VStack {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 40))
-                                .foregroundStyle(.secondary)
-                            Text("Search on iTunes")
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                        }
-                    ),
                     { searchList.loadNextPage() }
                 )
             } else {
@@ -36,7 +26,6 @@ struct SongListScreen: View {
                     viewModel.recentList.items,
                     viewModel.recentList.loadState,
                     viewModel.recentList.latestResult?.hasMore ?? false,
-                    AnyView(EmptyView()),
                     { viewModel.recentList.loadNextPage() }
                 )
             }
@@ -46,9 +35,7 @@ struct SongListScreen: View {
                 loadState: loadState,
                 hasMore: hasMore,
                 rowContent: songRow,
-                placeholderContent: {
-                    placeholder
-                },
+                placeholderContent: placeholderContent,
                 loadNextPage: loadNextPage,
                 refresh: {
                     if let searchList = viewModel.searchList {
@@ -104,6 +91,43 @@ struct SongListScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+    
+    @ViewBuilder func placeholderContent(_ type: PaginatedListViewPlaceholderType) -> some View {
+        switch (type, viewModel.searchList) {
+        case (.idle, nil):
+            EmptyView()
+            
+        case (.idle, .some):
+            VStack {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+                Text("Search on iTunes")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            
+        case (.empty, .some):
+            ContentUnavailableView(
+                "No results found for '\(viewModel.currentQuery)'",
+                systemImage: "music.note.list"
+            )
+            
+        case (.empty, nil):
+            ContentUnavailableView(
+                "No recently played songs",
+                systemImage: "music.note.list",
+                description: Text("Try the search bar above to look for your favorite artist or something")
+            )
+            
+        case let (.error(message), _):
+            ContentUnavailableView(
+                "Something went wrong",
+                systemImage: "exclamationmark.triangle",
+                description: Text(message)
+            )
         }
     }
 }

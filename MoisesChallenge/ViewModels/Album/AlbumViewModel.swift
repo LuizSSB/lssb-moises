@@ -46,11 +46,11 @@ class AlbumViewModel {
     }
     
     func onSelect(song: Song) {
-        guard case let .success(album) = album,
-              let songs = album.songs,
-              let queue = SongPlayerQueue(songs: songs, selectedSong: song)
-        else { return }
-        
-        player.present(.init(queue: queue))
+//        guard case let .success(album) = album,
+//              let songs = album.songs,
+//              let queue = SongPlayerQueue(songs: songs, selectedSong: song)
+//        else { return }
+//        
+//        player.present(.init(queue: queue, interactionService: .swiftData()))
     }
 }

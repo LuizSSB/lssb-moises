@@ -7,36 +7,43 @@
 
 import SwiftUI
 
-struct PaginatedListView<Item: Identifiable & Sendable, RowContent: View, PlaceholderContent: View>: View {
+enum PaginatedListViewPlaceholderType {
+    case idle,
+         empty,
+         error(String)
+}
+
+struct PaginatedListView<
+    Item: Identifiable & Sendable,
+    RowContent: View,
+    PlaceholderContent: View
+>: View {
+    
     let items: [Item]
     let loadState: PaginatedListLoadState
     let hasMore: Bool
     @ViewBuilder var rowContent: (Item) -> RowContent
-    @ViewBuilder var placeholderContent: () -> PlaceholderContent
+    @ViewBuilder var placeholderContent: (PaginatedListViewPlaceholderType) -> PlaceholderContent
     var loadNextPage: () -> Void
     var refresh: @Sendable () async -> Void
 
     var body: some View {
         switch loadState {
         case .loadingFirstPage:
+            Text("Loading...")
+            
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .empty:
-            ContentUnavailableView("No Results", systemImage: "music.note.list")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            placeholderContent(.empty)
 
         case .error(let message):
-            ContentUnavailableView(
-                "Something went wrong",
-                systemImage: "exclamationmark.triangle",
-                description: Text(message)
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            placeholderContent(.error(message))
 
         default:
             if loadState == .idle {
-                placeholderContent()
+                placeholderContent(.idle)
             } else {
                 List {
                     ForEach(items) { item in

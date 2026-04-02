@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SongInteraction: Equatable, Hashable {
+struct SongInteraction: Equatable, Hashable, Codable {
     let song: Song
     let lastPlayedAt: Date
 }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 
 enum PaginatedListLoadState: Equatable {
     case idle
@@ -31,10 +30,7 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
     private(set) var loadState: PaginatedListLoadState = .idle
     private(set) var latestResult: PageResult?
     
-    private let onPageLoadedSubject = PassthroughSubject<Result<PageResult, Error>, Never>()
-    var onPageLoadedPublisher: AnyPublisher<Result<PageResult, Error>, Never> {
-        onPageLoadedSubject.eraseToAnyPublisher()
-    }
+    var pageLoadedEvent = Event<Result<PageResult, Error>>()
     
     private var activeFetchTask: Task<Void, Never>?
     private let fetch: PageFetch
@@ -110,8 +106,8 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
                     
                     latestResult = result
                     loadState = items.isEmpty ? .empty : .loaded
-                    
-                    onPageLoadedSubject.send(.success(result))
+                } completion: {
+                    self.pageLoadedEvent.emitAndForget(.success(result))
                 }
 
             } catch is CancellationError {
@@ -121,8 +117,8 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
                 
                 withAnimation {
                     loadState = .error(error.localizedDescription)
-                    
-                    onPageLoadedSubject.send(.failure(error))
+                } completion: {
+                    self.pageLoadedEvent.emitAndForget(.failure(error))
                 }
             }
         }

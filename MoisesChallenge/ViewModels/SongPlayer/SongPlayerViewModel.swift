@@ -6,7 +6,6 @@
 //
 
 import AVFoundation
-import Combine
 import SwiftUI
 
 @MainActor
@@ -36,39 +35,48 @@ final class SongPlayerViewModel {
     private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
     private var queueWatchTask: Task<Void, Never>?
-    private var cancellables = Set<AnyCancellable>()
+    private var lifetimeTasks = Set<Task<Void, Never>>()
+    
+    private let interactionService: InteractionService
     
     // MARK: - Lifecycle
     
-    init(queue: any SongPlayerQueue) {
+    init(queue: any SongPlayerQueue, interactionService: InteractionService) {
         self.queue = queue
+        self.interactionService = interactionService
     }
     
     func onAppear() {
         syncWithQueue()
         
-        guard cancellables.isEmpty else { return }
+        guard lifetimeTasks.isEmpty else { return }
         
-        queue.onCurrentItemChanged.sink { [weak self] _ in
-            guard let self else { return }
-            self.syncWithQueue()
-        }
-        .store(in: &cancellables)
+        let currentItemChangedEvent = queue.currentItemChangedEvent
+        lifetimeTasks.insert(Task { [weak self] in
+            for await _ in await currentItemChangedEvent.stream().stream {
+                guard let self else { return }
+                self.syncWithQueue()
+            }
+        })
         
         // TODO: if error, show message?
-//        queue.onLoadedMore.sink { [weak self] direction, result in
-//            guard let self,
-//                  direction != nil,
-//                  case let .failure(error) = result
-//            else { return }
-//        }
-//        .store(in: &cancellables)
+//        let loadedMoreEvent = queue.loadedMoreEvent
+//        lifetimeTasks.insert(Task { [weak self] in
+//            for await (direction, result) in await loadedMoreEvent.stream().stream {
+//                guard let self else { return }
+//                
+//                guard direction != nil,
+//                      case let .failure(error) = result
+//                else { continue }
+//            }
+//        })
     }
     
     func onDisappear() {
         pause()
         queueWatchTask?.cancel()
         queueWatchTask = nil
+        lifetimeTasks.removeAll()
     }
     
     // MARK: - Extra
@@ -222,9 +230,15 @@ final class SongPlayerViewModel {
                 guard let self else { return }
                 switch status {
                 case .readyToPlay:
-                    if self.playbackState == .loading {
-                        withAnimation {
-                            self.playbackState = .playing
+                    if let song = self.currentSong {
+                        Task {
+                            try? await self.interactionService.markPlayed(song)
+                        }
+                        
+                        if self.playbackState == .loading {
+                            withAnimation {
+                                self.playbackState = .playing
+                            }
                         }
                     }
                 case .failed:

@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-private let defaultSizePage = 10
+private let defaultSizePage = 1
 
 @MainActor
 @Observable
@@ -16,11 +16,14 @@ final class SongListViewModel {
     private(set) var recentList: PaginatedListViewModel<Song, NullPaginationParams>
     
     var searchText = ""
-    private var currentQuery = ""
+    private(set) var currentQuery = ""
     private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
     
     private(set) var player = PresentationViewModel<SongPlayerViewModel>()
     private(set) var album = PresentationViewModel<AlbumViewModel>()
+
+    private var shouldRefreshRecent = true
+    private var recentSongsUpdatedTask: Task<Void, Never>?
 
     private let songService: SongSearchService
 
@@ -28,18 +31,38 @@ final class SongListViewModel {
         self.songService = songService
         self.recentList = PaginatedListViewModel(
             fetch: {
-                let page = try await interactionService.listPlayedSongs($0 ?? .first())
+                let page = try await interactionService.listPlayedSongs($0 ?? .first(limit: defaultSizePage))
                 return .init(
                     entries: page.entries.map(\.song),
                     pagination: page.pagination
                 )
             }
         )
+        
+        let songPlayedEvent = interactionService.songMarkedPlayedEvent
+        recentSongsUpdatedTask = Task { [weak self] in
+            for await interaction in await songPlayedEvent.stream().stream {
+                guard let self else { return }
+                
+                if self.recentList.items.first == nil || self.recentList.items.first!.id != interaction.song.id {
+                    self.shouldRefreshRecent = true
+                }
+            }
+        }
     }
 
     func onAppear() {
         guard searchList == nil else { return }
-        recentList.loadFirstPageIfNeeded()
+        prepareRecentList()
+    }
+    
+    private func prepareRecentList() {
+        if shouldRefreshRecent {
+            Task { await recentList.refresh() }
+        } else {
+            recentList.loadFirstPageIfNeeded()
+        }
+        shouldRefreshRecent = false
     }
 
     func onSearchBar(focused: Bool) {
@@ -51,9 +74,7 @@ final class SongListViewModel {
             searchList = nil
             searchText = ""
             currentQuery = ""
-            Task {
-                await recentList.refresh()
-            }
+            prepareRecentList()
         }
     }
     
@@ -76,7 +97,7 @@ final class SongListViewModel {
         } else {
             SongPlayerQueue(list: recentList, selectedSong: song)
         }
-        player.present(.init(queue: queue))
+        player.present(.init(queue: queue, interactionService: .swiftData))
     }
     
     func onSelectAlbum(of song: Song) {

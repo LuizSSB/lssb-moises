@@ -12,7 +12,7 @@ import FactoryKit
 @main
 struct MoisesChallengeApp: App {
     @State private var songListViewModel = SongListViewModel(
-        interactionService: InteractionService.swiftData(),
+        interactionService: InteractionService.swiftData,
         songService: SongSearchService.iTunes,
     )
 

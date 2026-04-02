@@ -5,8 +5,6 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-import Combine
-
 extension AlbumViewModel {
     class SongPlayerQueue: MoisesChallenge.SongPlayerQueue {
         let songs: [Song]
@@ -23,7 +21,7 @@ extension AlbumViewModel {
         
         private(set) var currentItem: Song? {
             didSet {
-                onCurrentItemChangedSubject.send(currentItem)
+                currentItemChangedEvent.emitAndForget(currentItem)
             }
         }
         
@@ -32,13 +30,9 @@ extension AlbumViewModel {
             return songs.firstIndex { $0.id == currentItem.id }
         }
         
-        let onCurrentItemChangedSubject = PassthroughSubject<Song?, Never>()
+        let currentItemChangedEvent = Event<Song?>()
         
-        var onCurrentItemChanged: AnyPublisher<Song?, Never> {
-            onCurrentItemChangedSubject.eraseToAnyPublisher()
-        }
-        
-        var onLoadedMore = Empty<OnLoadedMoreArgument, Never>().eraseToAnyPublisher()
+        var loadedMoreEvent = Event<OnLoadedMoreArgument>()
         
         func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool {
             false

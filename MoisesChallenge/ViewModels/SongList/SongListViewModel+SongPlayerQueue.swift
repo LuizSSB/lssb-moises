@@ -5,15 +5,12 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-import Combine
+import SwiftUI
 
 extension SongListViewModel {
-    class SongPlayerQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.SongPlayerQueue {
-        private let onCurrentItemChangedSubject = PassthroughSubject<Song?, Never>()
-        private let onLoadedMoreSubject = PassthroughSubject<OnLoadedMoreArgument, Never>()
-        
+    class SongPlayerQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.SongPlayerQueue {        
         private var nextIndexBeingLoaded: Int?
-        private var cancellables = Set<AnyCancellable>()
+        private var pageLoadedHandlerTask: Task<Void, Never>?
         
         private let list: PaginatedListViewModel<Song, PaginationParams>
         
@@ -22,11 +19,35 @@ extension SongListViewModel {
             self.currentItem = selectedSong
         }
         
+        private func preparePageLoadedHandler() {
+            guard pageLoadedHandlerTask == nil else { return }
+            
+            let event = list.pageLoadedEvent
+            pageLoadedHandlerTask = Task { [weak self] in
+                for await _ in await event.stream().stream {
+                    guard let self else { return }
+                    
+                    guard let nextIndexBeingLoaded = self.nextIndexBeingLoaded,
+                          self.currentIndex == nextIndexBeingLoaded - 1
+                    else { continue }
+                    
+                    self.nextIndexBeingLoaded = nil
+                    if nextIndexBeingLoaded < self.list.items.count {
+                        self.currentItem = self.list.items[nextIndexBeingLoaded]
+                    }
+                }
+            }
+        }
+        
+        deinit {
+            pageLoadedHandlerTask?.cancel()
+        }
+        
         // MARK: - PlayerQueue conformance
         
         private(set) var currentItem: Song? {
             didSet {
-                onCurrentItemChangedSubject.send(currentItem)
+                currentItemChangedEvent.emitAndForget(currentItem)
             }
         }
         
@@ -35,13 +56,9 @@ extension SongListViewModel {
             return list.items.firstIndex { $0.id == currentItemId }
         }
         
-        var onCurrentItemChanged: AnyPublisher<Song?, Never> {
-            onCurrentItemChangedSubject.eraseToAnyPublisher()
-        }
+        var currentItemChangedEvent = Event<Song?>()
         
-        var onLoadedMore: AnyPublisher<OnLoadedMoreArgument, Never> {
-            onLoadedMoreSubject.eraseToAnyPublisher()
-        }
+        var loadedMoreEvent = Event<OnLoadedMoreArgument>()
         
         func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool {
             direction == .next && nextIndexBeingLoaded != nil && list.items.last == currentItem
@@ -80,22 +97,7 @@ extension SongListViewModel {
                 if nextIndex < list.items.count {
                     currentItem = list.items[nextIndex]
                 } else if list.latestResult?.hasMore == true {
-                    if cancellables.isEmpty {
-                        list.onPageLoadedPublisher.sink { [weak self] result in
-                            guard let self,
-                                  let nextIndexBeingLoaded = self.nextIndexBeingLoaded,
-                                  self.currentIndex == nextIndexBeingLoaded - 1
-                            else { return }
-                            
-                            self.nextIndexBeingLoaded = nil
-                            self.currentItem = if nextIndexBeingLoaded < self.list.items.count {
-                                self.list.items[nextIndexBeingLoaded]
-                            } else {
-                                nil
-                            }
-                        }
-                        .store(in: &cancellables)
-                    }
+                    preparePageLoadedHandler()
                     nextIndexBeingLoaded = nextIndex
                     list.loadNextPage()
                 }
