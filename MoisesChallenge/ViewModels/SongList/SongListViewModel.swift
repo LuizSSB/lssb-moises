@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-private let defaultSizePage = 1
+private let defaultSizePage = 10
 
 @MainActor
 @Observable
@@ -22,26 +22,16 @@ final class SongListViewModel {
     private(set) var player = PresentationViewModel<SongPlayerViewModel>()
     private(set) var album = PresentationViewModel<AlbumViewModel>()
 
-    private let service: SongSearchService
+    private let songService: SongSearchService
 
-    init(service: SongSearchService) {
-        self.service = service
+    init(interactionService: InteractionService, songService: SongSearchService) {
+        self.songService = songService
         self.recentList = PaginatedListViewModel(
-            fetch: { @MainActor in
-                let result = try await service.search(
-                    .init(
-                        params: .init(searchTerm: "foo"),
-                        offset: $0?.offset ?? 0,
-                        limit: $0?.limit ?? 10
-                    )
-                )
+            fetch: {
+                let page = try await interactionService.listPlayedSongs($0 ?? .first())
                 return .init(
-                    entries: result.entries,
-                    pagination: .init(
-                        params: .instance,
-                        offset: result.pagination.offset,
-                        limit: result.pagination.limit
-                    )
+                    entries: page.entries.map(\.song),
+                    pagination: page.pagination
                 )
             }
         )
@@ -91,13 +81,13 @@ final class SongListViewModel {
     
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        album.present(.init(albumId: albumId, service: .init()))
+        album.present(.init(albumId: albumId, service: .iTunes))
     }
     
     private func fetchSearch(
         page: Pagination<SongSearchService.SearchParams>?
     ) async throws -> Pagination<SongSearchService.SearchParams>.Page<Song> {
-        try await service.search(
+        try await songService.search(
             page
             ?? .first(
                 params: .init(searchTerm: searchText),

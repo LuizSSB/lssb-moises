@@ -74,7 +74,7 @@ final class SongPlayerViewModel {
     // MARK: - Extra
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        album.present(.init(albumId: albumId, service: .init()))
+        album.present(.init(albumId: albumId, service: .iTunes))
     }
     
     // MARK: - Controls
