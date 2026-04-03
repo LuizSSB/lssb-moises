@@ -56,24 +56,29 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
                 self.syncWithQueue()
             }
         })
-        
-        // TODO: if error, show message?
-//        let loadedMoreEvent = queue.loadedMoreEvent
-//        lifetimeTasks.insert(Task { [weak self] in
-//            for await (direction, result) in await loadedMoreEvent.stream().stream {
-//                guard let self else { return }
-//                
-//                guard direction != nil,
-//                      case let .failure(error) = result
-//                else { continue }
-//            }
-//        })
+
+        let loadedMoreEvent = queue.loadedMoreEvent
+        lifetimeTasks.insert(Task { [weak self] in
+            for await (direction, result) in await loadedMoreEvent.stream().stream {
+                guard let self else { return }
+                guard let direction else { continue }
+
+                if case let .failure(error) = result {
+                    await MainActor.run {
+                        self.handleQueueLoadFailure(direction: direction, error: error)
+                    }
+                }
+            }
+        })
     }
     
     func onDisappear() {
         pause()
         queueWatchTask?.cancel()
         queueWatchTask = nil
+        for task in lifetimeTasks {
+            task.cancel()
+        }
         lifetimeTasks.removeAll()
     }
     
@@ -94,7 +99,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         queue.has(direction)
     }
     
-    func togglePlayPause() {
+    func onTogglePlayPause() {
         switch playbackState {
         case .playing:
             pause()
@@ -105,14 +110,14 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         }
     }
     
-    func seek(to fraction: Double) {
+    func onSeek(to fraction: Double) {
         guard let duration = player?.currentItem?.duration,
               duration.isNumeric else { return }
         let seconds = duration.seconds * fraction
         player?.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
     }
     
-    func move(to direction: PlaybackQueueDirection) {
+    func onMove(to direction: PlaybackQueueDirection) {
         queue.move(to: direction)
     }
     
@@ -142,11 +147,8 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
             return
         }
         
-        // Not meant to happen. Would it make sense to move to next song?
         guard let url = song.previewURL else {
-            withAnimation {
-                playbackState = .paused
-            }
+            failCurrentSongLoad(with: InvalidDataError())
             return
         }
         
@@ -168,6 +170,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     }
     
     private func play() {
+        guard player != nil else { return }
         player?.play()
         playbackState = .playing
     }
@@ -241,14 +244,40 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
                         }
                     }
                 case .failed:
-                    let message = item.error?.localizedDescription ?? "Playback failed"
-                    withAnimation {
-                        self.playbackState = .error(message)
-                    }
+                    self.failCurrentSongLoad(with: item.error ?? InvalidDataError())
                 default:
                     break
                 }
             }
+        }
+    }
+
+    private func failCurrentSongLoad(with error: Error) {
+        stopCurrentPlayback()
+
+        if queue.has(.next) {
+            queue.move(to: .next)
+            return
+        }
+
+        withAnimation {
+            playbackState = .paused
+        }
+    }
+
+    private func handleQueueLoadFailure(
+        direction: PlaybackQueueDirection,
+        error: Error
+    ) {
+        _ = direction
+        _ = error
+        pausePlaybackAfterFailure()
+    }
+
+    private func pausePlaybackAfterFailure() {
+        stopCurrentPlayback()
+        withAnimation {
+            playbackState = .paused
         }
     }
 }

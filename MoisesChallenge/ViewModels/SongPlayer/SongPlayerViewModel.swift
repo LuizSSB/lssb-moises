@@ -22,7 +22,7 @@ protocol SongPlayerViewModel: AnyObject, Observable, Sendable {
     func onSelectAlbum(of song: Song)
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool
     func has(_ direction: PlaybackQueueDirection) -> Bool
-    func togglePlayPause()
-    func seek(to fraction: Double)
-    func move(to direction: PlaybackQueueDirection)
+    func onTogglePlayPause()
+    func onSeek(to fraction: Double)
+    func onMove(to direction: PlaybackQueueDirection)
 }

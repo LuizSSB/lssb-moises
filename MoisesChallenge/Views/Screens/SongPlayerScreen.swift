@@ -91,7 +91,7 @@ struct SongPlayerScreen: View {
     private var seekbarSection: some View {
         VStack(spacing: 4) {
             SeekbarView(progress: viewModel.progress) { fraction in
-                viewModel.seek(to: fraction)
+                viewModel.onSeek(to: fraction)
             }
             
             HStack {
@@ -108,7 +108,7 @@ struct SongPlayerScreen: View {
     
     private func moveButton(direction: PlaybackQueueDirection) -> some View {
         Button {
-            viewModel.move(to: direction)
+            viewModel.onMove(to: direction)
         } label: {
             if viewModel.isLoading(direction) {
                 ProgressView()
@@ -131,7 +131,7 @@ struct SongPlayerScreen: View {
             moveButton(direction: .previous)
             
             Button {
-                viewModel.togglePlayPause()
+                viewModel.onTogglePlayPause()
             } label: {
                 playPauseLabel
                     .font(.system(size: 48))

@@ -24,16 +24,27 @@ extension SongListViewModelImpl {
             
             let event = list.pageLoadedEvent
             pageLoadedHandlerTask = Task { [weak self] in
-                for await _ in await event.stream().stream {
+                for await result in await event.stream().stream {
                     guard let self else { return }
-                    
-                    guard let nextIndexBeingLoaded = self.nextIndexBeingLoaded,
-                          self.currentIndex == nextIndexBeingLoaded - 1
-                    else { continue }
-                    
-                    self.nextIndexBeingLoaded = nil
-                    if nextIndexBeingLoaded < self.list.items.count {
-                        self.currentItem = self.list.items[nextIndexBeingLoaded]
+
+                    let pendingNextIndex = self.nextIndexBeingLoaded
+
+                    switch result {
+                    case .success:
+                        guard let nextIndexBeingLoaded = pendingNextIndex,
+                              self.currentIndex == nextIndexBeingLoaded - 1
+                        else { continue }
+
+                        self.nextIndexBeingLoaded = nil
+                        self.loadedMoreEvent.emitAndForget((.next, .success(())))
+                        if nextIndexBeingLoaded < self.list.items.count {
+                            self.currentItem = self.list.items[nextIndexBeingLoaded]
+                        }
+
+                    case .failure(let error):
+                        guard pendingNextIndex != nil else { continue }
+                        self.nextIndexBeingLoaded = nil
+                        self.loadedMoreEvent.emitAndForget((.next, .failure(error)))
                     }
                 }
             }
