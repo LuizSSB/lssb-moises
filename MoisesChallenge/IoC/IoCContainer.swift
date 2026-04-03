@@ -10,6 +10,7 @@ protocol IoCContainer: AnyObject {
     func interactionService() -> InteractionService
     func songSearchService() -> SongSearchService
     func albumSearchService() -> AlbumSearchService
+    func songPlaybackController() -> any SongPlaybackController
     
     func songListViewModel() -> any SongListViewModel
     func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel
@@ -33,6 +34,10 @@ extension IoCContainer {
     func albumSearchService() -> AlbumSearchService {
         .hybrid
     }
+
+    func songPlaybackController() -> any SongPlaybackController {
+        AVSongPlaybackController()
+    }
     
     func songListViewModel() -> any SongListViewModel {
         SongListViewModelImpl(
@@ -45,6 +50,7 @@ extension IoCContainer {
     func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel {
         SongPlayerViewModelImpl(
             queue: queue,
+            playbackController: songPlaybackController(),
             interactionService: .swiftData,
             container: self
         )

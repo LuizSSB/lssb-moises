@@ -5,7 +5,6 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-import AVFoundation
 import SwiftUI
 
 @Observable
@@ -23,10 +22,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     // MARK: - Private state
     
     private let queue: any PlaybackQueue<Song>
-    private var player: AVPlayer?
-    private var timeObserverToken: Any?
-    private var itemObservation: Task<Void, Never>?
-    private var playbackEndObservation: Task<Void, Never>?
+    private let playbackController: any SongPlaybackController
     private var queueWatchTask: Task<Void, Never>?
     private var lifetimeTasks = Set<Task<Void, Never>>()
     
@@ -37,10 +33,12 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     init(
         queue: any PlaybackQueue<Song>,
+        playbackController: any SongPlaybackController,
         interactionService: InteractionService,
         container: any IoCContainer
     ) {
         self.queue = queue
+        self.playbackController = playbackController
         self.interactionService = interactionService
         self.container = container
         self.album = container.presentationViewModel()
@@ -68,6 +66,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
                 await MainActor.run {
                     switch result {
                     case .success:
+                        guard self.repeatMode != .current else { return }
                         self.handlePlaybackEnded()
                     case .failure:
                         self.stopCurrentPlayback()
@@ -75,6 +74,16 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
                             self.playbackState = .paused
                         }
                     }
+                }
+            }
+        })
+        
+        let playbackEvent = playbackController.event
+        lifetimeTasks.insert(Task { [weak self] in
+            for await event in await playbackEvent.stream().stream {
+                guard let self else { return }
+                await MainActor.run {
+                    self.handlePlaybackEvent(event)
                 }
             }
         })
@@ -131,10 +140,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     }
     
     func onSeek(to fraction: Double) {
-        guard let duration = player?.currentItem?.duration,
-              duration.isNumeric else { return }
-        let seconds = duration.seconds * fraction
-        player?.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
+        playbackController.seek(to: fraction)
     }
     
     func onMove(to direction: PlaybackQueueDirection) {
@@ -167,121 +173,55 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
             return
         }
         
-        guard let url = song.previewURL else {
-            failCurrentSongLoad(with: InvalidDataError())
-            return
-        }
-        
         withAnimation {
             playbackState = .loading
         }
-        let item = AVPlayerItem(url: url)
-        let newPlayer = AVPlayer(playerItem: item)
-        player = newPlayer
-        
-        observePlayerItem(item)
-        observePlaybackEnd(for: item)
-        attachTimeObserver(to: newPlayer)
-        
-        newPlayer.play()
-        
-        withAnimation {
-            playbackState = .playing
-        }
+        playbackController.load(song)
     }
     
     private func play() {
-        guard player != nil else { return }
-        player?.play()
+        guard currentSong != nil else { return }
+        playbackController.play()
         playbackState = .playing
     }
     
     private func pause() {
-        player?.pause()
+        playbackController.pause()
         if case .playing = playbackState {
             playbackState = .paused
         }
     }
     
     private func stopCurrentPlayback() {
-        player?.pause()
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        itemObservation?.cancel()
-        itemObservation = nil
-        playbackEndObservation?.cancel()
-        playbackEndObservation = nil
-        player = nil
+        playbackController.stop()
     }
-    
-    // MARK: - Private: time observation
-    
-    private func attachTimeObserver(to player: AVPlayer) {
-        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
-        let token = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            guard let self else { return }
-            Task { @MainActor in
-                self.updateProgress(currentTime: time, player: player)
+
+    private func handlePlaybackEvent(_ event: SongPlaybackControllerEvent) {
+        switch event {
+        case .readyToPlay:
+            guard let song = currentSong else { return }
+            Task {
+                try? await interactionService.markPlayed(song)
             }
-        }
-        timeObserverToken = token
-    }
-    
-    private func updateProgress(currentTime: CMTime, player: AVPlayer) {
-        guard let item = player.currentItem,
-              item.duration.isNumeric
-        else { return }
-        
-        let total = item.duration.seconds
-        guard total > 0 else { return }
-        
-        let current = currentTime.seconds
-        duration = total
-        elapsed = current
-        progress = current / total
-    }
-    
-    // MARK: - Private: item status observation
-    
-    private func observePlayerItem(_ item: AVPlayerItem) {
-        itemObservation = Task { @MainActor [weak self] in
-            for await status in item.statusStream() {
-                guard let self else { return }
-                switch status {
-                case .readyToPlay:
-                    if let song = self.currentSong {
-                        Task {
-                            try? await self.interactionService.markPlayed(song)
-                        }
-                        
-                        if self.playbackState == .loading {
-                            withAnimation {
-                                self.playbackState = .playing
-                            }
-                        }
-                    }
-                case .failed:
-                    self.failCurrentSongLoad(with: item.error ?? InvalidDataError())
-                default:
-                    break
+            
+            if playbackState == .loading {
+                withAnimation {
+                    playbackState = .playing
                 }
             }
-        }
-    }
-    
-    private func observePlaybackEnd(for item: AVPlayerItem) {
-        playbackEndObservation = Task { @MainActor [weak self] in
-            let notifications = NotificationCenter.default.notifications(
-                named: AVPlayerItem.didPlayToEndTimeNotification,
-                object: item
-            )
             
-            for await _ in notifications {
-                guard let self else { return }
-                self.handlePlaybackEnded()
-            }
+        case let .progress(currentElapsed, totalDuration):
+            guard totalDuration > 0 else { return }
+            duration = totalDuration
+            elapsed = currentElapsed
+            progress = currentElapsed / totalDuration
+            
+        case .didFinishPlaying:
+            playbackState = .paused
+            handlePlaybackEnded()
+            
+        case .failed:
+            failCurrentSongLoad()
         }
     }
 
@@ -310,22 +250,15 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     }
 
     private func restartCurrentSong() {
-        guard let player else { return }
-        
-        player.seek(to: .zero) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                player.play()
-                withAnimation {
-                    self.playbackState = .playing
-                    self.elapsed = 0
-                    self.progress = 0
-                }
-            }
+        playbackController.restart()
+        withAnimation {
+            playbackState = .playing
+            elapsed = 0
+            progress = 0
         }
     }
 
-    private func failCurrentSongLoad(with _: Error) {
+    private func failCurrentSongLoad() {
         stopCurrentPlayback()
 
         if queue.has(.next) {
@@ -335,21 +268,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
 
         withAnimation {
             playbackState = .paused
-        }
-    }
-}
-
-// MARK: - AVPlayerItem async status stream
-
-private extension AVPlayerItem {
-    func statusStream() -> AsyncStream<AVPlayerItem.Status> {
-        AsyncStream { continuation in
-            let observation = observe(\.status, options: [.new]) { item, _ in
-                continuation.yield(item.status)
-            }
-            continuation.onTermination = { _ in
-                observation.invalidate()
-            }
         }
     }
 }
