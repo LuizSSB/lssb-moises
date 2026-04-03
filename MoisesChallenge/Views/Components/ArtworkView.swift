@@ -13,7 +13,7 @@ struct ArtworkView<PlaceholderContent: View>: View {
     @ViewBuilder let placeholderContent: () -> PlaceholderContent
     
     var body: some View {
-        if false, let url = artworkURL {
+        if let url = artworkURL {
             KFImage.url(url)
                 .placeholder {
                     placeholderContent()
