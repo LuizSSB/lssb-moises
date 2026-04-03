@@ -19,8 +19,8 @@ final class SongListViewModel {
     private(set) var currentQuery = ""
     private(set) var searchList: PaginatedListViewModel<Song, SongSearchParams>?
     
-    private(set) var player = PresentationViewModel<SongPlayerViewModel>()
-    private(set) var album = PresentationViewModel<AlbumViewModel>()
+    private(set) var player: any PresentationViewModel<SongPlayerViewModel> = PresentationViewModelImpl()
+    private(set) var album: any PresentationViewModel<AlbumViewModel> = PresentationViewModelImpl()
 
     private var shouldRefreshRecent = true
     private var recentSongsUpdatedTask: Task<Void, Never>?

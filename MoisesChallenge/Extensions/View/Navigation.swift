@@ -26,7 +26,7 @@ extension View {
     }
     
     func navigationDestination<T, Destination: View>(
-        presentationViewModel: PresentationViewModel<T>,
+        presentationViewModel: any PresentationViewModel<T>,
         @ViewBuilder destination: @escaping (T) -> Destination
     ) -> some View {
         self.navigationDestination(

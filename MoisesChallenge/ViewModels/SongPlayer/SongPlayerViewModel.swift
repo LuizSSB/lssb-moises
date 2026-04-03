@@ -26,7 +26,7 @@ final class SongPlayerViewModel {
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval? // nil until AVPlayer resolve it
-    private(set) var album = PresentationViewModel<AlbumViewModel>()
+    private(set) var album: any PresentationViewModel<AlbumViewModel> = PresentationViewModelImpl()
     
     // MARK: - Private state
     
