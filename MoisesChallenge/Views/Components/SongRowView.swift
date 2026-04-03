@@ -14,6 +14,7 @@ struct SongRowView: View {
             ArtworkView(artworkURL: song.itemArtworkURL)
                 .frame(width: 52, height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.displayTitle)
@@ -26,5 +27,6 @@ struct SongRowView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .accessibilityElement(children: .combine)
     }
 }

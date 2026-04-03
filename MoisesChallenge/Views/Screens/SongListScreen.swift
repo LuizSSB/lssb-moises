@@ -75,6 +75,8 @@ struct SongListScreen: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(localized: .commonMoreOptions))
+                .accessibilityHint(song.displayTitle)
             }
         }
         .listRowSeparator(.hidden)
@@ -91,10 +93,12 @@ struct SongListScreen: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
                 Text(String(localized: .songsPlaceholderSearch))
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .combine)
             
         case (.empty, .some):
             ContentUnavailableView(

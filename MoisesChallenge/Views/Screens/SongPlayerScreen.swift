@@ -45,6 +45,8 @@ struct SongPlayerScreen: View {
                         Image(systemName: "ellipsis")
                             .fontWeight(.semibold)
                     }
+                    .accessibilityLabel(String(localized: .commonMoreOptions))
+                    .accessibilityHint(currentSong.displayTitle)
                 }
             }
         }
@@ -64,6 +66,7 @@ struct SongPlayerScreen: View {
             ArtworkView(artworkURL: viewModel.currentSong?.mainArtworkURL)
                 .frame(maxWidth: 264, maxHeight: 264)
                 .clipShape(RoundedRectangle(cornerRadius: 32))
+                .accessibilityHidden(true)
         }
         .frame(maxHeight: .infinity)
     }
@@ -95,6 +98,8 @@ struct SongPlayerScreen: View {
                     .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.adaptivePlain)
+                .accessibilityLabel(String(localized: .playerRepeatAccessibilityLabel))
+                .accessibilityValue(repeatModeAccessibilityValue)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -108,8 +113,10 @@ struct SongPlayerScreen: View {
             
             HStack {
                 Text(viewModel.elapsed.formattedDuration)
+                    .accessibilityLabel(String(localized: .playerElapsedTimeAccessibilityLabel(viewModel.elapsed.formattedDuration)))
                 Spacer()
                 Text(remainingDurationText)
+                    .accessibilityLabel(String(localized: .playerRemainingTimeAccessibilityLabel(remainingDurationText)))
             }
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary.opacity(0.9))
@@ -143,6 +150,11 @@ struct SongPlayerScreen: View {
         }
         .buttonStyle(.adaptivePlain)
         .disabled(!viewModel.has(direction) || viewModel.isLoading(direction))
+        .accessibilityLabel(
+            String(
+                localized: direction == .previous ? .playerPreviousAccessibilityLabel : .playerNextAccessibilityLabel
+            )
+        )
     }
     
     private var controlsSection: some View {
@@ -161,6 +173,7 @@ struct SongPlayerScreen: View {
                 }
                 .buttonStyle(.plain) // .glass and .glassProminent are not totally round
                 .disabled(viewModel.playbackState == .loading)
+                .accessibilityLabel(playPauseAccessibilityLabel)
                 
                 moveButton(direction: .next)
             }
@@ -178,5 +191,24 @@ struct SongPlayerScreen: View {
         default:
             Image(systemName: "play.fill")
         }
+    }
+
+    private var repeatModeAccessibilityValue: String {
+        String(localized: {
+            switch viewModel.repeatMode {
+            case .none: return .playerRepeatAccessibilityValueOff
+            case .all: return .playerRepeatAccessibilityValueAll
+            case .current: return .playerRepeatAccessibilityValueCurrent
+            }
+        }())
+    }
+
+    private var playPauseAccessibilityLabel: String {
+        String(localized: {
+            switch viewModel.playbackState {
+            case .playing: return .playerPauseAccessibilityLabel
+            default: return .playerPlayAccessibilityLabel
+            }
+        }())
     }
 }

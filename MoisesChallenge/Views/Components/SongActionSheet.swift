@@ -85,6 +85,8 @@ private struct SongActionSheetContent: View {
         .frame(maxWidth: .infinity)
         .frame(height: Self.headerHeight)
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
     
     private var actionsView: some View {

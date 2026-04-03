@@ -26,11 +26,13 @@ struct AlbumScreen: View {
                     .frame(width: 120, height: 120)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .padding(.bottom, 16)
+                    .accessibilityHidden(true)
                     
                     Text(album?.displayTitle ?? "-")
                         .font(.title3.bold())
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 8)
+                        .accessibilityAddTraits(.isHeader)
                     
                     Text(album?.displayArtistName ?? "-")
                         .font(.subheadline)

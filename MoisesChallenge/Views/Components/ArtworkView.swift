@@ -35,6 +35,7 @@ struct ArtworkViewDefaultPlaceholderContent: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .accessibilityHidden(true)
         }
     }
 }
