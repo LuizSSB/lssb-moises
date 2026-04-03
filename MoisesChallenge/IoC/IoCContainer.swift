@@ -41,8 +41,8 @@ extension IoCContainer {
     
     func songListViewModel() -> any SongListViewModel {
         SongListViewModelImpl(
-            interactionService: .swiftData,
-            songService: .hybrid,
+            interactionService: interactionService(),
+            songService: songSearchService(),
             container: self
         )
     }
@@ -51,7 +51,7 @@ extension IoCContainer {
         SongPlayerViewModelImpl(
             queue: queue,
             playbackController: songPlaybackController(),
-            interactionService: .swiftData,
+            interactionService: interactionService(),
             container: self
         )
     }
@@ -59,7 +59,7 @@ extension IoCContainer {
     func albumViewModel(albumId: String) -> any AlbumViewModel {
         AlbumViewModelImpl(
             albumId: albumId,
-            service: .hybrid,
+            service: albumSearchService(),
             container: self
         )
     }

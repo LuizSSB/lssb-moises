@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Song: Identifiable, Codable, Hashable, Sendable, ArtistBearer, AlbumBearer, ArtworkBearer {
+struct Song: Identifiable, Codable, Hashable, Sendable {
     let id: String
     var title: String?
     var artist: Artist?
@@ -16,12 +16,4 @@ struct Song: Identifiable, Codable, Hashable, Sendable, ArtistBearer, AlbumBeare
     var mainArtwork: String?
     var durationSeconds: TimeInterval?
     var preview: String?
-    
-    var previewURL: URL? {
-        .init(string: preview ?? "")
-    }
-    
-    var displayTitle: String {
-        title ?? String(localized: .commonUnknownTitle)
-    }
 }

@@ -27,9 +27,8 @@ extension AlbumSearchService {
             
             switch result {
             case let .success(response):
-                guard let album = Album(fromResponse: response) else {
-                    throw InvalidDataError()
-                }
+                guard response.resultCount != 0 else { throw NotFoundError() }
+                guard let album = Album(fromResponse: response) else { throw InvalidDataError() }
                 return album
             case let .failure(error):
                 throw parseAF(error: error)
