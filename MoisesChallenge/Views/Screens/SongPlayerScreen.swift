@@ -25,6 +25,7 @@ struct SongPlayerScreen: View {
             
             controlsSection
         }
+        .frame(maxHeight: .infinity)
         .padding(24)
         .navigationTitle(viewModel.currentSong?.displayAlbumTitle ?? "-")
         .navigationBarTitleDisplayMode(.inline)
@@ -89,10 +90,11 @@ struct SongPlayerScreen: View {
                         case .current: return "repeat.1"
                         }
                     }())
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.body)
                     .foregroundStyle(viewModel.repeatMode == .none ? .secondary : .primary)
                     .frame(width: 24, height: 24)
                 }
+                .buttonStyle(.adaptivePlain)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -139,6 +141,7 @@ struct SongPlayerScreen: View {
                 .font(.system(size: 28))
             }
         }
+        .buttonStyle(.adaptivePlain)
         .disabled(!viewModel.has(direction) || viewModel.isLoading(direction))
     }
     
@@ -156,7 +159,7 @@ struct SongPlayerScreen: View {
                         .contentShape(Circle())
                         .glassEffect(.regular.interactive(), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.plain) // .glass and .glassProminent are not totally round
                 .disabled(viewModel.playbackState == .loading)
                 
                 moveButton(direction: .next)

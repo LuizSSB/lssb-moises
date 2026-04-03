@@ -18,6 +18,8 @@ struct PaginatedListView<
     RowContent: View,
     PlaceholderContent: View
 >: View {
+    private let topScrollID = "paginated-list-top"
+    
     let items: [Item]
     let loadState: PaginatedListLoadState
     let hasMore: Bool
@@ -30,10 +32,8 @@ struct PaginatedListView<
     var body: some View {
         switch loadState {
         case .loadingFirstPage:
-            Text("Loading...")
-            
             ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ensureRerenderOnAppear()
 
         case .empty:
             placeholderContent(.empty)
@@ -45,46 +45,68 @@ struct PaginatedListView<
             if loadState == .idle {
                 placeholderContent(.idle)
             } else {
-                List {
-                    ForEach(items) { item in
-                        rowContent(item)
-                    }
-                    
-                    if hasMore && loadState != .loadingNextPage {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear(perform: loadNextPage)
-                            .listRowSeparator(.hidden)
-                    }
-                    
-                    if loadState == .loadingNextPage {
-                        Text("Loading more...")
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                            .listRowSeparator(.hidden)
-                    }
-                }
-                .listStyle(.plain)
-                .refreshable(action: refresh)
-                .alert(
-                    presenting: .constant({
-                        if case let .error(data) = loadState {
-                            return data
-                        }
-                        return nil
-                    }()),
-                    title: \.title,
-                    message: { Text($0.message) },
-                    actions: { _ in
-                        Button("Try Again") {
-                            onError(true)
+                ScrollViewReader { proxy in
+                    List {
+                        if case .refreshing = loadState {
+                            ProgressView()
+                                .ensureRerenderOnAppear()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .listRowSeparator(.hidden)
                         }
                         
-                        Button("Dismiss", role: .cancel) {
-                            onError(false)
+                        ForEach(Array(items.enumerated()), id: \.element.id) { offset, element in
+                            let row = rowContent(element)
+                            if offset == 0 {
+                                row
+                                    .id(topScrollID)
+                            } else {
+                                row
+                            }
+                        }
+                        
+                        if hasMore && loadState != .loadingNextPage {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear(perform: loadNextPage)
+                                .listRowSeparator(.hidden)
+                        }
+                        
+                        if loadState == .loadingNextPage {
+                            ProgressView()
+                                .ensureRerenderOnAppear()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .listRowSeparator(.hidden)
                         }
                     }
-                )
+                    .listStyle(.plain)
+                    .refreshable(action: refresh)
+                    .onChange(of: loadState) {
+                        if loadState == .refreshing {
+                            withAnimation {
+                                proxy.scrollTo(topScrollID, anchor: .top)
+                            }
+                        }
+                    }
+                    .alert(
+                        presenting: .constant({
+                            if case let .error(data) = loadState {
+                                return data
+                            }
+                            return nil
+                        }()),
+                        title: \.title,
+                        message: { Text($0.message) },
+                        actions: { _ in
+                            Button("Try Again") {
+                                onError(true)
+                            }
+                            
+                            Button("Dismiss", role: .cancel) {
+                                onError(false)
+                            }
+                        }
+                    )
+                }
             }
         }
     }

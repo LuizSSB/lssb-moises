@@ -7,61 +7,65 @@
 
 import SwiftUI
 
-struct OnFirstAppearModifier: ViewModifier {
-    private struct WrapperView: View {
-        let content: Content
-        let action: () -> Void
-        
-        @State var appeared = false
-        
-        var body: some View {
-            content
-                .onAppear {
-                    if !appeared {
-                        appeared = true
-                        action()
-                    }
-                }
-        }
-    }
-    
+private struct OnFirstAppearWrapper<Content: View>: View {
+    let content: Content
     let action: () -> Void
     
-    func body(content: Content) -> some View {
-        WrapperView(content: content, action: action)
+    @State var appeared = false
+    
+    var body: some View {
+        content
+            .onAppear {
+                if !appeared {
+                    appeared = true
+                    action()
+                }
+            }
     }
 }
 
-struct FirstTaskModifier: ViewModifier {
-    private struct WrapperView: View {
-        let content: Content
-        let action: () async throws -> Void
-        
-        @State var appeared = false
-        
-        var body: some View {
-            content
-                .task {
-                    if !appeared {
-                        appeared = true
-                        try? await action()
-                    }
-                }
-        }
-    }
-    
+private struct FirstTaskWrapper<Content: View>: View {
+    let content: Content
     let action: () async throws -> Void
     
-    func body(content: Content) -> some View {
-        WrapperView(content: content, action: action)
+    @State var appeared = false
+    
+    var body: some View {
+        content
+            .task {
+                if !appeared {
+                    appeared = true
+                    try? await action()
+                }
+            }
     }
 }
+
+struct EnsureRerenderOnAppearWrapper<Content: View>: View {
+    let content: Content
+    
+    @State var id = UUID()
+    
+    var body: some View {
+        content
+            .id(id)
+            .onDisappear {
+                id = UUID()
+            }
+    }
+}
+
 
 extension View {
     func onFirstAppear(action: @escaping () -> Void) -> some View {
-        modifier(OnFirstAppearModifier(action: action))
+        OnFirstAppearWrapper(content: self, action: action)
     }
+    
     func firstTask(action: @escaping () async throws -> Void) -> some View {
-        modifier(FirstTaskModifier(action: action))
+        FirstTaskWrapper(content: self, action: action)
+    }
+    
+    func ensureRerenderOnAppear() -> some View {
+        EnsureRerenderOnAppearWrapper(content: self)
     }
 }
