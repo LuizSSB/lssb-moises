@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import FactoryKit
 
 @main
 struct MoisesChallengeApp: App {
