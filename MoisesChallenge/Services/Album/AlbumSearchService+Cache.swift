@@ -20,9 +20,10 @@ extension AlbumSearchService {
         service: Self.init(
             get: { albumId in
                 let context = ModelContext(swiftDataConfig.appModelContainer)
-                let descriptor = FetchDescriptor<CachedAlbumSwiftData>(
+                var descriptor = FetchDescriptor<CachedAlbumSwiftData>(
                     predicate: #Predicate { $0.id == albumId }
                 )
+                descriptor.fetchLimit = 1
                 
                 guard let cached = try context.fetch(descriptor).first,
                       cached.cachedAt.distance(to: Date()) < swiftDataConfig.cacheTTL

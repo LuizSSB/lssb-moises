@@ -13,7 +13,7 @@ import FactoryKit
 struct MoisesChallengeApp: App {
     @State private var songListViewModel = SongListViewModel(
         interactionService: InteractionService.swiftData,
-        songService: SongSearchService.iTunes,
+        songService: SongSearchService.hybrid,
     )
 
     var body: some Scene {

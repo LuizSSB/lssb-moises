@@ -19,7 +19,6 @@ let swiftDataConfig = (
         do {
             return try ModelContainer(for: schema, configurations: config)
         } catch {
-            // A failed container is unrecoverable — crash loudly in development.
             fatalError("Failed to create ModelContainer: \(error)")
         }
     }(),

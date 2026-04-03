@@ -32,6 +32,7 @@ extension CachedSongSearchPageSwiftData {
         self.init(
             searchTerm: result.pagination.params.searchTerm,
             offset: result.pagination.offset,
+            limit: result.pagination.limit,
             entries: result.entries
         )
     }
