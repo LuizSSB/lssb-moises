@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SongListScreen: View {
-    @State var viewModel: SongListViewModel
+    @State var viewModel: any SongListViewModel
     
     @State private var actionSheetSong: Song?
     

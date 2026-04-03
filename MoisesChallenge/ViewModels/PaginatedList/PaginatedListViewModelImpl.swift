@@ -1,5 +1,5 @@
 //
-//  PaginatedListLoadState.swift
+//  PaginatedListViewModelImpl.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 31/03/26.
@@ -7,19 +7,11 @@
 
 import SwiftUI
 
-enum PaginatedListLoadState: Equatable {
-    case idle
-    case loadingFirstPage
-    case loadingNextPage
-    case refreshing
-    case loaded
-    case empty
-    case error(String)
-}
-
-@MainActor
 @Observable
-final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable> {
+final class PaginatedListViewModelImpl<
+    Item: Hashable & Sendable,
+    PaginationParams: Hashable & Sendable
+>: PaginatedListViewModel {
     typealias PageResult = Pagination<PaginationParams>.Page<Item>
     
     typealias PageFetch = @Sendable (
@@ -51,7 +43,6 @@ final class PaginatedListViewModel<Item: Hashable & Sendable, PaginationParams: 
         load(mode: .nextPage)
     }
 
-    // Ideally, wouldn't need to be async, but view refreshing stuff requires it.
     func refresh() async {
         guard loadState != .refreshing else { return }
         let didAlreadyHaveStuff = latestResult != nil

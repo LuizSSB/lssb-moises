@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-extension SongListViewModel {
+extension SongListViewModelImpl {
     class SongPlayerQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.SongPlayerQueue {        
         private var nextIndexBeingLoaded: Int?
         private var pageLoadedHandlerTask: Task<Void, Never>?
         
-        private let list: PaginatedListViewModel<Song, PaginationParams>
+        private let list: any PaginatedListViewModel<Song, PaginationParams>
         
-        init(list: PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
+        init(list: any PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
             self.list = list
             self.currentItem = selectedSong
         }

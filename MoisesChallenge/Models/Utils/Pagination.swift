@@ -55,3 +55,13 @@ extension Pagination where TParams == NullPaginationParams {
         return .init(params: .instance, offset: 0, limit: limit)
     }
 }
+
+enum PaginatedListLoadState: Equatable {
+    case idle
+    case loadingFirstPage
+    case loadingNextPage
+    case refreshing
+    case loaded
+    case empty
+    case error(String)
+}

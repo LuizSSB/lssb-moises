@@ -10,7 +10,7 @@ import SwiftData
 
 @main
 struct MoisesChallengeApp: App {
-    @State private var songListViewModel = SongListViewModel(
+    @State private var songListViewModel: any SongListViewModel = SongListViewModelImpl(
         interactionService: InteractionService.swiftData,
         songService: SongSearchService.hybrid,
     )
