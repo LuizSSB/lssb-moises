@@ -11,7 +11,9 @@ struct SongRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            artworkView
+            ArtworkView(artworkURL: song.itemArtworkURL)
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.displayTitle)
@@ -25,30 +27,5 @@ struct SongRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 4)
-    }
-
-    @ViewBuilder
-    private var artworkView: some View {
-        if let url = song.itemArtworkURL {
-            AsyncImage(url: url) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                artworkPlaceholder
-            }
-            .frame(width: 48, height: 48)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-        } else {
-            artworkPlaceholder
-        }
-    }
-
-    private var artworkPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(Color(.systemGray5))
-            .frame(width: 48, height: 48)
-            .overlay {
-                Image(systemName: "music.note")
-                    .foregroundStyle(.secondary)
-            }
     }
 }

@@ -6,38 +6,45 @@
 //
 
 import SwiftUI
+import Kingfisher
 
-struct ArtworkView: View {
+struct ArtworkView<PlaceholderContent: View>: View {
     let artworkURL: URL?
+    @ViewBuilder let placeholderContent: () -> PlaceholderContent
     
     var body: some View {
-        Group {
-            if let url = artworkURL {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                } placeholder: {
-                    artworkPlaceholder
+        if false, let url = artworkURL {
+            KFImage.url(url)
+                .placeholder {
+                    placeholderContent()
                 }
-            } else {
-                artworkPlaceholder
-            }
+                .resizable()
+                .scaledToFit()
+        } else {
+            placeholderContent()
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 300)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(radius: 12, y: 6)
     }
-    
-    
-    private var artworkPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .fill(Color(.systemGray5))
-            .overlay {
-                Image(systemName: "music.note")
-                    .font(.system(size: 72))
-                    .foregroundStyle(.secondary)
-            }
+}
+
+struct ArtworkViewDefaultPlaceholderContent: View {
+    var body: some View {
+        GeometryReader { reader in
+            Rectangle()
+                .fill(Color(.systemGray5))
+                .overlay {
+                    Image(systemName: "music.note")
+                        .font(.system(size: reader.size.width * 0.25))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+        }
+    }
+}
+
+extension ArtworkView where PlaceholderContent == ArtworkViewDefaultPlaceholderContent {
+    init(artworkURL: URL?) {
+        self.init(artworkURL: artworkURL) {
+            ArtworkViewDefaultPlaceholderContent()
+        }
     }
 }

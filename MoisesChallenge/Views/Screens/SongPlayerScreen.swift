@@ -18,6 +18,9 @@ struct SongPlayerScreen: View {
             Spacer(minLength: 24)
             
             ArtworkView(artworkURL: viewModel.currentSong?.mainArtworkURL)
+                .frame(width: 300, height: 300)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 12, y: 6)
             
             Spacer(minLength: 24)
             

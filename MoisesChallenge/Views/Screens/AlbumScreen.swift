@@ -17,13 +17,8 @@ struct AlbumScreen: View {
             ScrollView {
                 VStack {
                     ArtworkView(artworkURL: album?.mainArtworkURL)
-                        .overlay {
-                            if case .running = viewModel.album {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(Color.black.opacity(0.125))
-                            }
-                        }
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     
                     Text(album?.displayTitle ?? "-")
                         .font(.system(size: 24))
