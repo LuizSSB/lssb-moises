@@ -7,6 +7,7 @@
 
 import Observation
 
+@MainActor
 @Observable
 class PresentationViewModelImpl<T>: PresentationViewModel {
     private(set) var presented: T?

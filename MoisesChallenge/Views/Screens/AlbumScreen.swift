@@ -54,6 +54,9 @@ struct AlbumScreen: View {
             .onAppear {
                 viewModel.onAppear()
             }
+            .onDisappear {
+                viewModel.onDisappear()
+            }
             .navigationDestination(presentationViewModel: viewModel.player) {
                 SongPlayerScreen(viewModel: $0, showsOptions: false)
             }

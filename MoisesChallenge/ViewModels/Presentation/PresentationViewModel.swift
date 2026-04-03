@@ -5,6 +5,7 @@
 //  Created by Luiz SSB on 03/04/26.
 //
 
+@MainActor
 protocol PresentationViewModel<Value>: AnyObject {
     associatedtype Value
     

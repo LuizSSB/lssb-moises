@@ -29,34 +29,36 @@ final class AlbumViewModelImpl: AlbumViewModel {
         guard case .none = album else { return }
         loadAlbum()
     }
+
+    func onDisappear() {
+        activeLoadTask?.cancel()
+        activeLoadTask = nil
+    }
     
     func loadAlbum() {
         guard !album.isRunning else { return }
         
-        album = .running
         activeLoadTask?.cancel()
+        album = .running
 
-        let albumId = albumId
-        let service = service
-
-        activeLoadTask = Task.detached {
+        activeLoadTask = Task { [weak self, albumId, service] in
             do {
                 let album = try await service.get(albumId)
 
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled,
+                      let self
+                else { return }
 
-                await MainActor.run {
-                    withAnimation {
-                        self.album = .success(album)
-                    }
+                withAnimation {
+                    self.album = .success(album)
                 }
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled,
+                      let self
+                else { return }
 
-                await MainActor.run {
-                    withAnimation {
-                        self.album = .failure(error.userFacingError)
-                    }
+                withAnimation {
+                    self.album = .failure(error.userFacingError)
                 }
             }
         }
@@ -65,7 +67,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
     func onSelect(song: Song) {
         guard case let .success(album) = album,
               let songs = album.songs,
-              let queue = PlaybackQueue(songs: songs, selectedSong: song)
+              let queue = StaticPlaybackQueue(items: songs, selectedItem: song)
         else { return }
         
         let viewModel = container.songPlayerViewModel(queue: queue)

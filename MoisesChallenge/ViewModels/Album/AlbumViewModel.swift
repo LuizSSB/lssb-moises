@@ -13,6 +13,7 @@ protocol AlbumViewModel: AnyObject, Observable, Sendable {
     var player: any PresentationViewModel<any SongPlayerViewModel> { get }
     
     func onAppear()
+    func onDisappear()
     func loadAlbum()
     func onSelect(song: Song)
 }
