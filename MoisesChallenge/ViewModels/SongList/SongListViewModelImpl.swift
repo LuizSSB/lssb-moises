@@ -17,6 +17,10 @@ final class SongListViewModelImpl: SongListViewModel {
     private(set) var currentQuery = ""
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
     
+    var currentList: any PaginatedListViewModel {
+        searchList ?? recentList
+    }
+    
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
     private(set) var album: any PresentationViewModel<any AlbumViewModel>
 

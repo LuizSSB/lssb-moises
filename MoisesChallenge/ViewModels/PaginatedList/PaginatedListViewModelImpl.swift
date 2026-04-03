@@ -25,6 +25,7 @@ final class PaginatedListViewModelImpl<
     var pageLoadedEvent = Event<Result<PageResult, Error>>()
     
     private var activeFetchTask: Task<Void, Never>?
+    private var lastFailedLoadMode: LoadMode?
     private let fetch: PageFetch
 
     init(fetch: @escaping PageFetch) {
@@ -54,6 +55,22 @@ final class PaginatedListViewModelImpl<
            didAlreadyHaveStuff {
            loadNextPage()
         }
+    }
+
+    func onInteractionWithError(shouldRetry: Bool) {
+        if !shouldRetry {
+            loadState = switch lastFailedLoadMode {
+            case nil, .firstPage: .idle
+            case .nextPage, .refresh: .loaded
+            }
+        }
+        
+        guard let lastFailedLoadMode else {
+            loadFirstPageIfNeeded()
+            return
+        }
+
+        load(mode: lastFailedLoadMode)
     }
 
     private enum LoadMode { case firstPage, nextPage, refresh }
@@ -99,6 +116,7 @@ final class PaginatedListViewModelImpl<
 
                         self.latestResult = result
                         self.loadState = self.items.isEmpty ? .empty : .loaded
+                        self.lastFailedLoadMode = nil
                     } completion: {
                         pageLoadedEvent.emitAndForget(.success(result))
                     }
@@ -110,7 +128,8 @@ final class PaginatedListViewModelImpl<
 
                 await MainActor.run {
                     withAnimation {
-                        self.loadState = .error(error.localizedDescription)
+                        self.lastFailedLoadMode = mode
+                        self.loadState = .error(error.userFacingError)
                     } completion: {
                         pageLoadedEvent.emitAndForget(.failure(error))
                     }
@@ -125,5 +144,6 @@ final class PaginatedListViewModelImpl<
         items = []
         latestResult = nil
         loadState = .idle
+        lastFailedLoadMode = nil
     }
 }

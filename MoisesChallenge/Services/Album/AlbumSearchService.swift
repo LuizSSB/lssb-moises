@@ -27,11 +27,12 @@ extension AlbumSearchService {
             
             switch result {
             case let .success(response):
-                // TODO: what happens if init fails?
-                let album = Album(fromResponse: response)!
+                guard let album = Album(fromResponse: response) else {
+                    throw InvalidDataError()
+                }
                 return album
             case let .failure(error):
-                throw error
+                throw parseAF(error: error)
             }
         }
     )

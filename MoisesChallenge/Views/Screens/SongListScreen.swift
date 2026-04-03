@@ -14,36 +14,20 @@ struct SongListScreen: View {
     
     var body: some View {
         SearchBarContentContainer {
-            let (items, loadState, hasMore, loadNextPage) = if let searchList = viewModel.searchList {
-                (
-                    searchList.items,
-                    searchList.loadState,
-                    searchList.latestResult?.hasMore ?? false,
-                    { searchList.loadNextPage() }
-                )
-            } else {
-                (
-                    viewModel.recentList.items,
-                    viewModel.recentList.loadState,
-                    viewModel.recentList.latestResult?.hasMore ?? false,
-                    { viewModel.recentList.loadNextPage() }
-                )
-            }
-            
+            let currentList = viewModel.currentList
             PaginatedListView(
-                items: items,
-                loadState: loadState,
-                hasMore: hasMore,
+                items: currentList.items as! [Song],
+                loadState: currentList.loadState,
+                hasMore: currentList.hasMore,
                 rowContent: songRow,
                 placeholderContent: placeholderContent,
-                loadNextPage: loadNextPage,
+                loadNextPage: {
+                    currentList.loadNextPage()
+                },
                 refresh: {
-                    if let searchList = viewModel.searchList {
-                        return { await searchList.refresh() }
-                    }
-                    
-                    return { await viewModel.recentList.refresh()}
-                }()
+                    await currentList.refresh()
+                },
+                onError: currentList.onInteractionWithError(shouldRetry:)
             )
         } onSearchStatusChanged: {
             viewModel.onSearchBar(focused: $0)
@@ -122,12 +106,16 @@ struct SongListScreen: View {
                 description: Text("Try the search bar above to look for your favorite artist or something")
             )
             
-        case let (.error(message), _):
-            ContentUnavailableView(
-                "Something went wrong",
-                systemImage: "exclamationmark.triangle",
-                description: Text(message)
-            )
+        case let (.error(error), _):
+            ContentUnavailableView {
+                Label(error.title, systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error.message)
+            } actions: {
+                Button("Try Again") {
+                    viewModel.currentList.onInteractionWithError(shouldRetry: true)
+                }
+            }
         }
     }
 }

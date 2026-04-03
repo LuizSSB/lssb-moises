@@ -63,5 +63,5 @@ enum PaginatedListLoadState: Equatable {
     case refreshing
     case loaded
     case empty
-    case error(String)
+    case error(UserFacingError)
 }

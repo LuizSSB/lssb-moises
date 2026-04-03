@@ -59,7 +59,7 @@ extension SongSearchService {
                     )
                 )
             case let .failure(error):
-                throw error
+                throw parseAF(error: error)
             }
         }
     )

@@ -10,7 +10,7 @@ import SwiftUI
 enum PaginatedListViewPlaceholderType {
     case idle,
          empty,
-         error(String)
+         error(UserFacingError)
 }
 
 struct PaginatedListView<
@@ -18,7 +18,6 @@ struct PaginatedListView<
     RowContent: View,
     PlaceholderContent: View
 >: View {
-    
     let items: [Item]
     let loadState: PaginatedListLoadState
     let hasMore: Bool
@@ -26,6 +25,7 @@ struct PaginatedListView<
     @ViewBuilder var placeholderContent: (PaginatedListViewPlaceholderType) -> PlaceholderContent
     var loadNextPage: () -> Void
     var refresh: @Sendable () async -> Void
+    var onError: (_ shouldRetry: Bool) -> Void
 
     var body: some View {
         switch loadState {
@@ -38,8 +38,8 @@ struct PaginatedListView<
         case .empty:
             placeholderContent(.empty)
 
-        case .error(let message):
-            placeholderContent(.error(message))
+        case .error(let error) where items.isEmpty:
+            placeholderContent(.error(error))
 
         default:
             if loadState == .idle {
@@ -65,6 +65,25 @@ struct PaginatedListView<
                 }
                 .listStyle(.plain)
                 .refreshable(action: refresh)
+                .alert(
+                    presenting: .constant({
+                        if case let .error(data) = loadState {
+                            return data
+                        }
+                        return nil
+                    }()),
+                    title: \.title,
+                    message: { Text($0.message) },
+                    actions: { _ in
+                        Button("Try Again") {
+                            onError(true)
+                        }
+                        
+                        Button("Dismiss", role: .cancel) {
+                            onError(false)
+                        }
+                    }
+                )
             }
         }
     }

@@ -15,6 +15,8 @@ protocol SongListViewModel: AnyObject, Observable, Sendable {
     var currentQuery: String { get }
     var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)? { get }
     
+    var currentList: any PaginatedListViewModel { get }
+    
     var player: any PresentationViewModel<any SongPlayerViewModel> { get }
     var album: any PresentationViewModel<any AlbumViewModel> { get }
     
