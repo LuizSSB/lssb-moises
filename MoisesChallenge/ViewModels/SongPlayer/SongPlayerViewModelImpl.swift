@@ -14,6 +14,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     private(set) var playbackState: PlaybackState = .idle
     private(set) var currentSong: Song?
+    private(set) var repeatMode: PlaybackRepeatMode = .none
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval?
@@ -25,6 +26,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     private var player: AVPlayer?
     private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
+    private var playbackEndObservation: Task<Void, Never>?
     private var queueWatchTask: Task<Void, Never>?
     private var lifetimeTasks = Set<Task<Void, Never>>()
     
@@ -59,17 +61,19 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
 
         let loadedMoreEvent = queue.loadedMoreEvent
         lifetimeTasks.insert(Task { [weak self] in
-            for await (direction, result) in await loadedMoreEvent.stream().stream {
+            for await (songBatchStartIndex, result) in await loadedMoreEvent.stream().stream {
                 guard let self else { return }
-                
-                guard direction != nil,
-                      case .failure = result
-                else { continue }
+                guard self.queue.currentIndex == songBatchStartIndex - 1 else { continue }
 
                 await MainActor.run {
-                    stopCurrentPlayback()
-                    withAnimation {
-                        playbackState = .paused
+                    switch result {
+                    case .success:
+                        self.handlePlaybackEnded()
+                    case .failure:
+                        self.stopCurrentPlayback()
+                        withAnimation {
+                            self.playbackState = .paused
+                        }
                     }
                 }
             }
@@ -112,6 +116,18 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         case .loading:
             break
         }
+    }
+    
+    func onToggleRepeatMode() {
+        let allModes = PlaybackRepeatMode.allCases
+        
+        guard let currentIndex = allModes.firstIndex(of: repeatMode) else {
+            repeatMode = .none
+            return
+        }
+        
+        let nextIndex = allModes.index(after: currentIndex)
+        repeatMode = nextIndex == allModes.endIndex ? allModes[0] : allModes[nextIndex]
     }
     
     func onSeek(to fraction: Double) {
@@ -164,6 +180,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         player = newPlayer
         
         observePlayerItem(item)
+        observePlaybackEnd(for: item)
         attachTimeObserver(to: newPlayer)
         
         newPlayer.play()
@@ -194,6 +211,8 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         }
         itemObservation?.cancel()
         itemObservation = nil
+        playbackEndObservation?.cancel()
+        playbackEndObservation = nil
         player = nil
     }
     
@@ -222,10 +241,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         duration = total
         elapsed = current
         progress = current / total
-        
-        if progress >= 1 && queue.has(.next) {
-            queue.move(to: .next)
-        }
     }
     
     // MARK: - Private: item status observation
@@ -255,8 +270,62 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
             }
         }
     }
+    
+    private func observePlaybackEnd(for item: AVPlayerItem) {
+        playbackEndObservation = Task { @MainActor [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: AVPlayerItem.didPlayToEndTimeNotification,
+                object: item
+            )
+            
+            for await _ in notifications {
+                guard let self else { return }
+                self.handlePlaybackEnded()
+            }
+        }
+    }
 
-    private func failCurrentSongLoad(with error: Error) {
+    private func handlePlaybackEnded() {
+        switch repeatMode {
+        case .none:
+            if queue.has(.next) {
+                queue.move(to: .next)
+            } else {
+                pause()
+                onSeek(to: 0)
+            }
+            
+        case .current:
+            restartCurrentSong()
+            
+        case .all:
+            if queue.has(.next) {
+                queue.move(to: .next)
+            } else if queue.currentIndex == 0 {
+                restartCurrentSong()
+            } else {
+                queue.currentIndex = 0
+            }
+        }
+    }
+
+    private func restartCurrentSong() {
+        guard let player else { return }
+        
+        player.seek(to: .zero) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                player.play()
+                withAnimation {
+                    self.playbackState = .playing
+                    self.elapsed = 0
+                    self.progress = 0
+                }
+            }
+        }
+    }
+
+    private func failCurrentSongLoad(with _: Error) {
         stopCurrentPlayback()
 
         if queue.has(.next) {

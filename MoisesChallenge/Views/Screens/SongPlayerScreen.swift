@@ -127,21 +127,37 @@ struct SongPlayerScreen: View {
     }
     
     private var controlsSection: some View {
-        HStack(spacing: 48) {
-            moveButton(direction: .previous)
-            
-            Button {
-                viewModel.onTogglePlayPause()
-            } label: {
-                playPauseLabel
-                    .font(.system(size: 48))
-                    .frame(width: 64, height: 64)
+        VStack(spacing: 16) {
+            HStack(spacing: 48) {
+                moveButton(direction: .previous)
+                
+                Button {
+                    viewModel.onTogglePlayPause()
+                } label: {
+                    playPauseLabel
+                        .font(.system(size: 48))
+                        .frame(width: 64, height: 64)
+                }
+                .disabled(viewModel.playbackState == .loading)
+                
+                moveButton(direction: .next)
             }
-            .disabled(viewModel.playbackState == .loading)
-            
-            moveButton(direction: .next)
+
+            Button {
+                viewModel.onToggleRepeatMode()
+            } label: {
+                Image(systemName: {
+                    switch viewModel.repeatMode {
+                    case .none, .all: return "repeat"
+                    case .current: return "repeat.1"
+                    }
+                }())
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(viewModel.repeatMode == .none ? .secondary : .primary)
+                    .frame(width: 44, height: 44)
+            }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .center)
     }
     
     @ViewBuilder

@@ -26,8 +26,19 @@ extension AlbumViewModelImpl {
         }
         
         var currentIndex: Int? {
-            guard let currentItem else { return nil }
-            return songs.firstIndex { $0.id == currentItem.id }
+            get {
+                guard let currentItem else { return nil }
+                return songs.firstIndex { $0.id == currentItem.id }
+            }
+            set {
+                guard let newValue else {
+                    currentItem = nil
+                    return
+                }
+                
+                guard newValue >= 0 && newValue < songs.endIndex && newValue != currentIndex else { return }
+                currentItem = songs[newValue]
+            }
         }
         
         let currentItemChangedEvent = Event<Song?>()
@@ -71,6 +82,11 @@ extension AlbumViewModelImpl {
                 
                 currentItem = songs[currentIndex + 1]
             }
+        }
+        
+        func moveToFirst() {
+            guard let firstSong = songs.first else { return }
+            currentItem = firstSong
         }
     }
 }

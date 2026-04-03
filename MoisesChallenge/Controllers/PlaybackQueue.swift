@@ -9,11 +9,10 @@
 protocol PlaybackQueue<Item>: AnyObject {
     associatedtype Item: Sendable
     
-    // nil direction means the loading was triggered by something other than the player.
-    typealias OnLoadedMoreArgument = (PlaybackQueueDirection?, Result<Void, Error>)
+    typealias OnLoadedMoreArgument = (songBatchStartIndex: Int, Result<Void, Error>)
     
     var currentItem: Item? { get }
-    var currentIndex: Int? { get }
+    var currentIndex: Int? { get set }
     
     var currentItemChangedEvent: Event<Item?> { get }
     var loadedMoreEvent: Event<OnLoadedMoreArgument> { get }

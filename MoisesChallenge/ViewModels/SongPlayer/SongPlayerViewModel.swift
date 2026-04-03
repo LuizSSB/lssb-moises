@@ -12,6 +12,7 @@ import Observation
 protocol SongPlayerViewModel: AnyObject, Observable, Sendable {
     var playbackState: PlaybackState { get }
     var currentSong: Song? { get }
+    var repeatMode: PlaybackRepeatMode { get }
     var progress: Double { get }
     var elapsed: TimeInterval { get }
     var duration: TimeInterval? { get } // nil until it's resolved it
@@ -23,6 +24,7 @@ protocol SongPlayerViewModel: AnyObject, Observable, Sendable {
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool
     func has(_ direction: PlaybackQueueDirection) -> Bool
     func onTogglePlayPause()
+    func onToggleRepeatMode()
     func onSeek(to fraction: Double)
     func onMove(to direction: PlaybackQueueDirection)
 }

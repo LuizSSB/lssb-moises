@@ -26,25 +26,20 @@ extension SongListViewModelImpl {
             pageLoadedHandlerTask = Task { [weak self] in
                 for await result in await event.stream().stream {
                     guard let self else { return }
-
-                    let pendingNextIndex = self.nextIndexBeingLoaded
-
+                    guard let nextIndexBeingLoaded = self.nextIndexBeingLoaded else { continue }
+                    self.nextIndexBeingLoaded = nil
+                    
                     switch result {
                     case .success:
-                        guard let nextIndexBeingLoaded = pendingNextIndex,
-                              self.currentIndex == nextIndexBeingLoaded - 1
-                        else { continue }
+                        guard self.currentIndex == nextIndexBeingLoaded - 1 else { continue }
 
-                        self.nextIndexBeingLoaded = nil
-                        self.loadedMoreEvent.emitAndForget((.next, .success(())))
+                        self.loadedMoreEvent.emitAndForget((nextIndexBeingLoaded, .success(())))
                         if nextIndexBeingLoaded < self.list.items.count {
                             self.currentItem = self.list.items[nextIndexBeingLoaded]
                         }
 
                     case .failure(let error):
-                        guard pendingNextIndex != nil else { continue }
-                        self.nextIndexBeingLoaded = nil
-                        self.loadedMoreEvent.emitAndForget((.next, .failure(error)))
+                        self.loadedMoreEvent.emitAndForget((nextIndexBeingLoaded, .failure(error)))
                     }
                 }
             }
@@ -63,8 +58,19 @@ extension SongListViewModelImpl {
         }
         
         var currentIndex: Int? {
-            guard let currentItemId = currentItem?.id else { return nil }
-            return list.items.firstIndex { $0.id == currentItemId }
+            get {
+                guard let currentItemId = currentItem?.id else { return nil }
+                return list.items.firstIndex { $0.id == currentItemId }
+            }
+            set {
+                guard let newValue else {
+                    currentItem = nil
+                    return
+                }
+                
+                guard newValue >= 0 && newValue < list.items.endIndex && newValue != currentIndex else { return }
+                currentItem = list.items[newValue]
+            }
         }
         
         var currentItemChangedEvent = Event<Song?>()

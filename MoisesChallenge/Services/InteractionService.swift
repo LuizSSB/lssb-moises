@@ -47,7 +47,7 @@ extension InteractionService {
                     entries: interactions,
                     pagination: .init(
                         offset: pagination.offset,
-                        limit: interactionsData.count
+                        limit: pagination.limit
                     )
                 )
             }

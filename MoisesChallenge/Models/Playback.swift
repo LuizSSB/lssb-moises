@@ -10,6 +10,12 @@ enum PlaybackQueueDirection {
          next
 }
 
+enum PlaybackRepeatMode: CaseIterable {
+    case none
+    case current
+    case all
+}
+
 enum PlaybackState: Equatable {
     case idle
     case loading
@@ -17,4 +23,3 @@ enum PlaybackState: Equatable {
     case paused
     case error(String)
 }
-

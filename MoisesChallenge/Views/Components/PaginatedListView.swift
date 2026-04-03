@@ -54,6 +54,7 @@ struct PaginatedListView<
                         Color.clear
                             .frame(height: 1)
                             .onAppear(perform: loadNextPage)
+                            .listRowSeparator(.hidden)
                     }
                     
                     if loadState == .loadingNextPage {
