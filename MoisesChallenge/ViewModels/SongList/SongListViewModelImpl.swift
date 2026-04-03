@@ -17,7 +17,7 @@ final class SongListViewModelImpl: SongListViewModel {
     private(set) var currentQuery = ""
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
     
-    private(set) var player: any PresentationViewModel<SongPlayerViewModel> = PresentationViewModelImpl()
+    private(set) var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl()
     private(set) var album: any PresentationViewModel<AlbumViewModel> = PresentationViewModelImpl()
 
     private var shouldRefreshRecent = true
@@ -95,7 +95,11 @@ final class SongListViewModelImpl: SongListViewModel {
         } else {
             SongPlayerQueue(list: recentList, selectedSong: song)
         }
-        player.present(.init(queue: queue, interactionService: .swiftData))
+        let viewModel: any SongPlayerViewModel = SongPlayerViewModelImpl(
+            queue: queue,
+            interactionService: .swiftData
+        )
+        player.present(viewModel)
     }
     
     func onSelectAlbum(of song: Song) {

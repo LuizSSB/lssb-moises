@@ -5,15 +5,10 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-enum SongQueuePlaybackDirection {
-    case previous,
-         next
-}
-
 @MainActor
 protocol SongPlayerQueue: AnyObject {
     // nil direction means the loading was triggered by something other than the player.
-    typealias OnLoadedMoreArgument = (SongQueuePlaybackDirection?, Result<Void, Error>)
+    typealias OnLoadedMoreArgument = (PlaybackQueueDirection?, Result<Void, Error>)
     
     var currentItem: Song? { get }
     var currentIndex: Int? { get }
@@ -21,7 +16,7 @@ protocol SongPlayerQueue: AnyObject {
     var currentItemChangedEvent: Event<Song?> { get }
     var loadedMoreEvent: Event<OnLoadedMoreArgument> { get }
     
-    func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool
-    func has(_ direction: SongQueuePlaybackDirection) -> Bool
-    func move(to direction: SongQueuePlaybackDirection)
+    func isLoading(_ direction: PlaybackQueueDirection) -> Bool
+    func has(_ direction: PlaybackQueueDirection) -> Bool
+    func move(to direction: PlaybackQueueDirection)
 }

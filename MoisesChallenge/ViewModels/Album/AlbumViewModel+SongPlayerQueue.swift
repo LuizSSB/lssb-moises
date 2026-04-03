@@ -34,18 +34,18 @@ extension AlbumViewModel {
         
         var loadedMoreEvent = Event<OnLoadedMoreArgument>()
         
-        func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool {
+        func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
             false
         }
         
-        func has(_ direction: SongQueuePlaybackDirection) -> Bool {
+        func has(_ direction: PlaybackQueueDirection) -> Bool {
             switch direction {
             case .previous: return (currentIndex ?? 0) > 0
             case .next: return (currentIndex ?? .max) < songs.count - 1
             }
         }
         
-        func move(to direction: SongQueuePlaybackDirection) {
+        func move(to direction: PlaybackQueueDirection) {
             switch direction {
             case .previous:
                 guard let currentIndex else {

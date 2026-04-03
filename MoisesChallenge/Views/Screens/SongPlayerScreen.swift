@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SongPlayerScreen: View {
-    @State var viewModel: SongPlayerViewModel
+    @State var viewModel: any SongPlayerViewModel
     var showsOptions = true
     
     @State private var actionSheetSong: Song?
@@ -106,7 +106,7 @@ struct SongPlayerScreen: View {
     
     // MARK: - Controls
     
-    private func moveButton(direction: SongQueuePlaybackDirection) -> some View {
+    private func moveButton(direction: PlaybackQueueDirection) -> some View {
         Button {
             viewModel.move(to: direction)
         } label: {
@@ -207,4 +207,3 @@ private struct SeekbarView: View {
         .frame(height: 32)
     }
 }
-

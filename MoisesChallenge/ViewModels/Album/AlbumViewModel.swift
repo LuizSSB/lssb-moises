@@ -11,7 +11,7 @@ import SwiftUI
 @Observable
 class AlbumViewModel {
     var album: ActionStatus<Album, String> = .none
-    private(set) var player: any PresentationViewModel<SongPlayerViewModel> = PresentationViewModelImpl()
+    private(set) var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl()
     
     private let albumId: String
     private let service: AlbumSearchService

@@ -60,11 +60,11 @@ extension SongListViewModelImpl {
         
         var loadedMoreEvent = Event<OnLoadedMoreArgument>()
         
-        func isLoading(_ direction: SongQueuePlaybackDirection) -> Bool {
+        func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
             direction == .next && nextIndexBeingLoaded != nil && list.items.last == currentItem
         }
         
-        func has(_ direction: SongQueuePlaybackDirection) -> Bool {
+        func has(_ direction: PlaybackQueueDirection) -> Bool {
             switch direction {
             case .previous:
                 guard let index = currentIndex else { return false }
@@ -81,7 +81,7 @@ extension SongListViewModelImpl {
             }
         }
         
-        func move(to direction: SongQueuePlaybackDirection) {
+        func move(to direction: PlaybackQueueDirection) {
             switch direction {
             case .previous:
                 guard let currentIndex,
