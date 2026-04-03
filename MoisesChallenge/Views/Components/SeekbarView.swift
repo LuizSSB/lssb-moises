@@ -14,43 +14,72 @@ struct SeekbarView: View {
     @State private var isDragging = false
     @State private var dragProgress: Double = 0
     
+    private let trackHeight: CGFloat = 8
+    private let thumbSize: CGFloat = 24
+    private let touchHeight: CGFloat = 36
+    
     private var displayProgress: Double {
         isDragging ? dragProgress : progress
     }
     
     var body: some View {
         GeometryReader { geo in
+            let width = max(geo.size.width, 1)
+            let thumbRadius = thumbSize / 2
+            let trackWidth = max(width - thumbSize, 1)
+            let clampedProgress = displayProgress.clamped(to: 0...1)
+            let thumbCenterX = thumbRadius + (trackWidth * clampedProgress)
+            
             ZStack(alignment: .leading) {
+                // Complete bar
                 Capsule()
-                    .fill(Color(.systemGray4))
-                    .frame(height: 4)
-                
+                    .fill(Color.seekbar.opacity(0.25))
+                    .padding(.horizontal, thumbRadius)
+                    .frame(height: trackHeight)
+
+                // Filled bar
                 Capsule()
-                    .fill(Color.primary)
-                    .frame(width: max(0, geo.size.width * displayProgress), height: 4)
+                    .fill(Color.seekbar.opacity(0.6))
+                    .frame(width: thumbCenterX, height: trackHeight)
                 
-                // Invisible wide drag target
-                Color.clear
-                    .contentShape(Rectangle())
-                    .frame(height: 32)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                isDragging = true
-                                dragProgress = (value.location.x / geo.size.width)
-                                    .clamped(to: 0...1)
-                            }
-                            .onEnded { value in
-                                let fraction = (value.location.x / geo.size.width)
-                                    .clamped(to: 0...1)
-                                onSeek(fraction)
-                                isDragging = false
-                            }
-                    )
+                // Thumb
+                Circle()
+                    .fill(Color.seekbarThumb)
+                    .frame(width: thumbSize, height: thumbSize)
+                    .position(x: thumbCenterX, y: touchHeight / 2)
             }
-            .frame(height: 32)
-            .alignmentGuide(.top) { _ in 0 }
+            .frame(height: touchHeight)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        isDragging = true
+                        dragProgress = ((value.location.x - thumbRadius) / trackWidth)
+                            .clamped(to: 0...1)
+                    }
+                    .onEnded { value in
+                        let fraction = ((value.location.x - thumbRadius) / trackWidth)
+                            .clamped(to: 0...1)
+                        onSeek(fraction)
+                        isDragging = false
+                    }
+            )
+            .animation(.easeOut(duration: 0.12), value: clampedProgress)
+            .accessibilityElement()
+            .accessibilityLabel("Playback position")
+            .accessibilityValue(Text("\(Int(clampedProgress * 100)) percent"))
+            .accessibilityAdjustableAction { direction in
+                let step = 0.05
+                switch direction {
+                case .increment:
+                    onSeek((displayProgress + step).clamped(to: 0...1))
+                case .decrement:
+                    onSeek((displayProgress - step).clamped(to: 0...1))
+                @unknown default:
+                    break
+                }
+            }
         }
-        .frame(height: 32)
+        .frame(height: touchHeight)
     }
 }

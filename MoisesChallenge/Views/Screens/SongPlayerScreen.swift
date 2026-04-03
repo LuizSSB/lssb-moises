@@ -99,7 +99,7 @@ struct SongPlayerScreen: View {
     }
     
     private var seekbarSection: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             SeekbarView(progress: viewModel.progress) { fraction in
                 viewModel.onSeek(to: fraction)
             }
@@ -107,11 +107,17 @@ struct SongPlayerScreen: View {
             HStack {
                 Text(viewModel.elapsed.formattedDuration)
                 Spacer()
-                Text(viewModel.duration.map { $0.formattedDuration } ?? "--:--")
+                Text(remainingDurationText)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary.opacity(0.9))
         }
+    }
+    
+    private var remainingDurationText: String {
+        guard let duration = viewModel.duration else { return "--:--" }
+        let remaining = max(duration - viewModel.elapsed, 0)
+        return "-\(remaining.formattedDuration)"
     }
     
     // MARK: - Controls
