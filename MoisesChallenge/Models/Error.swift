@@ -32,31 +32,31 @@ extension Error {
         if isNoInternetConnectionError {
             return .init(
                 kind: .noInternetConnection,
-                title: "No internet connection",
-                message: "Please check your connection and try again."
+                title: String(localized: .errorNoInternetTitle),
+                message: String(localized: .errorNoInternetMessage)
             )
         }
         
         if self is NotFoundError {
             return .init(
                 kind: .notFound,
-                title: "Item not found",
-                message: "We couldn't find what you were looking for. Please try again."
+                title: String(localized: .errorNotFoundTitle),
+                message: String(localized: .errorNotFoundMessage)
             )
         }
         
         if self is InvalidDataError {
             return .init(
                 kind: .invalidData,
-                title: "Invalid data",
-                message: "Remote data couldn't be parsed. Please try again later."
+                title: String(localized: .errorInvalidDataTitle),
+                message: String(localized: .errorInvalidDataMessage)
             )
         }
 
         return .init(
             kind: .generic,
-            title: "Something went wrong",
-            message: "Please try again. If the problem continues, cancel and try later."
+            title: String(localized: .errorGenericTitle),
+            message: String(localized: .errorGenericMessage)
         )
     }
 

@@ -16,7 +16,7 @@ enum SongAction: CaseIterable, Identifiable {
     
     var label: String {
         switch self {
-        case .viewAlbum: return "View album"
+        case .viewAlbum: return String(localized: .songActionsViewAlbum)
         }
     }
     

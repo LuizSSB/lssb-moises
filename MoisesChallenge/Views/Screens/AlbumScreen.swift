@@ -61,7 +61,7 @@ struct AlbumScreen: View {
             } description: {
                 Text(error.message)
             } actions: {
-                Button("Try Again") {
+                Button(String(localized: .commonTryAgain)) {
                     viewModel.loadAlbum()
                 }
             }

@@ -5,7 +5,7 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-private let defaultTitleAlbum = "Unknown title"
+private let defaultTitleAlbum = String(localized: .commonUnknownTitle)
 
 struct Album: Identifiable, Codable, Hashable, ArtistBearer, ArtworkBearer {
     let id: String

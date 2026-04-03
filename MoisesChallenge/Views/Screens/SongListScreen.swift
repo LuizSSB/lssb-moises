@@ -32,7 +32,7 @@ struct SongListScreen: View {
         } onSearchStatusChanged: {
             viewModel.onSearchBar(focused: $0)
         }
-        .navigationTitle("Songs")
+        .navigationTitle(String(localized: .songsNavigationTitle))
         .searchable(
             text: $viewModel.searchText,
             placement: .navigationBarDrawer(displayMode: .always)
@@ -91,22 +91,22 @@ struct SongListScreen: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(.secondary)
-                Text("Search on iTunes")
+                Text(String(localized: .songsPlaceholderSearch))
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }
             
         case (.empty, .some):
             ContentUnavailableView(
-                "No results found for '\(viewModel.currentQuery)'",
+                String(localized: .songsEmptySearchResults(viewModel.currentQuery)),
                 systemImage: "music.note.list"
             )
             
         case (.empty, nil):
             ContentUnavailableView(
-                "No recently played songs",
+                String(localized: .songsEmptyRecentTitle),
                 systemImage: "music.note.list",
-                description: Text("Try the search bar above to look for your favorite artist or something")
+                description: Text(String(localized: .songsEmptyRecentDescription))
             )
             
         case let (.error(error), _):
@@ -115,7 +115,7 @@ struct SongListScreen: View {
             } description: {
                 Text(error.message)
             } actions: {
-                Button("Try Again") {
+                Button(String(localized: .commonTryAgain)) {
                     viewModel.currentList.onInteractionWithError(shouldRetry: true)
                 }
             }

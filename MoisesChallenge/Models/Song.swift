@@ -22,6 +22,6 @@ struct Song: Identifiable, Codable, Hashable, Sendable, ArtistBearer, AlbumBeare
     }
     
     var displayTitle: String {
-        title ?? "Unknown title"
+        title ?? String(localized: .commonUnknownTitle)
     }
 }

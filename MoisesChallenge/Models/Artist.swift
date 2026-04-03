@@ -5,7 +5,7 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-private let defaultArtistName = "Unknown Artist"
+private let defaultArtistName = String(localized: .commonUnknownArtist)
 
 struct Artist: Codable, Hashable {
     let id: String

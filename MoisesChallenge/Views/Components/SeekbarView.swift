@@ -66,8 +66,8 @@ struct SeekbarView: View {
             )
             .animation(.easeOut(duration: 0.12), value: clampedProgress)
             .accessibilityElement()
-            .accessibilityLabel("Playback position")
-            .accessibilityValue(Text("\(Int(clampedProgress * 100)) percent"))
+            .accessibilityLabel(String(localized: .playerSeekbarAccessibilityLabel))
+            .accessibilityValue(Text(String(localized: .playerSeekbarAccessibilityValue(Int(clampedProgress * 100)))))
             .accessibilityAdjustableAction { direction in
                 let step = 0.05
                 switch direction {

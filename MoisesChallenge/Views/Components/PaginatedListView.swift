@@ -97,11 +97,11 @@ struct PaginatedListView<
                         title: \.title,
                         message: { Text($0.message) },
                         actions: { _ in
-                            Button("Try Again") {
+                            Button(String(localized: .commonTryAgain)) {
                                 onError(true)
                             }
                             
-                            Button("Dismiss", role: .cancel) {
+                            Button(String(localized: .commonDismiss), role: .cancel) {
                                 onError(false)
                             }
                         }
