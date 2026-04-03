@@ -25,7 +25,7 @@ final class SongListViewModelImpl: SongListViewModel {
     private(set) var album: any PresentationViewModel<any AlbumViewModel>
 
     private var shouldRefreshRecent = true
-    private var recentSongsUpdatedTask: Task<Void, Never>?
+    private var recentSongsUpdatedTask: Task<Void, Never>? // Haven't found a way to properly dispose of it :/
 
     private let songService: SongSearchService
     private let container: any IoCContainer
@@ -123,7 +123,7 @@ final class SongListViewModelImpl: SongListViewModel {
         try await songService.search(
             page
             ?? .first(
-                params: .init(searchTerm: searchText),
+                params: .init(searchTerm: currentQuery),
                 limit: defaultSizePage
             )
         )
