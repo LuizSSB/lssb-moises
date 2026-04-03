@@ -8,10 +8,12 @@
 import SwiftUI
 
 @Observable
-class AlbumViewModelImpl: AlbumViewModel {
+final class AlbumViewModelImpl: AlbumViewModel {
     var album: ActionStatus<Album, String> = .none
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
     
+    private var activeLoadTask: Task<Void, Never>?
+
     private let albumId: String
     private let service: AlbumSearchService
     private let container: any IoCContainer
@@ -32,16 +34,29 @@ class AlbumViewModelImpl: AlbumViewModel {
         guard !album.isRunning else { return }
         
         album = .running
-        
-        Task {
+        activeLoadTask?.cancel()
+
+        let albumId = albumId
+        let service = service
+
+        activeLoadTask = Task.detached {
             do {
                 let album = try await service.get(albumId)
-                withAnimation {
-                    self.album = .success(album)
+
+                guard !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    withAnimation {
+                        self.album = .success(album)
+                    }
                 }
             } catch {
-                withAnimation {
-                    album = .failure(error.localizedDescription)
+                guard !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    withAnimation {
+                        self.album = .failure(error.localizedDescription)
+                    }
                 }
             }
         }
