@@ -17,7 +17,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval?
-    private(set) var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl()
+    private(set) var album: any PresentationViewModel<any AlbumViewModel>
     
     // MARK: - Private state
     
@@ -29,12 +29,19 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     private var lifetimeTasks = Set<Task<Void, Never>>()
     
     private let interactionService: InteractionService
+    private let container: any IoCContainer
     
     // MARK: - Lifecycle
     
-    init(queue: any PlaybackQueue<Song>, interactionService: InteractionService) {
+    init(
+        queue: any PlaybackQueue<Song>,
+        interactionService: InteractionService,
+        container: any IoCContainer
+    ) {
         self.queue = queue
         self.interactionService = interactionService
+        self.container = container
+        self.album = container.presentationViewModel()
     }
     
     func onAppear() {
@@ -73,7 +80,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     // MARK: - Extra
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        let viewModel: any AlbumViewModel = AlbumViewModelImpl(albumId: albumId, service: .iTunes)
+        let viewModel = container.albumViewModel(albumId: albumId)
         album.present(viewModel)
     }
     

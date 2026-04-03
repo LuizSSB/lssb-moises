@@ -10,10 +10,13 @@ import SwiftData
 
 @main
 struct MoisesChallengeApp: App {
-    @State private var songListViewModel: any SongListViewModel = SongListViewModelImpl(
-        interactionService: InteractionService.swiftData,
-        songService: SongSearchService.hybrid,
-    )
+    private let container = LiveIoCContainer()
+    @State private var songListViewModel: any SongListViewModel
+
+    init() {
+        let container = LiveIoCContainer()
+        self._songListViewModel = State(initialValue: container.songListViewModel())
+    }
 
     var body: some Scene {
         WindowGroup {

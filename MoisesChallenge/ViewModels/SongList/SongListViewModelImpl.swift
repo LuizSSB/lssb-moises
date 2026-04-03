@@ -17,17 +17,25 @@ final class SongListViewModelImpl: SongListViewModel {
     private(set) var currentQuery = ""
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
     
-    private(set) var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl()
-    private(set) var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl()
+    private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
+    private(set) var album: any PresentationViewModel<any AlbumViewModel>
 
     private var shouldRefreshRecent = true
     private var recentSongsUpdatedTask: Task<Void, Never>?
 
     private let songService: SongSearchService
+    private let container: any IoCContainer
 
-    init(interactionService: InteractionService, songService: SongSearchService) {
+    init(
+        interactionService: InteractionService,
+        songService: SongSearchService,
+        container: any IoCContainer
+    ) {
+        self.container = container
         self.songService = songService
-        self.recentList = PaginatedListViewModelImpl(
+        self.player = container.presentationViewModel()
+        self.album = container.presentationViewModel()
+        self.recentList = container.paginatedListViewModel(
             fetch: {
                 let page = try await interactionService.listPlayedSongs($0 ?? .first(limit: defaultSizePage))
                 return .init(
@@ -66,7 +74,7 @@ final class SongListViewModelImpl: SongListViewModel {
     func onSearchBar(focused: Bool) {
         if focused {
             guard searchList == nil else { return }
-            searchList = PaginatedListViewModelImpl(fetch: fetchSearch)
+            searchList = container.paginatedListViewModel(fetch: fetchSearch)
         } else {
             guard searchList != nil else { return }
             searchList = nil
@@ -95,16 +103,13 @@ final class SongListViewModelImpl: SongListViewModel {
         } else {
             PlaybackQueue(list: recentList, selectedSong: song)
         }
-        let viewModel: any SongPlayerViewModel = SongPlayerViewModelImpl(
-            queue: queue,
-            interactionService: .swiftData
-        )
+        let viewModel = container.songPlayerViewModel(queue: queue)
         player.present(viewModel)
     }
     
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        let viewModel: any AlbumViewModel = AlbumViewModelImpl(albumId: albumId, service: .iTunes)
+        let viewModel = container.albumViewModel(albumId: albumId)
         album.present(viewModel)
     }
     

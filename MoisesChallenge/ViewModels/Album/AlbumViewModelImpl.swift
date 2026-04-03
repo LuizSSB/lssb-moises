@@ -10,14 +10,17 @@ import SwiftUI
 @Observable
 class AlbumViewModelImpl: AlbumViewModel {
     var album: ActionStatus<Album, String> = .none
-    private(set) var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl()
+    private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
     
     private let albumId: String
     private let service: AlbumSearchService
+    private let container: any IoCContainer
     
-    init(albumId: String, service: AlbumSearchService) {
+    init(albumId: String, service: AlbumSearchService, container: any IoCContainer) {
         self.albumId = albumId
         self.service = service
+        self.container = container
+        self.player = container.presentationViewModel()
     }
     
     func onAppear() {
@@ -50,10 +53,7 @@ class AlbumViewModelImpl: AlbumViewModel {
               let queue = PlaybackQueue(songs: songs, selectedSong: song)
         else { return }
         
-        let viewModel: any SongPlayerViewModel = SongPlayerViewModelImpl(
-            queue: queue,
-            interactionService: .swiftData
-        )
+        let viewModel = container.songPlayerViewModel(queue: queue)
         player.present(viewModel)
     }
 }
