@@ -1,19 +1,21 @@
 //
-//  SongPlayerQueue.swift
+//  PlaybackQueue.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 01/04/26.
 //
 
 @MainActor
-protocol SongPlayerQueue: AnyObject {
+protocol PlaybackQueue<Item>: AnyObject {
+    associatedtype Item: Sendable
+    
     // nil direction means the loading was triggered by something other than the player.
     typealias OnLoadedMoreArgument = (PlaybackQueueDirection?, Result<Void, Error>)
     
-    var currentItem: Song? { get }
+    var currentItem: Item? { get }
     var currentIndex: Int? { get }
     
-    var currentItemChangedEvent: Event<Song?> { get }
+    var currentItemChangedEvent: Event<Item?> { get }
     var loadedMoreEvent: Event<OnLoadedMoreArgument> { get }
     
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool

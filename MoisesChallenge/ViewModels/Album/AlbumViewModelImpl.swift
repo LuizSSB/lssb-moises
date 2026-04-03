@@ -47,9 +47,13 @@ class AlbumViewModelImpl: AlbumViewModel {
     func onSelect(song: Song) {
         guard case let .success(album) = album,
               let songs = album.songs,
-              let queue = SongPlayerQueue(songs: songs, selectedSong: song)
+              let queue = PlaybackQueue(songs: songs, selectedSong: song)
         else { return }
         
-        player.present(SongPlayerViewModelImpl(queue: queue, interactionService: .swiftData))
+        let viewModel: any SongPlayerViewModel = SongPlayerViewModelImpl(
+            queue: queue,
+            interactionService: .swiftData
+        )
+        player.present(viewModel)
     }
 }

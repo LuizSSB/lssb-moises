@@ -1,12 +1,12 @@
 //
-//  AlbumViewModel+SongPlayerQueue.swift
+//  AlbumViewModel+PlaybackQueue.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 01/04/26.
 //
 
 extension AlbumViewModelImpl {
-    class SongPlayerQueue: MoisesChallenge.SongPlayerQueue {
+    class PlaybackQueue: MoisesChallenge.PlaybackQueue {
         let songs: [Song]
         
         init?(songs: [Song], selectedSong: Song) {

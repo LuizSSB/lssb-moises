@@ -1,5 +1,5 @@
 //
-//  SongListViewModel+SongPlayerQueue.swift
+//  SongListViewModel+PlaybackQueue.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 01/04/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension SongListViewModelImpl {
-    class SongPlayerQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.SongPlayerQueue {        
+    class PlaybackQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.PlaybackQueue {
         private var nextIndexBeingLoaded: Int?
         private var pageLoadedHandlerTask: Task<Void, Never>?
         

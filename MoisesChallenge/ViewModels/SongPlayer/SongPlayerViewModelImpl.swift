@@ -21,7 +21,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     // MARK: - Private state
     
-    private let queue: any SongPlayerQueue
+    private let queue: any PlaybackQueue<Song>
     private var player: AVPlayer?
     private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
@@ -32,7 +32,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     // MARK: - Lifecycle
     
-    init(queue: any SongPlayerQueue, interactionService: InteractionService) {
+    init(queue: any PlaybackQueue<Song>, interactionService: InteractionService) {
         self.queue = queue
         self.interactionService = interactionService
     }
