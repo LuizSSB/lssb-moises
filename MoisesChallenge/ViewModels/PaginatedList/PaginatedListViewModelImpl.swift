@@ -63,6 +63,7 @@ final class PaginatedListViewModelImpl<
             case nil, .firstPage: .idle
             case .nextPage, .refresh: .loaded
             }
+            return
         }
         
         guard let lastFailedLoadMode else {
@@ -99,11 +100,13 @@ final class PaginatedListViewModelImpl<
         let currentFetch = fetch
         let pageLoadedEvent = pageLoadedEvent
 
-        activeFetchTask = Task.detached { [mode] in
+        activeFetchTask = Task { [weak self, mode] in
             do {
                 let result = try await currentFetch(fetchConfig.pageToFetch)
 
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled,
+                      let self
+                else { return }
 
                 await MainActor.run {
                     withAnimation {
@@ -124,7 +127,9 @@ final class PaginatedListViewModelImpl<
             } catch is CancellationError {
                 // Ignore cancelled task
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled,
+                      let self
+                else { return }
 
                 await MainActor.run {
                     withAnimation {

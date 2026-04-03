@@ -23,7 +23,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     private let queue: any PlaybackQueue<Song>
     private let playbackController: any SongPlaybackController
-    private var queueWatchTask: Task<Void, Never>?
     private var lifetimeTasks = Set<Task<Void, Never>>()
     
     private let interactionService: InteractionService
@@ -56,27 +55,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
                 self.syncWithQueue()
             }
         })
-
-        let loadedMoreEvent = queue.loadedMoreEvent
-        lifetimeTasks.insert(Task { [weak self] in
-            for await (songBatchStartIndex, result) in await loadedMoreEvent.stream().stream {
-                guard let self else { return }
-                guard self.queue.currentIndex == songBatchStartIndex - 1 else { continue }
-
-                await MainActor.run {
-                    switch result {
-                    case .success:
-                        guard self.repeatMode != .current else { return }
-                        self.handlePlaybackEnded()
-                    case .failure:
-                        self.stopCurrentPlayback()
-                        withAnimation {
-                            self.playbackState = .paused
-                        }
-                    }
-                }
-            }
-        })
         
         let playbackEvent = playbackController.event
         lifetimeTasks.insert(Task { [weak self] in
@@ -91,8 +69,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     
     func onDisappear() {
         pause()
-        queueWatchTask?.cancel()
-        queueWatchTask = nil
         for task in lifetimeTasks {
             task.cancel()
         }
@@ -144,7 +120,18 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     }
     
     func onMove(to direction: PlaybackQueueDirection) {
-        queue.move(to: direction)
+        Task { [weak self] in
+            do {
+                try await self?.queue.move(to: direction)
+            } catch {
+                guard let self else { return }
+                guard direction == .next else { return }
+                self.stopCurrentPlayback()
+                withAnimation {
+                    self.playbackState = .paused
+                }
+            }
+        }
     }
     
     // MARK: - Private: queue observation
@@ -229,7 +216,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         switch repeatMode {
         case .none:
             if queue.has(.next) {
-                queue.move(to: .next)
+                onMove(to: .next)
             } else {
                 pause()
                 onSeek(to: 0)
@@ -240,7 +227,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
             
         case .all:
             if queue.has(.next) {
-                queue.move(to: .next)
+                onMove(to: .next)
             } else if queue.currentIndex == 0 {
                 restartCurrentSong()
             } else {
@@ -262,7 +249,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         stopCurrentPlayback()
 
         if queue.has(.next) {
-            queue.move(to: .next)
+            onMove(to: .next)
             return
         }
 

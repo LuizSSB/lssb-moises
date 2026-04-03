@@ -42,8 +42,6 @@ class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
     
     let currentItemChangedEvent = Event<Item?>()
     
-    var loadedMoreEvent = Event<OnLoadedMoreArgument>()
-    
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
         false
     }
@@ -55,7 +53,7 @@ class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
         }
     }
     
-    func move(to direction: PlaybackQueueDirection) {
+    func move(to direction: PlaybackQueueDirection) async throws {
         switch direction {
         case .previous:
             guard let currentIndex else {

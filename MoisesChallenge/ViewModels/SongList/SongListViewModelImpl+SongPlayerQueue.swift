@@ -10,43 +10,12 @@ import SwiftUI
 extension SongListViewModelImpl {
     class PlaybackQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.PlaybackQueue {
         private var nextIndexBeingLoaded: Int?
-        private var pageLoadedHandlerTask: Task<Void, Never>?
         
         private let list: any PaginatedListViewModel<Song, PaginationParams>
         
         init(list: any PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
             self.list = list
             self.currentItem = selectedSong
-        }
-        
-        private func preparePageLoadedHandler() {
-            guard pageLoadedHandlerTask == nil else { return }
-            
-            let event = list.pageLoadedEvent
-            pageLoadedHandlerTask = Task { [weak self] in
-                for await result in await event.stream().stream {
-                    guard let self else { return }
-                    guard let nextIndexBeingLoaded = self.nextIndexBeingLoaded else { continue }
-                    self.nextIndexBeingLoaded = nil
-                    
-                    switch result {
-                    case .success:
-                        guard self.currentIndex == nextIndexBeingLoaded - 1 else { continue }
-
-                        self.loadedMoreEvent.emitAndForget((nextIndexBeingLoaded, .success(())))
-                        if nextIndexBeingLoaded < self.list.items.count {
-                            self.currentItem = self.list.items[nextIndexBeingLoaded]
-                        }
-
-                    case .failure(let error):
-                        self.loadedMoreEvent.emitAndForget((nextIndexBeingLoaded, .failure(error)))
-                    }
-                }
-            }
-        }
-        
-        deinit {
-            pageLoadedHandlerTask?.cancel()
         }
         
         // MARK: - PlayerQueue conformance
@@ -75,8 +44,6 @@ extension SongListViewModelImpl {
         
         var currentItemChangedEvent = Event<Song?>()
         
-        var loadedMoreEvent = Event<OnLoadedMoreArgument>()
-        
         func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
             direction == .next && nextIndexBeingLoaded != nil && list.items.last == currentItem
         }
@@ -98,7 +65,7 @@ extension SongListViewModelImpl {
             }
         }
         
-        func move(to direction: PlaybackQueueDirection) {
+        func move(to direction: PlaybackQueueDirection) async throws {
             switch direction {
             case .previous:
                 guard let currentIndex,
@@ -114,10 +81,31 @@ extension SongListViewModelImpl {
                 if nextIndex < list.items.count {
                     currentItem = list.items[nextIndex]
                 } else if list.latestResult?.hasMore == true {
-                    preparePageLoadedHandler()
-                    nextIndexBeingLoaded = nextIndex
-                    list.loadNextPage()
+                    try await loadAndMoveToNext(at: nextIndex)
                 }
+            }
+        }
+        
+        private func loadAndMoveToNext(at index: Int) async throws {
+            guard nextIndexBeingLoaded == nil else { return }
+            
+            let streamData = await list.pageLoadedEvent.stream()
+            nextIndexBeingLoaded = index
+            list.loadNextPage()
+            
+            defer {
+                nextIndexBeingLoaded = nil
+            }
+            
+            var iterator = streamData.stream.makeAsyncIterator()
+            guard let result = await iterator.next() else { return }
+            
+            switch result {
+            case .success:
+                guard index < list.items.count else { return }
+                currentItem = list.items[index]
+            case .failure(let error):
+                throw error
             }
         }
     }
