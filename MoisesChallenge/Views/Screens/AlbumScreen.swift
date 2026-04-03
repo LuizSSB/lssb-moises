@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AlbumScreen: View {
-    @State var viewModel: AlbumViewModel
+    @State var viewModel: any AlbumViewModel
     
     var body: some View {
         switch viewModel.album {

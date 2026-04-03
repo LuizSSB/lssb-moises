@@ -8,7 +8,6 @@
 import AVFoundation
 import SwiftUI
 
-@MainActor
 @Observable
 final class SongPlayerViewModelImpl: SongPlayerViewModel {
     // MARK: - Public state
@@ -18,7 +17,7 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval?
-    private(set) var album: any PresentationViewModel<AlbumViewModel> = PresentationViewModelImpl()
+    private(set) var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl()
     
     // MARK: - Private state
     
@@ -74,7 +73,8 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
     // MARK: - Extra
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        album.present(.init(albumId: albumId, service: .iTunes))
+        let viewModel: any AlbumViewModel = AlbumViewModelImpl(albumId: albumId, service: .iTunes)
+        album.present(viewModel)
     }
     
     // MARK: - Controls

@@ -16,7 +16,7 @@ protocol SongListViewModel: AnyObject, Observable, Sendable {
     var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)? { get }
     
     var player: any PresentationViewModel<any SongPlayerViewModel> { get }
-    var album: any PresentationViewModel<AlbumViewModel> { get }
+    var album: any PresentationViewModel<any AlbumViewModel> { get }
     
     func onAppear()
     func onSearchBar(focused: Bool)

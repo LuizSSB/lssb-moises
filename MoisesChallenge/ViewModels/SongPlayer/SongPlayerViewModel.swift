@@ -15,7 +15,7 @@ protocol SongPlayerViewModel: AnyObject, Observable, Sendable {
     var progress: Double { get }
     var elapsed: TimeInterval { get }
     var duration: TimeInterval? { get } // nil until it's resolved it
-    var album: any PresentationViewModel<AlbumViewModel> { get }
+    var album: any PresentationViewModel<any AlbumViewModel> { get }
     
     func onAppear()
     func onDisappear()

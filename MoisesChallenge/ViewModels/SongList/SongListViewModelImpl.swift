@@ -18,7 +18,7 @@ final class SongListViewModelImpl: SongListViewModel {
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
     
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl()
-    private(set) var album: any PresentationViewModel<AlbumViewModel> = PresentationViewModelImpl()
+    private(set) var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl()
 
     private var shouldRefreshRecent = true
     private var recentSongsUpdatedTask: Task<Void, Never>?
@@ -104,7 +104,8 @@ final class SongListViewModelImpl: SongListViewModel {
     
     func onSelectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        album.present(.init(albumId: albumId, service: .iTunes))
+        let viewModel: any AlbumViewModel = AlbumViewModelImpl(albumId: albumId, service: .iTunes)
+        album.present(viewModel)
     }
     
     private func fetchSearch(
