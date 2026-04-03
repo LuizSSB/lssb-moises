@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Song: Identifiable, Codable, Hashable, ArtistBearer, AlbumBearer, ArtworkBearer {
+struct Song: Identifiable, Codable, Hashable, Sendable, ArtistBearer, AlbumBearer, ArtworkBearer {
     let id: String
     var title: String?
     var artist: Artist?

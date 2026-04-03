@@ -9,15 +9,7 @@ import FactoryKit
 import Alamofire
 
 struct SongSearchService {
-    struct SearchParams: Equatable, Hashable, Sendable {
-        let searchTerm: String
-        fileprivate var allResults: [Song]?
-    }
-    
-    typealias SearchPagination = Pagination<SearchParams>
-    typealias SearchPage = Self.SearchPagination.Page<Song>
-    
-    var search: @Sendable (SearchPagination) async throws -> SearchPage
+    var search: @Sendable (SongSearchPagination) async throws -> SongSearchPage
 }
 
 extension SongSearchService {
@@ -73,10 +65,3 @@ extension SongSearchService {
         }
     )
 }
-
-extension SongSearchService.SearchParams {
-    init(searchTerm: String) {
-        self.init(searchTerm: searchTerm, allResults: nil)
-    }
-}
-

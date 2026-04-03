@@ -12,9 +12,8 @@ let swiftDataConfig = (
     appModelContainer: {
         let schema = Schema([
             SongInteractionSwiftData.self,
-            CachedSongSearchSwiftData.self,
             CachedAlbumSwiftData.self,
-            
+            CachedSongSearchPageSwiftData.self
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

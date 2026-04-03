@@ -17,7 +17,7 @@ final class SongListViewModel {
     
     var searchText = ""
     private(set) var currentQuery = ""
-    private(set) var searchList: PaginatedListViewModel<Song, SongSearchService.SearchParams>?
+    private(set) var searchList: PaginatedListViewModel<Song, SongSearchParams>?
     
     private(set) var player = PresentationViewModel<SongPlayerViewModel>()
     private(set) var album = PresentationViewModel<AlbumViewModel>()
@@ -106,8 +106,8 @@ final class SongListViewModel {
     }
     
     private func fetchSearch(
-        page: Pagination<SongSearchService.SearchParams>?
-    ) async throws -> Pagination<SongSearchService.SearchParams>.Page<Song> {
+        page: Pagination<SongSearchParams>?
+    ) async throws -> Pagination<SongSearchParams>.Page<Song> {
         try await songService.search(
             page
             ?? .first(
