@@ -9,7 +9,7 @@ import SwiftUI
 
 @Observable
 final class AlbumViewModelImpl: AlbumViewModel {
-    var album: ActionStatus<Album, String> = .none
+    var album: ActionStatus<Album, UserFacingError> = .none
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
     
     private var activeLoadTask: Task<Void, Never>?
@@ -55,7 +55,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
 
                 await MainActor.run {
                     withAnimation {
-                        self.album = .failure(error.localizedDescription)
+                        self.album = .failure(error.userFacingError)
                     }
                 }
             }

@@ -61,11 +61,15 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
         lifetimeTasks.insert(Task { [weak self] in
             for await (direction, result) in await loadedMoreEvent.stream().stream {
                 guard let self else { return }
-                guard let direction else { continue }
+                
+                guard direction != nil,
+                      case .failure = result
+                else { continue }
 
-                if case let .failure(error) = result {
-                    await MainActor.run {
-                        self.handleQueueLoadFailure(direction: direction, error: error)
+                await MainActor.run {
+                    stopCurrentPlayback()
+                    withAnimation {
+                        playbackState = .paused
                     }
                 }
             }
@@ -260,22 +264,6 @@ final class SongPlayerViewModelImpl: SongPlayerViewModel {
             return
         }
 
-        withAnimation {
-            playbackState = .paused
-        }
-    }
-
-    private func handleQueueLoadFailure(
-        direction: PlaybackQueueDirection,
-        error: Error
-    ) {
-        _ = direction
-        _ = error
-        pausePlaybackAfterFailure()
-    }
-
-    private func pausePlaybackAfterFailure() {
-        stopCurrentPlayback()
         withAnimation {
             playbackState = .paused
         }

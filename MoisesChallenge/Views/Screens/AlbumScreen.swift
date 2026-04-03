@@ -44,11 +44,15 @@ struct AlbumScreen: View {
                 SongPlayerScreen(viewModel: $0, showsOptions: false)
             }
         case .failure(let error):
-            ContentUnavailableView(
-                "Something went wrong",
-                systemImage: "exclamationmark.triangle",
-                description: Text(error)
-            )
+            ContentUnavailableView {
+                Label(error.title, systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error.message)
+            } actions: {
+                Button("Try Again") {
+                    viewModel.loadAlbum()
+                }
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ struct NotFoundError: Error {
 struct InvalidDataError: Error {
 }
 
-struct UserFacingError: Equatable {
+struct UserFacingError: Equatable, Hashable {
     enum AppErrorKind {
         case noInternetConnection,
              notFound,

@@ -9,7 +9,7 @@ import Observation
 
 @MainActor
 protocol AlbumViewModel: AnyObject, Observable, Sendable {
-    var album: ActionStatus<Album, String> { get }
+    var album: ActionStatus<Album, UserFacingError> { get }
     var player: any PresentationViewModel<any SongPlayerViewModel> { get }
     
     func onAppear()
