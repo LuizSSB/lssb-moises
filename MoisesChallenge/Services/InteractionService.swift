@@ -25,30 +25,15 @@ extension InteractionService {
         return Self(
             songMarkedPlayedEvent: onSongMarkedPlayed,
             markPlayed: { song in
-                let context = ModelContext(appModelContainer)
-                
-                var descriptor = FetchDescriptor<SongInteractionSwiftData>(
-                    predicate: #Predicate { $0.song.id == song.id }
-                )
-                descriptor.fetchLimit = 1
-                
-                let interaction = try {
-                    if let existing = try context.fetch(descriptor).first {
-                        existing.lastPlayedAt = .now
-                        return existing
-                    } else {
-                        let newOne = SongInteractionSwiftData(song: song)
-                        context.insert(newOne)
-                        return newOne
-                    }
-                }()
-                
+                let context = ModelContext(swiftDataConfig.appModelContainer)
+                let interaction = SongInteractionSwiftData(song: song)
+                context.insert(interaction)
                 try context.save()
                 
                 onSongMarkedPlayed.emitAndForget(.init(from: interaction))
             },
             listPlayedSongs: { pagination in
-                let context = ModelContext(appModelContainer)
+                let context = ModelContext(swiftDataConfig.appModelContainer)
                 
                 var descriptor = FetchDescriptor<SongInteractionSwiftData>(
                     sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
