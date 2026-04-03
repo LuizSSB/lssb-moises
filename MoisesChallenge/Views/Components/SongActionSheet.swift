@@ -42,7 +42,7 @@ private struct SongActionSheetModifier: ViewModifier {
                     self.song = nil
                     onAction(song, action)
                 }
-                // Snap to a compact height — just tall enough for the header + rows
+                // Snap to a compact height - just tall enough for the header + rows
                 .presentationDetents([.height(SongActionSheetContent.preferredHeight)])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(nil)

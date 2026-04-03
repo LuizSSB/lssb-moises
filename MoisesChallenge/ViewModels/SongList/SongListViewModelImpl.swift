@@ -7,7 +7,7 @@
 
 import Observation
 
-private let defaultSizePage = 1
+private let defaultSizePage = 10
 
 @Observable
 final class SongListViewModelImpl: SongListViewModel {

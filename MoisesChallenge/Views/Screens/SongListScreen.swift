@@ -63,9 +63,9 @@ struct SongListScreen: View {
                 viewModel.onSelect(song: song)
             } label: {
                 SongRowView(song: song)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(maxWidth: .infinity)
             
             if song.album != nil {
                 Button {
@@ -74,8 +74,11 @@ struct SongListScreen: View {
                     Image(systemName: "ellipsis")
                         .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
             }
         }
+        .listRowSeparator(.hidden)
+        .listRowInsets([.vertical], 7)
     }
     
     @ViewBuilder func placeholderContent(_ type: PaginatedListViewPlaceholderType) -> some View {
