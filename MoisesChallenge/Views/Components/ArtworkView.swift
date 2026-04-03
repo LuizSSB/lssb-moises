@@ -10,18 +10,16 @@ import Kingfisher
 
 struct ArtworkView<PlaceholderContent: View>: View {
     let artworkURL: URL?
-    @ViewBuilder let placeholderContent: () -> PlaceholderContent
+    @ViewBuilder let placeholderContent: (Progress?) -> PlaceholderContent
     
     var body: some View {
         if let url = artworkURL {
             KFImage.url(url)
-                .placeholder {
-                    placeholderContent()
-                }
+                .placeholder(placeholderContent)
                 .resizable()
                 .scaledToFit()
         } else {
-            placeholderContent()
+            placeholderContent(nil)
         }
     }
 }
@@ -43,7 +41,7 @@ struct ArtworkViewDefaultPlaceholderContent: View {
 
 extension ArtworkView where PlaceholderContent == ArtworkViewDefaultPlaceholderContent {
     init(artworkURL: URL?) {
-        self.init(artworkURL: artworkURL) {
+        self.init(artworkURL: artworkURL) { _ in
             ArtworkViewDefaultPlaceholderContent()
         }
     }

@@ -15,16 +15,26 @@ struct AlbumScreen: View {
         case .none, .running, .success:
             let album = viewModel.album.result
             ScrollView {
-                VStack {
-                    ArtworkView(artworkURL: album?.mainArtworkURL)
-                        .frame(width: 120, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                VStack(spacing: 0) {
+                    ArtworkView(artworkURL: album?.mainArtworkURL) {
+                        if album == nil || $0?.isFinished == false {
+                            ProgressView()
+                        } else {
+                            ArtworkViewDefaultPlaceholderContent()
+                        }
+                    }
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .padding(.bottom, 16)
                     
                     Text(album?.displayTitle ?? "-")
-                        .font(.system(size: 24))
+                        .font(.title3.bold())
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 8)
                     
                     Text(album?.displayArtistName ?? "-")
-                        .font(.system(size: 17))
+                        .font(.subheadline)
+                        .padding(.bottom, 40)
                     
                     ForEach(album?.songs ?? []) { song in
                         Button {
@@ -33,8 +43,10 @@ struct AlbumScreen: View {
                             SongRowView(song: song)
                         }
                         .buttonStyle(.plain)
+                        .padding(.vertical, 7)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
             }
             .onAppear {
