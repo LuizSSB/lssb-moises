@@ -15,30 +15,17 @@ struct SongPlayerScreen: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 24)
-            
-            ArtworkView(artworkURL: viewModel.currentSong?.mainArtworkURL)
-                .frame(width: 300, height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(radius: 12, y: 6)
-            
-            Spacer(minLength: 24)
+            artworkSection
             
             infoSection
-                .padding(.horizontal, 32)
-            
-            Spacer(minLength: 16)
+                .padding(.bottom)
             
             seekbarSection
-                .padding(.horizontal, 32)
-            
-            Spacer(minLength: 24)
+                .padding(.bottom)
             
             controlsSection
-                .padding(.horizontal, 32)
-            
-            Spacer(minLength: 40)
         }
+        .padding(24)
         .navigationTitle(viewModel.currentSong?.displayAlbumTitle ?? "-")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -71,22 +58,45 @@ struct SongPlayerScreen: View {
         }
     }
     
-    // MARK: - Song info
+    private var artworkSection: some View {
+        ZStack {
+            ArtworkView(artworkURL: viewModel.currentSong?.mainArtworkURL)
+                .frame(maxWidth: 264, maxHeight: 264)
+                .clipShape(RoundedRectangle(cornerRadius: 32))
+        }
+        .frame(maxHeight: .infinity)
+    }
     
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(viewModel.currentSong?.displayTitle ?? "—")
-                .font(.title2.bold())
+                .font(.title.bold())
                 .lineLimit(1)
-            Text(viewModel.currentSong?.displayArtistName ?? "—")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            
+            HStack {
+                Text(viewModel.currentSong?.displayArtistName ?? "—")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Button {
+                    viewModel.onToggleRepeatMode()
+                } label: {
+                    Image(systemName: {
+                        switch viewModel.repeatMode {
+                        case .none, .all: return "repeat"
+                        case .current: return "repeat.1"
+                        }
+                    }())
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(viewModel.repeatMode == .none ? .secondary : .primary)
+                    .frame(width: 24, height: 24)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
-    // MARK: - Seekbar
     
     private var seekbarSection: some View {
         VStack(spacing: 4) {
@@ -128,33 +138,22 @@ struct SongPlayerScreen: View {
     
     private var controlsSection: some View {
         VStack(spacing: 16) {
-            HStack(spacing: 48) {
+            HStack(spacing: 28) {
                 moveButton(direction: .previous)
                 
                 Button {
                     viewModel.onTogglePlayPause()
                 } label: {
                     playPauseLabel
-                        .font(.system(size: 48))
-                        .frame(width: 64, height: 64)
+                        .font(.system(size: 38))
+                        .frame(width: 72, height: 72)
+                        .contentShape(Circle())
+                        .glassEffect(.regular.interactive(), in: Circle())
                 }
+                .buttonStyle(.plain)
                 .disabled(viewModel.playbackState == .loading)
                 
                 moveButton(direction: .next)
-            }
-
-            Button {
-                viewModel.onToggleRepeatMode()
-            } label: {
-                Image(systemName: {
-                    switch viewModel.repeatMode {
-                    case .none, .all: return "repeat"
-                    case .current: return "repeat.1"
-                    }
-                }())
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(viewModel.repeatMode == .none ? .secondary : .primary)
-                    .frame(width: 44, height: 44)
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -170,56 +169,5 @@ struct SongPlayerScreen: View {
         default:
             Image(systemName: "play.fill")
         }
-    }
-}
-
-// MARK: - SeekbarView
-
-private struct SeekbarView: View {
-    
-    let progress: Double
-    let onSeek: (Double) -> Void
-    
-    @State private var isDragging = false
-    @State private var dragProgress: Double = 0
-    
-    private var displayProgress: Double {
-        isDragging ? dragProgress : progress
-    }
-    
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color(.systemGray4))
-                    .frame(height: 4)
-                
-                Capsule()
-                    .fill(Color.primary)
-                    .frame(width: max(0, geo.size.width * displayProgress), height: 4)
-                
-                // Invisible wide drag target
-                Color.clear
-                    .contentShape(Rectangle())
-                    .frame(height: 32)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                isDragging = true
-                                dragProgress = (value.location.x / geo.size.width)
-                                    .clamped(to: 0...1)
-                            }
-                            .onEnded { value in
-                                let fraction = (value.location.x / geo.size.width)
-                                    .clamped(to: 0...1)
-                                onSeek(fraction)
-                                isDragging = false
-                            }
-                    )
-            }
-            .frame(height: 32)
-            .alignmentGuide(.top) { _ in 0 }
-        }
-        .frame(height: 32)
     }
 }
