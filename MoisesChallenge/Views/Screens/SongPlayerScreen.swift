@@ -101,6 +101,13 @@ struct SongPlayerScreen: View {
                 .accessibilityLabel(String(localized: .playerRepeatAccessibilityLabel))
                 .accessibilityValue(repeatModeAccessibilityValue)
             }
+            
+            if let playbackErrorMessage {
+                Text(playbackErrorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.danger)
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -210,5 +217,10 @@ struct SongPlayerScreen: View {
             default: return .playerPlayAccessibilityLabel
             }
         }())
+    }
+
+    private var playbackErrorMessage: String? {
+        guard case let .error(message) = viewModel.playbackState else { return nil }
+        return message
     }
 }

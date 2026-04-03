@@ -15,6 +15,9 @@ struct SearchBarContentContainer<Content: View>: View {
     
     var body: some View {
         content
+            .onFirstAppear {
+                onSearchStatusChanged(isSearching)
+            }
             .onChange(of: isSearching) {
                 onSearchStatusChanged($1)
             }
