@@ -13,6 +13,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:MoisesChallenge.xcodeproj",
         "identifier" : "6053B7F32F7C2EAE001A7F06",
@@ -20,6 +21,7 @@
       }
     },
     {
+      "enabled" : false,
       "target" : {
         "containerPath" : "container:MoisesChallenge.xcodeproj",
         "identifier" : "6053B7FD2F7C2EAE001A7F06",

@@ -10,7 +10,7 @@ import SwiftData
 
 @Model
 final class SongInteractionSwiftData {
-    #Unique<SongInteractionSwiftData>([\.song.id])
+    #Unique<SongInteractionSwiftData>([\.id])
     
     var id: String
     var song: Song

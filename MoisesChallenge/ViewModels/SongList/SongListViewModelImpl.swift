@@ -6,6 +6,7 @@
 //
 
 import Observation
+import SwiftUI
 
 private let defaultSizePage = 10
 
@@ -78,12 +79,16 @@ final class SongListViewModelImpl: SongListViewModel {
     func handleSearchBar(focused: Bool) {
         if focused {
             guard searchList == nil else { return }
-            searchList = container.paginatedListViewModel(fetch: fetchSearch)
+            withAnimation {
+                searchList = container.paginatedListViewModel(fetch: fetchSearch)
+            }
         } else {
             guard searchList != nil else { return }
-            searchList = nil
-            searchText = ""
-            currentQuery = ""
+            withAnimation {
+                searchList = nil
+                searchText = ""
+                currentQuery = ""
+            }
             prepareRecentList()
         }
     }

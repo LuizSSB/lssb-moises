@@ -17,7 +17,7 @@ extension AlbumSearchService {
             self.container = container
             self.service = .init(
                 get: { albumId in
-                    let context = ModelContext(swiftDataConfig.appModelContainer)
+                    let context = ModelContext(container)
                     var descriptor = FetchDescriptor<CachedAlbumSwiftData>(
                         predicate: #Predicate { $0.id == albumId }
                     )
@@ -37,7 +37,7 @@ extension AlbumSearchService {
         @Sendable func add(album: Album) throws{
             guard let cached = CachedAlbumSwiftData(from: album) else { return }
             
-            let context = ModelContext(swiftDataConfig.appModelContainer)
+            let context = ModelContext(container)
             context.insert(cached)
             try context.save()
         }
