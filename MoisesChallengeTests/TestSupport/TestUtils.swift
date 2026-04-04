@@ -33,4 +33,4 @@ func busyWaitAsync(
     }
     
     Issue.record("Timed out waiting for async condition.")
-    }
+}
