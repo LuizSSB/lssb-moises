@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6038A3052F7FDDED009BFB10 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 6038A3042F7FDDED009BFB10 /* Kingfisher */; };
 		605F68CA2F7C5146000B7303 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 605F68C92F7C5146000B7303 /* Alamofire */; };
+		60DC29372F81855500263198 /* MoisesChallengeTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 60DC29362F81855500263198 /* MoisesChallengeTestPlan.xctestplan */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		6053B7E52F7C2EAD001A7F06 /* MoisesChallenge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoisesChallenge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6053B7F42F7C2EAE001A7F06 /* MoisesChallengeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoisesChallengeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6053B7FE2F7C2EAE001A7F06 /* MoisesChallengeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoisesChallengeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		60DC29362F81855500263198 /* MoisesChallengeTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = MoisesChallengeTestPlan.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -95,6 +97,7 @@
 		6053B7DC2F7C2EAD001A7F06 = {
 			isa = PBXGroup;
 			children = (
+				60DC29362F81855500263198 /* MoisesChallengeTestPlan.xctestplan */,
 				6053B7E72F7C2EAD001A7F06 /* MoisesChallenge */,
 				6053B7F72F7C2EAE001A7F06 /* MoisesChallengeTests */,
 				6053B8012F7C2EAE001A7F06 /* MoisesChallengeUITests */,
@@ -240,6 +243,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60DC29372F81855500263198 /* MoisesChallengeTestPlan.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,7 +447,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.elitehrv.MoisesChallenge;
+				PRODUCT_BUNDLE_IDENTIFIER = com.luizssb.MoisesChallenge;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
@@ -474,7 +478,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.elitehrv.MoisesChallenge;
+				PRODUCT_BUNDLE_IDENTIFIER = com.luizssb.MoisesChallenge;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;

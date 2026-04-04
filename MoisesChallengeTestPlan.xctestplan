@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "099C1491-B5F5-4CF9-9656-FE1933603666",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:MoisesChallenge.xcodeproj",
+        "identifier" : "6053B7F32F7C2EAE001A7F06",
+        "name" : "MoisesChallengeTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:MoisesChallenge.xcodeproj",
+        "identifier" : "6053B7FD2F7C2EAE001A7F06",
+        "name" : "MoisesChallengeUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

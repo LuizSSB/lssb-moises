@@ -2,6 +2,8 @@
 //  EventTests.swift
 //  MoisesChallengeTests
 //
+//  Created by Codex on 03/04/26.
+//
 
 import Testing
 @testable import MoisesChallenge
