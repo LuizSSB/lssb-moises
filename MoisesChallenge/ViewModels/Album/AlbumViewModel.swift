@@ -15,5 +15,5 @@ protocol AlbumViewModel: AnyObject, Observable, Sendable {
     func onAppear()
     func onDisappear()
     func loadAlbum()
-    func onSelect(song: Song)
+    func select(song: Song)
 }

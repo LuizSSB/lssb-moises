@@ -53,7 +53,7 @@ struct SongPlayerScreen: View {
         .songActionSheet(for: $actionSheetSong) { song, action in
             switch action {
             case .viewAlbum:
-                viewModel.onSelectAlbum(of: song)
+                viewModel.selectAlbum(of: song)
             }
         }
         .navigationDestination(presentationViewModel: viewModel.album) {
@@ -85,7 +85,7 @@ struct SongPlayerScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Button {
-                    viewModel.onToggleRepeatMode()
+                    viewModel.toggleRepeatMode()
                 } label: {
                     Image(systemName: {
                         switch viewModel.repeatMode {
@@ -115,7 +115,7 @@ struct SongPlayerScreen: View {
     private var seekbarSection: some View {
         VStack(spacing: 2) {
             SeekbarView(progress: viewModel.progress) { fraction in
-                viewModel.onSeek(to: fraction)
+                viewModel.seek(to: fraction)
             }
             
             HStack {
@@ -140,7 +140,7 @@ struct SongPlayerScreen: View {
     
     private func moveButton(direction: PlaybackQueueDirection) -> some View {
         Button {
-            viewModel.onMove(to: direction)
+            viewModel.move(to: direction)
         } label: {
             if viewModel.isLoading(direction) {
                 ProgressView()
@@ -170,7 +170,7 @@ struct SongPlayerScreen: View {
                 moveButton(direction: .previous)
                 
                 Button {
-                    viewModel.onTogglePlayPause()
+                    viewModel.togglePlayPause()
                 } label: {
                     playPauseLabel
                         .font(.system(size: 38))

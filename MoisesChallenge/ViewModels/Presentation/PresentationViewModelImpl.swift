@@ -10,13 +10,17 @@ import Observation
 @MainActor
 @Observable
 class PresentationViewModelImpl<T>: PresentationViewModel {
+    // MARK: - Public State
+
     private(set) var presented: T?
-    
+
+    // MARK: - Actions
+
     func present(_ value: T) {
         presented = value
     }
-    
-    func onDismiss() {
+
+    func dismiss() {
         presented = nil
     }
 }

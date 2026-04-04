@@ -20,11 +20,11 @@ protocol SongPlayerViewModel: AnyObject, Observable, Sendable {
     
     func onAppear()
     func onDisappear()
-    func onSelectAlbum(of song: Song)
+    func selectAlbum(of song: Song)
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool
     func has(_ direction: PlaybackQueueDirection) -> Bool
-    func onTogglePlayPause()
-    func onToggleRepeatMode()
-    func onSeek(to fraction: Double)
-    func onMove(to direction: PlaybackQueueDirection)
+    func togglePlayPause()
+    func toggleRepeatMode()
+    func seek(to fraction: Double)
+    func move(to direction: PlaybackQueueDirection)
 }

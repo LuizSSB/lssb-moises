@@ -40,7 +40,7 @@ struct AlbumScreen: View {
                     
                     ForEach(album?.songs ?? []) { song in
                         Button {
-                            viewModel.onSelect(song: song)
+                            viewModel.select(song: song)
                         } label: {
                             SongRowView(song: song)
                         }

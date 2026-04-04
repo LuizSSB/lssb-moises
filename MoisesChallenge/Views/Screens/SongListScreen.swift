@@ -27,10 +27,10 @@ struct SongListScreen: View {
                 refresh: {
                     await currentList.refresh()
                 },
-                onError: currentList.onInteractionWithError(shouldRetry:)
+                onError: currentList.interactWithError(shouldRetry:)
             )
         } onSearchStatusChanged: {
-            viewModel.onSearchBar(focused: $0)
+            viewModel.handleSearchBar(focused: $0)
         }
         .navigationTitle(String(localized: .songsNavigationTitle))
         .searchable(
@@ -38,7 +38,7 @@ struct SongListScreen: View {
             placement: .navigationBarDrawer(displayMode: .always)
         )
         .onSubmit(of: .search) {
-            viewModel.onSearchSubmitted()
+            viewModel.submitSearch()
         }
         .onAppear {
             viewModel.onAppear()
@@ -46,7 +46,7 @@ struct SongListScreen: View {
         .songActionSheet(for: $actionSheetSong) { song, action in
             switch action {
             case .viewAlbum:
-                viewModel.onSelectAlbum(of: song)
+                viewModel.selectAlbum(of: song)
             }
         }
         .navigationDestination(presentationViewModel: viewModel.player) {
@@ -60,7 +60,7 @@ struct SongListScreen: View {
     @ViewBuilder func songRow(_ song: Song) -> some View {
         HStack {
             Button {
-                viewModel.onSelect(song: song)
+                viewModel.select(song: song)
             } label: {
                 SongRowView(song: song)
                     .contentShape(Rectangle())
@@ -120,7 +120,7 @@ struct SongListScreen: View {
                 Text(error.message)
             } actions: {
                 Button(String(localized: .commonTryAgain)) {
-                    viewModel.currentList.onInteractionWithError(shouldRetry: true)
+                    viewModel.currentList.interactWithError(shouldRetry: true)
                 }
             }
         }

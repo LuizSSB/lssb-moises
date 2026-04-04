@@ -12,25 +12,42 @@ final class PaginatedListViewModelImpl<
     Item: Hashable & Sendable,
     PaginationParams: Hashable & Sendable
 >: PaginatedListViewModel {
+    // MARK: - Types
+
     typealias PageResult = Pagination<PaginationParams>.Page<Item>
-    
     typealias PageFetch = @Sendable (
         _ page: Pagination<PaginationParams>? // a `nil` page means the first one (or whatever one the client feels like.
     ) async throws -> Pagination<PaginationParams>.Page<Item>
-    
+
+    private enum LoadMode {
+        case firstPage
+        case nextPage
+        case refresh
+    }
+
+    // MARK: - Public State
+
     private(set) var items: [Item] = []
     private(set) var loadState: PaginatedListLoadState = .idle
     private(set) var latestResult: PageResult?
-    
     var pageLoadedEvent = Event<Result<PageResult, Error>>()
-    
+
+    // MARK: - Private State
+
     private var activeFetchTask: Task<Void, Never>?
     private var lastFailedLoadMode: LoadMode?
+
+    // MARK: - Dependencies
+
     private let fetch: PageFetch
+
+    // MARK: - Lifecycle
 
     init(fetch: @escaping PageFetch) {
         self.fetch = fetch
     }
+
+    // MARK: - Actions
 
     func loadFirstPageIfNeeded() {
         guard loadState == .idle else { return }
@@ -47,17 +64,17 @@ final class PaginatedListViewModelImpl<
     func refresh() async {
         guard loadState != .refreshing else { return }
         let didAlreadyHaveStuff = latestResult != nil
-        
+
         load(mode: .refresh)
-        
+
         // HACK: after refreshing, if nothing has changed, the top items won't be rerendered, and, as such, their onAppear will not be triggered, so if all of the page's results fit into the list, it won't load more by itself.
         if case .success = await activeFetchTask?.result,
            didAlreadyHaveStuff {
-           loadNextPage()
+            loadNextPage()
         }
     }
 
-    func onInteractionWithError(shouldRetry: Bool) {
+    func interactWithError(shouldRetry: Bool) {
         if !shouldRetry {
             loadState = switch lastFailedLoadMode {
             case nil, .firstPage: .idle
@@ -65,7 +82,7 @@ final class PaginatedListViewModelImpl<
             }
             return
         }
-        
+
         guard let lastFailedLoadMode else {
             loadFirstPageIfNeeded()
             return
@@ -74,11 +91,20 @@ final class PaginatedListViewModelImpl<
         load(mode: lastFailedLoadMode)
     }
 
-    private enum LoadMode { case firstPage, nextPage, refresh }
+    func reset() {
+        activeFetchTask?.cancel()
+        activeFetchTask = nil
+        items = []
+        latestResult = nil
+        loadState = .idle
+        lastFailedLoadMode = nil
+    }
+
+    // MARK: - Private Helpers
 
     private func load(mode: LoadMode) {
         activeFetchTask?.cancel()
-        
+
         let fetchConfig: (loadState: PaginatedListLoadState, pageToFetch: Pagination<PaginationParams>?)? = switch mode {
         case .firstPage:
             (.loadingFirstPage, nil)
@@ -141,14 +167,5 @@ final class PaginatedListViewModelImpl<
                 }
             }
         }
-    }
-
-    func reset() {
-        activeFetchTask?.cancel()
-        activeFetchTask = nil
-        items = []
-        latestResult = nil
-        loadState = .idle
-        lastFailedLoadMode = nil
     }
 }

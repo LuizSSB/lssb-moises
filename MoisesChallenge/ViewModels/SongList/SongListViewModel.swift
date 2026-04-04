@@ -21,8 +21,8 @@ protocol SongListViewModel: AnyObject, Observable, Sendable {
     var album: any PresentationViewModel<any AlbumViewModel> { get }
     
     func onAppear()
-    func onSearchBar(focused: Bool)
-    func onSearchSubmitted()
-    func onSelect(song: Song)
-    func onSelectAlbum(of song: Song)
+    func handleSearchBar(focused: Bool)
+    func submitSearch()
+    func select(song: Song)
+    func selectAlbum(of song: Song)
 }

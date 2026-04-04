@@ -18,7 +18,7 @@ protocol PaginatedListViewModel<Item, PaginationParams>: AnyObject, Sendable {
     func loadFirstPageIfNeeded()
     func loadNextPage()
     func refresh() async // Ideally, wouldn't need to be async, but view refreshing stuff requires it.
-    func onInteractionWithError(shouldRetry: Bool)
+    func interactWithError(shouldRetry: Bool)
     func reset()
 }
 

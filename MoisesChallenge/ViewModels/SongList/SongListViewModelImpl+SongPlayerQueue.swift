@@ -9,17 +9,20 @@ import SwiftUI
 
 extension SongListViewModelImpl {
     class PlaybackQueue<PaginationParams: Hashable & Sendable>: MoisesChallenge.PlaybackQueue {
+        // MARK: - Private State
+
         private var nextIndexBeingLoaded: Int?
-        
         private let list: any PaginatedListViewModel<Song, PaginationParams>
-        
+
+        // MARK: - Lifecycle
+
         init(list: any PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
             self.list = list
             self.currentItem = selectedSong
         }
-        
-        // MARK: - PlayerQueue conformance
-        
+
+        // MARK: - PlaybackQueue Conformance
+
         private(set) var currentItem: Song? {
             didSet {
                 currentItemChangedEvent.emitAndForget(currentItem)
@@ -36,7 +39,7 @@ extension SongListViewModelImpl {
                     currentItem = nil
                     return
                 }
-                
+
                 guard newValue >= 0 && newValue < list.items.endIndex && newValue != currentIndex else { return }
                 currentItem = list.items[newValue]
             }
@@ -53,14 +56,14 @@ extension SongListViewModelImpl {
             case .previous:
                 guard let index = currentIndex else { return false }
                 return index > 0
-                
+
             case .next:
                 guard let currentIndex else { return false }
-                
+
                 if currentIndex != list.items.count - 1 {
                     return true
                 }
-                
+
                 return list.latestResult?.hasMore == true
             }
         }
@@ -71,12 +74,12 @@ extension SongListViewModelImpl {
                 guard let currentIndex,
                       currentIndex > 0
                 else { return }
-                
+
                 currentItem = list.items[currentIndex - 1]
-                
+
             case .next:
                 guard let currentIndex else { return }
-                
+
                 let nextIndex = currentIndex + 1
                 if nextIndex < list.items.count {
                     currentItem = list.items[nextIndex]
@@ -85,21 +88,23 @@ extension SongListViewModelImpl {
                 }
             }
         }
-        
+
+        // MARK: - Private Helpers
+
         private func loadAndMoveToNext(at index: Int) async throws {
             guard nextIndexBeingLoaded == nil else { return }
-            
+
             let streamData = await list.pageLoadedEvent.stream()
             nextIndexBeingLoaded = index
             list.loadNextPage()
-            
+
             defer {
                 nextIndexBeingLoaded = nil
             }
-            
+
             var iterator = streamData.stream.makeAsyncIterator()
             guard let result = await iterator.next() else { return }
-            
+
             switch result {
             case .success:
                 guard index < list.items.count else { return }

@@ -9,22 +9,32 @@ import SwiftUI
 
 @Observable
 final class AlbumViewModelImpl: AlbumViewModel {
+    // MARK: - Public State
+
     var album: ActionStatus<Album, UserFacingError> = .none
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
-    
+
+    // MARK: - Private State
+
     private var activeLoadTask: Task<Void, Never>?
+
+    // MARK: - Dependencies
 
     private let albumId: String
     private let service: AlbumSearchService
     private let container: any IoCContainer
-    
+
+    // MARK: - Lifecycle
+
     init(albumId: String, service: AlbumSearchService, container: any IoCContainer) {
         self.albumId = albumId
         self.service = service
         self.container = container
         self.player = container.presentationViewModel()
     }
-    
+
+    // MARK: - Screen Events
+
     func onAppear() {
         guard case .none = album else { return }
         loadAlbum()
@@ -34,10 +44,12 @@ final class AlbumViewModelImpl: AlbumViewModel {
         activeLoadTask?.cancel()
         activeLoadTask = nil
     }
-    
+
+    // MARK: - Actions
+
     func loadAlbum() {
         guard !album.isRunning else { return }
-        
+
         activeLoadTask?.cancel()
         album = .running
 
@@ -63,8 +75,8 @@ final class AlbumViewModelImpl: AlbumViewModel {
             }
         }
     }
-    
-    func onSelect(song: Song) {
+
+    func select(song: Song) {
         guard case let .success(album) = album,
               let songs = album.songs,
               let queue = StaticPlaybackQueue(items: songs, selectedItem: song)

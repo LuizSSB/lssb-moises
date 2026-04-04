@@ -11,24 +11,31 @@ private let defaultSizePage = 10
 
 @Observable
 final class SongListViewModelImpl: SongListViewModel {
+    // MARK: - Public State
+
     private(set) var recentList: any PaginatedListViewModel<Song, NullPaginationParams>
-    
     var searchText = ""
     private(set) var currentQuery = ""
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
-    
+
     var currentList: any PaginatedListViewModel {
         searchList ?? recentList
     }
-    
+
     private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
     private(set) var album: any PresentationViewModel<any AlbumViewModel>
+
+    // MARK: - Private State
 
     private var shouldRefreshRecent = true
     private var recentSongsUpdatedTask: Task<Void, Never>? // Haven't found a way to properly dispose of it :/
 
+    // MARK: - Dependencies
+
     private let songService: SongSearchService
     private let container: any IoCContainer
+
+    // MARK: - Lifecycle
 
     init(
         interactionService: InteractionService,
@@ -61,21 +68,14 @@ final class SongListViewModelImpl: SongListViewModel {
         }
     }
 
+    // MARK: - Screen Events
+
     func onAppear() {
         guard searchList == nil else { return }
         prepareRecentList()
     }
-    
-    private func prepareRecentList() {
-        if shouldRefreshRecent {
-            Task { await recentList.refresh() }
-        } else {
-            recentList.loadFirstPageIfNeeded()
-        }
-        shouldRefreshRecent = false
-    }
 
-    func onSearchBar(focused: Bool) {
+    func handleSearchBar(focused: Bool) {
         if focused {
             guard searchList == nil else { return }
             searchList = container.paginatedListViewModel(fetch: fetchSearch)
@@ -87,8 +87,8 @@ final class SongListViewModelImpl: SongListViewModel {
             prepareRecentList()
         }
     }
-    
-    func onSearchSubmitted() {
+
+    func submitSearch() {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty,
               query != currentQuery,
@@ -100,8 +100,10 @@ final class SongListViewModelImpl: SongListViewModel {
             await searchList.refresh()
         }
     }
-    
-    func onSelect(song: Song) {
+
+    // MARK: - Navigation
+
+    func select(song: Song) {
         let queue: any MoisesChallenge.PlaybackQueue<Song> = if let searchList {
             PlaybackQueue(list: searchList, selectedSong: song)
         } else {
@@ -111,12 +113,23 @@ final class SongListViewModelImpl: SongListViewModel {
         player.present(viewModel)
     }
     
-    func onSelectAlbum(of song: Song) {
+    func selectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
         let viewModel = container.albumViewModel(albumId: albumId)
         album.present(viewModel)
     }
-    
+
+    // MARK: - Private Helpers
+
+    private func prepareRecentList() {
+        if shouldRefreshRecent {
+            Task { await recentList.refresh() }
+        } else {
+            recentList.loadFirstPageIfNeeded()
+        }
+        shouldRefreshRecent = false
+    }
+
     private func fetchSearch(
         page: Pagination<SongSearchParams>?
     ) async throws -> Pagination<SongSearchParams>.Page<Song> {

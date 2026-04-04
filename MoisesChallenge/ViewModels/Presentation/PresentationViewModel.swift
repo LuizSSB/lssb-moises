@@ -12,5 +12,5 @@ protocol PresentationViewModel<Value>: AnyObject {
     var presented: Value? { get }
     
     func present(_ value: Value)
-    func onDismiss()
+    func dismiss()
 }

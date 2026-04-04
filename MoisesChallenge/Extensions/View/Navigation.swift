@@ -32,7 +32,7 @@ extension View {
         self.navigationDestination(
             nonHashableItem: .init(
                 get: { presentationViewModel.presented },
-                set: { _ in presentationViewModel.onDismiss() }
+                set: { _ in presentationViewModel.dismiss() }
             ),
             destination: destination
         )
