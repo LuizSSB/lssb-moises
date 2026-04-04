@@ -363,34 +363,6 @@ struct SongPlayerViewModelImplTests {
             container: container
         )
     }
-
-    private func busyWait(
-        timeoutIterations: Int = 200,
-        until condition: @escaping @MainActor () -> Bool
-    ) async {
-        for _ in 0..<timeoutIterations {
-            if condition() {
-                return
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
-
-        Issue.record("Timed out waiting for condition.")
-    }
-
-    private func busyWaitAsync(
-        timeoutIterations: Int = 200,
-        until condition: @escaping @Sendable () async -> Bool
-    ) async {
-        for _ in 0..<timeoutIterations {
-            if await condition() {
-                return
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
-
-        Issue.record("Timed out waiting for async condition.")
-    }
 }
 
 @MainActor
@@ -540,30 +512,6 @@ private actor PlayedSongsStore {
 private final class IoCContainerStub: IoCContainer {
     let albumViewModelStub = AlbumViewModelStub()
 
-    func interactionService() -> InteractionService {
-        fatalError("Unused in tests")
-    }
-
-    func songSearchService() -> SongSearchService {
-        fatalError("Unused in tests")
-    }
-
-    func albumSearchService() -> AlbumSearchService {
-        fatalError("Unused in tests")
-    }
-
-    func songPlaybackController() -> any SongPlaybackController {
-        fatalError("Unused in tests")
-    }
-
-    func songListViewModel() -> any SongListViewModel {
-        fatalError("Unused in tests")
-    }
-
-    func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel {
-        fatalError("Unused in tests")
-    }
-
     func albumViewModel(albumId: String) -> any AlbumViewModel {
         albumViewModelStub.lastRequestedAlbumId = albumId
         return albumViewModelStub
@@ -571,12 +519,6 @@ private final class IoCContainerStub: IoCContainer {
 
     func presentationViewModel<T>() -> any PresentationViewModel<T> {
         PresentationViewModelImpl<T>()
-    }
-
-    func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
-    ) -> any PaginatedListViewModel<Item, PaginationParams> {
-        fatalError("Unused in tests")
     }
 }
 
