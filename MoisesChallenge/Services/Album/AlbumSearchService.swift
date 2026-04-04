@@ -12,27 +12,31 @@ struct AlbumSearchService {
 }
 
 extension AlbumSearchService {
-    static let iTunes = Self(
-        get: { albumId in
-            let result = await AF.request(
-                iTunesAPIConfig.urls.lookup,
-                parameters: [
-                    "id": albumId,
-                    "limit": iTunesAPIConfig.maxLimit,
-                    "entity": iTunesAPIConfig.defaults.entity
-                ]
-            )
-                .serializingDecodable(ITunesAPIResponse.self)
-                .result
-            
-            switch result {
-            case let .success(response):
-                guard response.resultCount != 0 else { throw NotFoundError() }
-                guard let album = Album(fromResponse: response) else { throw InvalidDataError() }
-                return album
-            case let .failure(error):
-                throw parseAF(error: error)
+    init(session: Session) {
+        self.init(
+            get: { albumId in
+                let result = await session.request(
+                    iTunesAPIConfig.urls.lookup,
+                    parameters: [
+                        "id": albumId,
+                        "limit": iTunesAPIConfig.maxLimit,
+                        "entity": iTunesAPIConfig.defaults.entity
+                    ]
+                )
+                    .serializingDecodable(ITunesAPIResponse.self)
+                    .result
+                
+                switch result {
+                case let .success(response):
+                    guard response.resultCount != 0 else { throw NotFoundError() }
+                    guard let album = Album(fromResponse: response) else { throw InvalidDataError() }
+                    return album
+                case let .failure(error):
+                    throw parseAF(error: error)
+                }
             }
-        }
-    )
+        )
+    }
+    
+    static let iTunes = Self(session: AF)
 }
