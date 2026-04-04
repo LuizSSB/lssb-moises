@@ -10,6 +10,10 @@ import Foundation
 actor Event<T: Sendable> {
     private var continuations: [UUID: AsyncStream<T>.Continuation] = [:]
     
+    var observerCount: Int {
+        continuations.count
+    }
+    
     func stream() -> (id: UUID, stream: AsyncStream<T>) {
         let id = UUID()
         
