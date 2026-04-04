@@ -5,6 +5,7 @@ import Testing
 @Suite(.serialized) struct SongSearchServiceTests {
 
     @Test func search_requestsSongsAndReturnsPaginatedPage() async throws {
+        // ARRANGE
         let session = MockNetwork.makeSession { request in
             #expect(request.url?.absoluteString.contains("itunes.apple.com/search") == true)
             #expect(request.url?.query?.contains("term=beatles") == true)
@@ -67,11 +68,13 @@ import Testing
             return (response, data)
         }
         defer { MockNetwork.reset() }
-        
+
+        // ACT
         let page = try await SongSearchService(session: session).search(
             .init(params: .init(searchTerm: "beatles"), offset: 1, limit: 1)
         )
 
+        // ASSERT
         #expect(page.entries.map(\.id) == ["2"])
         #expect(page.entries.first?.title == "Song B")
         #expect(page.pagination.offset == 1)
@@ -81,6 +84,7 @@ import Testing
     }
 
     @Test func search_throwsUnderlyingNetworkErrorWhenRequestFails() async throws {
+        // ARRANGE
         let expectedError = NSError(
             domain: NSURLErrorDomain,
             code: URLError.notConnectedToInternet.rawValue
@@ -88,10 +92,12 @@ import Testing
         let session = MockNetwork.makeSession { _ in throw expectedError }
         defer { MockNetwork.reset() }
 
+        // ACT
         do {
             _ = try await SongSearchService(session: session).search(.first(params: .init(searchTerm: "beatles"), limit: 1))
             Issue.record("Expected iTunes search to surface the network error")
         } catch {
+            // ASSERT
             let nsError = error as NSError
             #expect(nsError.domain == expectedError.domain)
             #expect(nsError.code == expectedError.code)

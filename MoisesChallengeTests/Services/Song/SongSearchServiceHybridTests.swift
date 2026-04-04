@@ -5,6 +5,7 @@ import Testing
 @Suite(.serialized) struct SongSearchServiceHybridTests {
 
     @Test func search_returnsCachedPageWhenCacheHit() async throws {
+        // ARRANGE
         let container = try makeTestModelContainer()
         let cache = SongSearchService.Cache(container: container)
         let cachedPage = SongSearchPage(
@@ -23,11 +24,15 @@ import Testing
             )
         )
 
+        // ACT
         let page = try await service.search(.first(params: .init(searchTerm: "beatles"), limit: 1))
+
+        // ASSERT
         #expect(page == cachedPage)
     }
 
     @Test func search_returnsFreshPageAndCachesItWhenCacheMiss() async throws {
+        // ARRANGE
         let container = try makeTestModelContainer()
         let cache = SongSearchService.Cache(container: container)
         let expectedPage = SongSearchPage(
@@ -39,9 +44,11 @@ import Testing
             actual: .init(search: { _ in expectedPage })
         )
 
+        // ACT
         let page = try await service.search(.first(params: .init(searchTerm: "queen"), limit: 2))
         let cached = try await cache.service.search(.first(params: .init(searchTerm: "queen"), limit: 2))
 
+        // ASSERT
         #expect(page == expectedPage)
         #expect(cached == expectedPage)
     }

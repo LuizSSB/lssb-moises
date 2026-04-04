@@ -11,13 +11,19 @@ import Testing
 struct EventTests {
 
     @Test func stream_returnsDistinctIds() async {
+        // ARRANGE
         let event = Event<Int>()
+
+        // ACT
         let (id1, _) = await event.stream()
         let (id2, _) = await event.stream()
+
+        // ASSERT
         #expect(id1 != id2)
     }
 
     @Test func emit_deliversValueToSingleSubscriber() async {
+        // ARRANGE
         let event = Event<Int>()
         let (_, stream) = await event.stream()
 
@@ -26,12 +32,16 @@ struct EventTests {
             return await iterator.next()
         }
 
+        // ACT
         await event.emit(42)
         let value = await reader.value
+
+        // ASSERT
         #expect(value == 42)
     }
 
     @Test func emit_broadcastsToAllSubscribers() async {
+        // ARRANGE
         let event = Event<Int>()
         let (_, stream1) = await event.stream()
         let (_, stream2) = await event.stream()
@@ -45,13 +55,16 @@ struct EventTests {
             return await iterator.next()
         }
 
+        // ACT
         await event.emit(7)
 
+        // ASSERT
         #expect(await reader1.value == 7)
         #expect(await reader2.value == 7)
     }
 
     @Test func emit_deliversMultipleValuesInOrder() async {
+        // ARRANGE
         let event = Event<Int>()
         let (_, stream) = await event.stream()
 
@@ -66,15 +79,19 @@ struct EventTests {
             return values
         }
 
+        // ACT
         await event.emit(1)
         await event.emit(2)
         await event.emit(3)
 
         let values = await reader.value
+
+        // ASSERT
         #expect(values == [1, 2, 3])
     }
 
     @Test func emitAndForget_deliversValue() async {
+        // ARRANGE
         let event = Event<String>()
         let (_, stream) = await event.stream()
 
@@ -83,13 +100,17 @@ struct EventTests {
             return await iterator.next()
         }
 
+        // ACT
         event.emitAndForget("done")
 
         let value = await reader.value
+
+        // ASSERT
         #expect(value == "done")
     }
 
     @Test func removeContinuation_excludesThatStreamFromEmits() async {
+        // ARRANGE
         let event = Event<Int>()
         let (removedId, _) = await event.stream()
         let (_, stream2) = await event.stream()
@@ -101,7 +122,10 @@ struct EventTests {
             return await iterator.next()
         }
 
+        // ACT
         await event.emit(3)
+
+        // ASSERT
         #expect(await reader.value == 3)
     }
 }

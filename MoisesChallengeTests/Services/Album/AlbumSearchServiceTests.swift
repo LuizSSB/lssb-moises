@@ -5,6 +5,7 @@ import Testing
 @Suite(.serialized) struct AlbumSearchServiceTests {
 
     @Test func get_requestsAlbumAndParsesSongs() async throws {
+        // ARRANGE
         let session = MockNetwork.makeSession { request in
             #expect(request.url?.absoluteString.contains("itunes.apple.com/lookup") == true)
             #expect(request.url?.query?.contains("id=42") == true)
@@ -62,14 +63,17 @@ import Testing
         }
         defer { MockNetwork.reset() }
 
+        // ACT
         let album = try await AlbumSearchService(session: session).get("42")
 
+        // ASSERT
         #expect(album.id == "42")
         #expect(album.title == "Album A")
         #expect(album.songs?.map(\.id) == ["1", "2"])
     }
 
     @Test func get_throwsNotFoundWhenResponseIsEmpty() async throws {
+        // ARRANGE
         let session = MockNetwork.makeSession { request in
             let response = HTTPURLResponse(
                 url: try #require(request.url),
@@ -89,10 +93,12 @@ import Testing
         }
         defer { MockNetwork.reset() }
 
+        // ACT
         do {
             _ = try await AlbumSearchService(session: session).get("42")
             Issue.record("Expected empty album lookup response to throw NotFoundError")
         } catch {
+            // ASSERT
             #expect(error is NotFoundError)
         }
     }
