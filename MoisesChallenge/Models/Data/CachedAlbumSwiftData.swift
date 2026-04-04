@@ -14,10 +14,11 @@ class CachedAlbumSwiftData {
     
     var id: String
     var title: String?
-    var artist: Artist?
+    var artistId: String?
+    var artistName: String?
     var itemArtwork: String?
     var mainArtwork: String?
-    var songs: [Song]
+    var songs: [CachedSongSwiftData]
     var cachedAt: Date
     
     init(
@@ -31,10 +32,13 @@ class CachedAlbumSwiftData {
     ) {
         self.id = id
         self.title = title
-        self.artist = artist
+        self.artistId = artist?.id
+        self.artistName = artist?.name
         self.itemArtwork = itemArtwork
         self.mainArtwork = mainArtwork
-        self.songs = songs
+        self.songs = songs.enumerated().map { index, song in
+            CachedSongSwiftData(song: song, sortIndex: index)
+        }
         self.cachedAt = cachedAt
     }
 }
@@ -60,10 +64,13 @@ extension Album {
         self = .init(
             id: album.id,
             title: album.title,
-            artist: album.artist,
+            artist: {
+                guard let artistId = album.artistId else { return nil }
+                return Artist(id: artistId, name: album.artistName)
+            }(),
             itemArtwork: album.itemArtwork,
             mainArtwork: album.mainArtwork,
-            songs: album.songs
+            songs: album.songs.sorted { $0.sortIndex < $1.sortIndex }.map(Song.init(from:))
         )
     }
 }

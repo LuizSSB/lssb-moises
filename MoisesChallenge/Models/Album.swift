@@ -9,8 +9,8 @@ struct Album: Identifiable, Codable, Hashable {
     let id: String
     let title: String?
     let artist: Artist?
-    let itemArtwork: String?
-    let mainArtwork: String?
+    var itemArtwork: String?
+    var mainArtwork: String?
 
     var songs: [Song]? // nil means the songs weren't loaded
 }

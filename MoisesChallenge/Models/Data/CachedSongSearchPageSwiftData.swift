@@ -15,14 +15,16 @@ final class CachedSongSearchPageSwiftData {
     var searchTerm: String
     var offset: Int
     var limit: Int?
-    var entries: [Song]
+    var entries: [CachedSongSwiftData]
     var cachedAt: Date
     
     init(searchTerm: String, offset: Int, limit: Int? = nil, entries: [Song], cachedAt: Date = .now) {
         self.searchTerm = searchTerm
         self.offset = offset
         self.limit = limit
-        self.entries = entries
+        self.entries = entries.enumerated().map { index, song in
+            CachedSongSwiftData(song: song, sortIndex: index)
+        }
         self.cachedAt = cachedAt
     }
 }
@@ -41,7 +43,7 @@ extension CachedSongSearchPageSwiftData {
 extension SongSearchPage {
     init(from cached: CachedSongSearchPageSwiftData) {
         self.init(
-            entries: cached.entries,
+            entries: cached.entries.sorted { $0.sortIndex < $1.sortIndex }.map(Song.init(from:)),
             pagination: .init(
                 params: .init(searchTerm: cached.searchTerm),
                 offset: cached.offset,

@@ -4,6 +4,7 @@ import SwiftData
 
 func makeTestModelContainer() throws -> ModelContainer {
     let schema = Schema([
+        CachedSongSwiftData.self,
         SongInteractionSwiftData.self,
         CachedAlbumSwiftData.self,
         CachedSongSearchPageSwiftData.self

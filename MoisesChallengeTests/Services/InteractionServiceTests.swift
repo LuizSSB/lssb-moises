@@ -21,7 +21,7 @@ import Testing
         let saved = try context.fetch(FetchDescriptor<SongInteractionSwiftData>())
 
         #expect(saved.count == 1)
-        #expect(saved.first?.song == TestData.song1)
+        #expect(Song(from: saved.first!.storedSong) == TestData.song1)
         #expect(await reader.value?.song == TestData.song1)
     }
 

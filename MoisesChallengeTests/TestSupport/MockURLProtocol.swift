@@ -2,7 +2,7 @@ import Alamofire
 import Foundation
 
 final class MockURLProtocol: URLProtocol, @unchecked Sendable {
-    static let requestIDHeader = "X-Mock-Network-ID"
+    static let requestIdHeader = "X-Mock-Network-ID"
     private nonisolated(unsafe) static var handlers: [String: @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)] = [:]
     private static let lock = NSLock()
     
@@ -16,8 +16,8 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     
     override func startLoading() {
         guard
-            let requestID = request.value(forHTTPHeaderField: Self.requestIDHeader),
-            let handler = Self.handler(for: requestID)
+            let requestId = request.value(forHTTPHeaderField: Self.requestIdHeader),
+            let handler = Self.handler(for: requestId)
         else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
@@ -38,16 +38,16 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     static func register(
         handler: @escaping @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)
     ) -> String {
-        let requestID = UUID().uuidString
+        let requestId = UUID().uuidString
         lock.lock()
-        handlers[requestID] = handler
+        handlers[requestId] = handler
         lock.unlock()
-        return requestID
+        return requestId
     }
 
-    private static func handler(for requestID: String) -> (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
+    private static func handler(for requestId: String) -> (@Sendable (URLRequest) throws -> (HTTPURLResponse, Data))? {
         lock.lock()
-        let handler = handlers[requestID]
+        let handler = handlers[requestId]
         lock.unlock()
         return handler
     }
@@ -60,7 +60,7 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
 }
 
 private struct MockRequestInterceptor: RequestInterceptor {
-    let requestID: String
+    let requestId: String
 
     func adapt(
         _ urlRequest: URLRequest,
@@ -68,7 +68,7 @@ private struct MockRequestInterceptor: RequestInterceptor {
         completion: @escaping @Sendable (Result<URLRequest, any Error>) -> Void
     ) {
         var request = urlRequest
-        request.setValue(requestID, forHTTPHeaderField: MockURLProtocol.requestIDHeader)
+        request.setValue(requestId, forHTTPHeaderField: MockURLProtocol.requestIdHeader)
         completion(.success(request))
     }
 }
@@ -77,7 +77,7 @@ enum MockNetwork {
     static func makeSession(
         handler: @escaping @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)
     ) -> Session {
-        let requestID = MockURLProtocol.register(handler: handler)
+        let requestId = MockURLProtocol.register(handler: handler)
 
         let configuration = URLSessionConfiguration.af.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
@@ -86,7 +86,7 @@ enum MockNetwork {
 
         return Session(
             configuration: configuration,
-            interceptor: MockRequestInterceptor(requestID: requestID)
+            interceptor: MockRequestInterceptor(requestId: requestId)
         )
     }
 

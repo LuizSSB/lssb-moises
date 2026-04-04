@@ -10,6 +10,7 @@ import SwiftData
 
 private func makeAppModelContainer() -> ModelContainer {
     let schema = Schema([
+        CachedSongSwiftData.self,
         SongInteractionSwiftData.self,
         CachedAlbumSwiftData.self,
         CachedSongSearchPageSwiftData.self

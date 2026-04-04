@@ -13,18 +13,21 @@ final class SongInteractionSwiftData {
     #Unique<SongInteractionSwiftData>([\.id])
     
     var id: String
-    var song: Song
+    var storedSong: CachedSongSwiftData
     var lastPlayedAt: Date
     
     init(song: Song, lastPlayedAt: Date = .now) {
         self.id = song.id
-        self.song = song
+        self.storedSong = CachedSongSwiftData(song: song)
         self.lastPlayedAt = lastPlayedAt
     }
 }
 
 extension SongInteraction {
     init(from data: SongInteractionSwiftData) {
-        self = .init(song: data.song, lastPlayedAt: data.lastPlayedAt)
+        self = .init(
+            song: .init(from: data.storedSong),
+            lastPlayedAt: data.lastPlayedAt
+        )
     }
 }

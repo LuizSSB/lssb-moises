@@ -18,7 +18,7 @@ struct PaginatedListView<
     RowContent: View,
     PlaceholderContent: View
 >: View {
-    private let topScrollID = "paginated-list-top"
+    private let topScrollId = "paginated-list-top"
     
     let items: [Item]
     let loadState: PaginatedListLoadState
@@ -58,7 +58,7 @@ struct PaginatedListView<
                             let row = rowContent(element)
                             if offset == 0 {
                                 row
-                                    .id(topScrollID)
+                                    .id(topScrollId)
                             } else {
                                 row
                             }
@@ -83,7 +83,7 @@ struct PaginatedListView<
                     .onChange(of: loadState) {
                         if loadState == .refreshing {
                             withAnimation {
-                                proxy.scrollTo(topScrollID, anchor: .top)
+                                proxy.scrollTo(topScrollId, anchor: .top)
                             }
                         }
                     }
