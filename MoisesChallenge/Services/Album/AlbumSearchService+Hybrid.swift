@@ -10,15 +10,19 @@ import Foundation
 import SwiftData
 
 extension AlbumSearchService {
-    static let hybrid = Self.init(
-        get: { albumId in
-            if let cached = try? await Self.cache.service.get(albumId) {
-                return cached
+    init(with cache: Cache) {
+        self.init(
+            get: { albumId in
+                if let cached = try? await cache.service.get(albumId) {
+                    return cached
+                }
+                
+                let fresh = try await Self.iTunes.get(albumId)
+                try? cache.add(album: fresh)
+                return fresh
             }
-            
-            let fresh = try await Self.iTunes.get(albumId)
-            try? Self.cache.addToCache(fresh)
-            return fresh
-        }
-    )
+        )
+    }
+    
+    static let hybrid = Self(with: .init(container: swiftDataConfig.appModelContainer))
 }

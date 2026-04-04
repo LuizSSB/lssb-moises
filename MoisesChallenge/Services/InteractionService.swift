@@ -19,13 +19,13 @@ struct InteractionService {
 }
 
 extension InteractionService {
-    static let swiftData: Self = {
+    init(with container: ModelContainer) {
         let onSongMarkedPlayed = Event<SongInteraction>()
         
-        return Self(
+        self.init(
             songMarkedPlayedEvent: onSongMarkedPlayed,
             markPlayed: { song in
-                let context = ModelContext(swiftDataConfig.appModelContainer)
+                let context = ModelContext(container)
                 let interaction = SongInteractionSwiftData(song: song)
                 context.insert(interaction)
                 try context.save()
@@ -33,7 +33,7 @@ extension InteractionService {
                 onSongMarkedPlayed.emitAndForget(.init(from: interaction))
             },
             listPlayedSongs: { pagination in
-                let context = ModelContext(swiftDataConfig.appModelContainer)
+                let context = ModelContext(container)
                 
                 var descriptor = FetchDescriptor<SongInteractionSwiftData>(
                     sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
@@ -52,5 +52,7 @@ extension InteractionService {
                 )
             }
         )
-    }()
+    }
+    
+    static let swiftData = Self.init(with: swiftDataConfig.appModelContainer)
 }

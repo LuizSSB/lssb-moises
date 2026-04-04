@@ -8,15 +8,19 @@
 import Foundation
 
 extension SongSearchService {
-    static let hybrid = Self(
-        search: { pagination in
-            if let cached = try? await Self.cache.service.search(pagination) {
-                return cached
+    init(with cache: Cache) {
+        self.init(
+            search: { pagination in
+                if let cached = try? await cache.service.search(pagination) {
+                    return cached
+                }
+                
+                let fresh = try await Self.iTunes.search(pagination)
+                try? cache.add(page: fresh)
+                return fresh
             }
-            
-            let fresh = try await Self.iTunes.search(pagination)
-            try? Self.cache.addToCache(fresh)
-            return fresh
-        }
-    )
+        )
+    }
+    
+    static let hybrid = Self(with: .init(container: swiftDataConfig.appModelContainer))
 }
