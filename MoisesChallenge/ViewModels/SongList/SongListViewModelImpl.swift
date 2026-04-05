@@ -110,9 +110,9 @@ final class SongListViewModelImpl: SongListViewModel {
 
     func select(song: Song) {
         let queue: any MoisesChallenge.PlaybackQueue<Song> = if let searchList {
-            PlaybackQueue(list: searchList, selectedSong: song)
+            PaginatedListPlaybackQueue(list: searchList, selectedSong: song)
         } else {
-            PlaybackQueue(list: recentList, selectedSong: song)
+            PaginatedListPlaybackQueue(list: recentList, selectedSong: song)
         }
         let viewModel = container.songPlayerViewModel(queue: queue)
         player.present(viewModel)
