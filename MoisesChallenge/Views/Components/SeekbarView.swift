@@ -34,13 +34,16 @@ struct SeekbarView: View {
                 // Complete bar
                 Capsule()
                     .fill(Color.seekbar.opacity(0.25))
+                    .frame(width: trackWidth, height: trackHeight)
                     .padding(.horizontal, thumbRadius)
                     .frame(height: trackHeight)
 
                 // Filled bar
                 Capsule()
                     .fill(Color.seekbar.opacity(0.6))
-                    .frame(width: thumbCenterX, height: trackHeight)
+                    .frame(width: trackWidth * clampedProgress, height: trackHeight)
+                    .padding(.horizontal, thumbRadius)
+                    .frame(height: trackHeight, alignment: .leading)
                 
                 // Thumb
                 Circle()
