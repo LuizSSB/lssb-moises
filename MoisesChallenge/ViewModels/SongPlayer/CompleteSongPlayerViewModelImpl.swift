@@ -11,6 +11,7 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     private(set) var album: any PresentationViewModel<any AlbumViewModel>
     
     private let container: any IoCContainer
+    private let queue: any PlaybackQueue<Song>
     
     init(
         songList: any PaginatedListViewModel<Song>,
@@ -18,6 +19,7 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
         container: any IoCContainer
     ) {
         let queue = container.playbackQueue(ofKind: .paginated(songList), selectedItem: selectedSong)
+        self.queue = queue
         self.actualPlayer = container.focusedSongPlayerViewModel(queue: queue)
         self.songList = songList
         self.album = container.presentationViewModel()
@@ -25,7 +27,8 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     }
     
     func select(song: Song) {
-//        actualPlayer.currentSong = song
+        guard let index = songList.items.firstIndex(of: song) else { return }
+        queue.currentIndex = index
     }
     
     func selectAlbum(of song: Song) {
