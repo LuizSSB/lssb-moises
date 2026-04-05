@@ -79,7 +79,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
     func select(song: Song) {
         guard case let .success(album) = album,
               let songs = album.songs,
-              let queue = StaticPlaybackQueue(items: songs, selectedItem: song)
+              let queue = container.playbackQueue(ofKind: .init(staticItems: songs), selectedItem: song)
         else { return }
         
         let viewModel = container.songPlayerViewModel(queue: queue)

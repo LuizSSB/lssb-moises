@@ -1,0 +1,110 @@
+# ViewModels
+
+This directory contains the app's View Model layer.
+
+View models are the main coordinators of business logic in the UI flow: they fetch data through `Services`, react to events from `Controllers`, expose observable state to `Views`, and drive navigation or presentation decisions without embedding UI rendering details.
+
+## Role in the architecture
+
+- Prepare data for screens and reusable view flows.
+- Translate user interactions into service calls, playback actions, or navigation.
+- Expose observable state that SwiftUI views can bind to.
+- Keep the `Views` layer focused on presentation rather than business logic.
+
+Across this directory, the common pattern is:
+
+- A protocol defines the expected behavior of a view model.
+- A concrete `...Impl` type implements that behavior.
+- Dependencies are injected from the IoC container rather than created internally.
+
+## Directory structure
+
+### `SongList`
+
+The home/search screen view model lives in `ViewModels/SongList`.
+
+- `SongListViewModel.swift`: the public contract for the song list screen.
+- `SongListViewModelImpl.swift`: coordinates recently played songs, search state, song selection, and album navigation.
+
+This view model is responsible for switching between:
+
+- a recent songs list backed by `InteractionService`
+- a search results list backed by `SongSearchService`
+
+It also presents the song player and album screens when the user selects a song or album.
+
+### `SongPlayer`
+
+The player screen view model lives in `ViewModels/SongPlayer`.
+
+- `SongPlayerViewModel.swift`: defines the player-facing state and playback controls.
+- `SongPlayerViewModelImpl.swift`: coordinates the playback queue, playback controller, repeat behavior, progress updates, and recent-play persistence.
+
+This is the main orchestration point for playback behavior in the UI layer.
+
+### `Album`
+
+The album details screen view model lives in `ViewModels/Album`.
+
+- `AlbumViewModel.swift`: the public contract for album loading and song selection.
+- `AlbumViewModelImpl.swift`: loads album details, exposes loading/error state, and opens the player for selected album tracks.
+
+### `PaginatedList`
+
+Reusable paginated-list logic lives in `ViewModels/PaginatedList`.
+
+- `PaginatedListViewModel.swift`: defines the base paginated-list APIs and the full paginated contract.
+- `PaginatedListViewModelImpl.swift`: implements first-page loading, next-page loading, refresh, error recovery, and page-loaded events.
+- `PaginatedListPlaybackQueue.swift`: adapts a paginated list into a playback queue, including loading the next page when playback advances beyond the currently loaded items.
+
+This folder provides a key shared abstraction used by multiple features, especially the song list flows.
+
+### `Presentation`
+
+Presentation helpers live in `ViewModels/Presentation`.
+
+- `PresentationViewModel.swift`: a small abstraction for presenting and dismissing another value or view model.
+- `PresentationViewModelImpl.swift`: the observable implementation used by screens for navigation and sheet/full-screen presentation state.
+- `ErrorPresentation.swift`: maps internal errors into `UserFacingError` values suitable for display.
+
+These helpers keep navigation and user-facing error handling consistent across the app.
+
+## Important components
+
+### `SongListViewModel`
+
+The main view model for the app's home flow.
+
+- Manages both recent songs and search results.
+- Owns presentation state for the player and album screens.
+- Refreshes recent songs when playback interactions change.
+
+### `SongPlayerViewModel`
+
+The main view model for playback.
+
+- Observes both the playback queue and the playback controller.
+- Tracks playback state, progress, elapsed time, duration, and repeat mode.
+- Handles next/previous movement and playback-end behavior.
+
+### `PaginatedListViewModel`
+
+The reusable pagination engine for list-based features.
+
+- Centralizes paging, refresh, loading-state, and retry behavior.
+- Exposes `pageLoadedEvent`, which other components can react to.
+- Enables features like infinite scrolling and the paginated playback queue.
+
+### `PresentationViewModel`
+
+A lightweight abstraction for navigation/presentation state.
+
+- Lets a view model present another view model without taking a dependency on concrete view code.
+- Keeps modal/navigation state observable and easy to reset.
+
+## Important patterns
+
+- View models expose observable state and imperative actions, but not view code.
+- Screen-specific view models compose shared helpers such as paginated lists and presentation state instead of reimplementing them.
+- The protocol/implementation split keeps the layer testable and friendly to dependency injection.
+- Errors are converted into `UserFacingError` values here, close to the UI boundary, so services and controllers can stay focused on lower-level concerns.

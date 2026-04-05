@@ -12,10 +12,10 @@ struct AlbumSearchService {
 }
 
 extension AlbumSearchService {
-    init(session: Session) {
+    init(iTunesAPISession: Session) {
         self.init(
             get: { albumId in
-                let result = await session.request(
+                let result = await iTunesAPISession.request(
                     iTunesAPIConfig.urls.lookup,
                     parameters: [
                         "id": albumId,
@@ -38,5 +38,5 @@ extension AlbumSearchService {
         )
     }
     
-    static let iTunes = Self(session: AF)
+    static let iTunes = Self(iTunesAPISession: AF)
 }

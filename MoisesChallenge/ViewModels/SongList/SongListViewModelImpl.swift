@@ -109,11 +109,12 @@ final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Navigation
 
     func select(song: Song) {
-        let queue: any PlaybackQueue<Song> = if let searchList {
-            container.paginatedListPlaybackQueue(list: searchList, selectedItem: song)
+        let queue: (any PlaybackQueue<Song>)? = if let searchList {
+            container.playbackQueue(ofKind: .paginated(searchList), selectedItem: song)
         } else {
-            container.paginatedListPlaybackQueue(list: recentList, selectedItem: song)
+            container.playbackQueue(ofKind: .paginated(recentList), selectedItem: song)
         }
+        guard let queue else { return }
         let viewModel = container.songPlayerViewModel(queue: queue)
         player.present(viewModel)
     }

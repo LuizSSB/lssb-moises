@@ -64,7 +64,7 @@ import Testing
         defer { MockNetwork.reset() }
 
         // ACT
-        let album = try await AlbumSearchService(session: session).get("42")
+        let album = try await AlbumSearchService(iTunesAPISession: session).get("42")
 
         // ASSERT
         #expect(album.id == "42")
@@ -95,7 +95,7 @@ import Testing
 
         // ACT
         do {
-            _ = try await AlbumSearchService(session: session).get("42")
+            _ = try await AlbumSearchService(iTunesAPISession: session).get("42")
             Issue.record("Expected empty album lookup response to throw NotFoundError")
         } catch {
             // ASSERT

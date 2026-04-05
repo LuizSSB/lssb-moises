@@ -70,7 +70,7 @@ import Testing
         defer { MockNetwork.reset() }
 
         // ACT
-        let page = try await SongSearchService(session: session).search(
+        let page = try await SongSearchService(iTunesAPISession: session).search(
             .init(params: .init(searchTerm: "beatles"), offset: 1, limit: 1)
         )
 
@@ -94,7 +94,7 @@ import Testing
 
         // ACT
         do {
-            _ = try await SongSearchService(session: session).search(.first(params: .init(searchTerm: "beatles"), limit: 1))
+            _ = try await SongSearchService(iTunesAPISession: session).search(.first(params: .init(searchTerm: "beatles"), limit: 1))
             Issue.record("Expected iTunes search to surface the network error")
         } catch {
             // ASSERT

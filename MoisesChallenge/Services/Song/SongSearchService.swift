@@ -12,7 +12,7 @@ struct SongSearchService {
 }
 
 extension SongSearchService {
-    init(session: Session) {
+    init(iTunesAPISession: Session) {
         self.init(
             /// Lists all songs with pagination.
             /// The iTunes API doesn't support pagination (only limit), so by default we can't have that. In addition, we also can't simulate pagination by increasing the limit and cutting off all entries prior to the offset, because the position of songs in the results may shift when the limit changes.
@@ -21,7 +21,7 @@ extension SongSearchService {
                 let limit = pagination.limit ?? iTunesAPIConfig.maxLimit
                 
                 if let allResults = pagination.params.allResults {
-                    try? await Task.sleep(for: .seconds(3)) // just for the thrills
+                    try? await Task.sleep(for: .seconds(3)) // unnecessary, but here just so we can show the UI loading
                     
                     return .init(
                         entries: Array(allResults[pagination.offset..<min(allResults.count, pagination.offset + limit)]),
@@ -33,7 +33,7 @@ extension SongSearchService {
                     )
                 }
                 
-                let result = await session.request(
+                let result = await iTunesAPISession.request(
                     iTunesAPIConfig.urls.search,
                     parameters: [
                         "term": pagination.params.searchTerm,
@@ -66,5 +66,5 @@ extension SongSearchService {
         )
     }
     
-    static let iTunes = Self(session: AF)
+    static let iTunes = Self(iTunesAPISession: AF)
 }

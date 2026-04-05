@@ -20,9 +20,10 @@ protocol IoCContainer: AnyObject {
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
         fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
     ) -> any PaginatedListViewModel<Item, PaginationParams>
-    func paginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item
-    ) -> any PlaybackQueue<Item>
+    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
+        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
+        selectedItem: Item
+    ) -> (any PlaybackQueue<Item>)?
 }
 
 extension IoCContainer {
@@ -77,10 +78,16 @@ extension IoCContainer {
         PaginatedListViewModelImpl(fetch: fetch)
     }
     
-    func paginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item
-    ) -> any PlaybackQueue<Item> {
-        PaginatedListPlaybackQueue(list: list, selectedItem: selectedItem)
+    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
+        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
+        selectedItem: Item
+    ) -> (any PlaybackQueue<Item>)? {
+        switch kind {
+        case let .static(items):
+            return StaticPlaybackQueue(items: items, selectedItem: selectedItem)
+        case let .paginated(list):
+            return PaginatedListPlaybackQueue(list: list, selectedItem: selectedItem)
+        }
     }
 }
 

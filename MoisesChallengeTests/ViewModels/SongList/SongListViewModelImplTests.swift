@@ -285,16 +285,22 @@ private final class IoCContainerStub: IoCContainer {
 
         return PaginatedListViewModelImpl(fetch: fetch)
     }
-
-    func paginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        list: any PaginatedListViewModel<Item, PaginationParams>,
+    
+    
+    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
+        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
         selectedItem: Item
-    ) -> any PlaybackQueue<Item> {
+    ) -> (any PlaybackQueue<Item>)? {
         if let song = selectedItem as? Song {
             capturedSelectedSong = song
         }
-
-        capturedQueueList = list as AnyObject
+        
+        switch kind {
+        case .static:
+            break
+        case let .paginated(list):
+            capturedQueueList = list as AnyObject
+        }
         return PlaybackQueueStub(selectedItem: selectedItem)
     }
 }
