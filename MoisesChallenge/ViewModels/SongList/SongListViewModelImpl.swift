@@ -15,11 +15,11 @@ final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Public State
 
     private(set) var recentList: any PaginatedListViewModel<Song, NullPaginationParams>
-    var searchText = ""
+    var workingSearchQuery = ""
     private(set) var currentQuery = ""
     private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
 
-    var currentList: any PaginatedListViewModel {
+    var currentList: any BasePaginatedListViewModel<Song> {
         searchList ?? recentList
     }
 
@@ -86,7 +86,7 @@ final class SongListViewModelImpl: SongListViewModel {
             guard searchList != nil else { return }
             withAnimation {
                 searchList = nil
-                searchText = ""
+                workingSearchQuery = ""
                 currentQuery = ""
             }
             prepareRecentList()
@@ -94,7 +94,7 @@ final class SongListViewModelImpl: SongListViewModel {
     }
 
     func submitSearch() {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = workingSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty,
               query != currentQuery,
               let searchList
@@ -110,9 +110,9 @@ final class SongListViewModelImpl: SongListViewModel {
 
     func select(song: Song) {
         let queue: any PlaybackQueue<Song> = if let searchList {
-            PaginatedListPlaybackQueue(list: searchList, selectedItem: song)
+            container.paginatedListPlaybackQueue(list: searchList, selectedItem: song)
         } else {
-            PaginatedListPlaybackQueue(list: recentList, selectedItem: song)
+            container.paginatedListPlaybackQueue(list: recentList, selectedItem: song)
         }
         let viewModel = container.songPlayerViewModel(queue: queue)
         player.present(viewModel)

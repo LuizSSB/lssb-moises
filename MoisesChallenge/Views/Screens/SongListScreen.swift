@@ -16,7 +16,7 @@ struct SongListScreen: View {
         SearchBarContentContainer {
             let currentList = viewModel.currentList
             PaginatedListView(
-                items: currentList.items as! [Song],
+                items: currentList.items,
                 loadState: currentList.loadState,
                 hasMore: currentList.hasMore,
                 rowContent: songRow,
@@ -34,7 +34,7 @@ struct SongListScreen: View {
         }
         .navigationTitle(String(localized: .songsNavigationTitle))
         .searchable(
-            text: $viewModel.searchText,
+            text: $viewModel.workingSearchQuery,
             placement: .navigationBarDrawer(displayMode: .always)
         )
         .onSubmit(of: .search) {

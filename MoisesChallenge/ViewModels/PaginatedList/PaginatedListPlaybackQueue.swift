@@ -12,6 +12,7 @@ class PaginatedListPlaybackQueue<
 >: PlaybackQueue {
     // MARK: - Private State
     
+    private var currentItemChangeCount = 0
     private var nextIndexBeingLoaded: Int?
     private let list: any PaginatedListViewModel<Item, PaginationParams>
     
@@ -26,6 +27,7 @@ class PaginatedListPlaybackQueue<
     
     private(set) var currentItem: Item? {
         didSet {
+            currentItemChangeCount += 1
             currentItemChangedEvent.emitAndForget(currentItem)
         }
     }
@@ -96,6 +98,7 @@ class PaginatedListPlaybackQueue<
         guard nextIndexBeingLoaded == nil else { return }
         
         let streamData = await list.pageLoadedEvent.stream()
+        let currentItemChangeCountBeforeLoading = currentItemChangeCount
         nextIndexBeingLoaded = index
         list.loadNextPage()
         
@@ -108,7 +111,9 @@ class PaginatedListPlaybackQueue<
         
         switch result {
         case .success:
-            guard index < list.items.count else { return }
+            guard currentItemChangeCount == currentItemChangeCountBeforeLoading,
+                  index < list.items.count
+            else { return }
             currentItem = list.items[index]
         case .failure(let error):
             throw error

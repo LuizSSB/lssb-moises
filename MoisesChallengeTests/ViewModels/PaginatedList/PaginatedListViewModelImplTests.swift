@@ -184,6 +184,44 @@ struct PaginatedListViewModelImplTests {
         #expect(await stub.requestedPages() == [nil, nil])
     }
 
+    @Test func interactWithError_retriesFailedNextPageLoadWhenRequested() async throws {
+        // ARRANGE
+        let stub = FetchStub([
+            .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
+            .failure(InvalidDataError()),
+            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
+        ])
+        let viewModel = makeViewModel(with: stub)
+
+        let initialLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadFirstPageIfNeeded()
+        _ = try requireSuccess(try #require(await initialLoad.value))
+
+        let failedNextLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadNextPage()
+        _ = try #require(await failedNextLoad.value)
+
+        let retriedNextLoad = await readNextPageLoadedEvent(from: viewModel)
+
+        // ACT
+        viewModel.interactWithError(shouldRetry: true)
+
+        let page = try requireSuccess(try #require(await retriedNextLoad.value))
+
+        // ASSERT
+        #expect(page.entries == [3])
+        #expect(viewModel.items == [1, 2, 3])
+        #expect(viewModel.loadState == .loaded)
+        #expect(viewModel.latestResult == page)
+        #expect(
+            await stub.requestedPages() == [
+                nil,
+                Pagination(offset: 2, limit: 2),
+                Pagination(offset: 2, limit: 2)
+            ]
+        )
+    }
+
     @Test func interactWithError_restoresIdleStateWhenAbandoningFailedFirstPageLoad() async throws {
         // ARRANGE
         let stub = FetchStub([
@@ -228,6 +266,124 @@ struct PaginatedListViewModelImplTests {
         #expect(viewModel.latestResult == Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2)))
     }
 
+    @Test func refresh_setsErrorStateAndKeepsCurrentItemsWhenFetchFails() async throws {
+        // ARRANGE
+        let initialPage = Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))
+        let stub = FetchStub([
+            .success(initialPage),
+            .failure(InvalidDataError())
+        ])
+        let viewModel = makeViewModel(with: stub)
+
+        let initialLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadFirstPageIfNeeded()
+        _ = try requireSuccess(try #require(await initialLoad.value))
+
+        let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
+
+        // ACT
+        await viewModel.refresh()
+
+        let refreshResult = try #require(await failedRefresh.value)
+
+        // ASSERT
+        switch refreshResult {
+        case .success:
+            Issue.record("Expected refreshing the list to fail.")
+        case .failure(let error):
+            #expect(error is InvalidDataError)
+        }
+        #expect(viewModel.items == [1, 2])
+        #expect(viewModel.latestResult == initialPage)
+        #expect(viewModel.loadState == .error(InvalidDataError().userFacingError))
+    }
+
+    @Test func interactWithError_restoresLoadedStateWhenAbandoningFailedRefresh() async throws {
+        // ARRANGE
+        let initialPage = Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))
+        let stub = FetchStub([
+            .success(initialPage),
+            .failure(InvalidDataError())
+        ])
+        let viewModel = makeViewModel(with: stub)
+
+        let initialLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadFirstPageIfNeeded()
+        _ = try requireSuccess(try #require(await initialLoad.value))
+
+        let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
+        await viewModel.refresh()
+        _ = try #require(await failedRefresh.value)
+
+        // ACT
+        viewModel.interactWithError(shouldRetry: false)
+
+        // ASSERT
+        #expect(viewModel.items == [1, 2])
+        #expect(viewModel.latestResult == initialPage)
+        #expect(viewModel.loadState == .loaded)
+    }
+
+    @Test func interactWithError_retriesFailedRefreshWhenRequested() async throws {
+        // ARRANGE
+        let initialPage = Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))
+        let refreshedPage = Page(entries: [10, 11], pagination: .init(offset: 0, limit: 2))
+        let stub = FetchStub([
+            .success(initialPage),
+            .failure(InvalidDataError()),
+            .success(refreshedPage)
+        ])
+        let viewModel = makeViewModel(with: stub)
+
+        let initialLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadFirstPageIfNeeded()
+        _ = try requireSuccess(try #require(await initialLoad.value))
+
+        let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
+        await viewModel.refresh()
+        _ = try #require(await failedRefresh.value)
+
+        let retriedRefresh = await readNextPageLoadedEvent(from: viewModel)
+
+        // ACT
+        viewModel.interactWithError(shouldRetry: true)
+
+        let page = try requireSuccess(try #require(await retriedRefresh.value))
+
+        // ASSERT
+        #expect(page == refreshedPage)
+        #expect(viewModel.items == [10, 11])
+        #expect(viewModel.latestResult == refreshedPage)
+        #expect(viewModel.loadState == .loaded)
+        #expect(await stub.requestedPages() == [nil, nil, nil])
+    }
+
+    @Test func reset_keepsIdleStateWhenCancelledLoadEventuallyCompletes() async {
+        // ARRANGE
+        let stub = FetchStub(responses: [.suspended])
+        let viewModel = makeViewModel(with: stub)
+
+        // ACT
+        viewModel.loadFirstPageIfNeeded()
+        await busyWaitAsync {
+            let pendingRequestCount = await stub.pendingRequestCount()
+            return pendingRequestCount == 1
+        }
+        viewModel.reset()
+        await stub.resumeNextRequest(
+            with: .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2)))
+        )
+        await busyWaitAsync {
+            let completedRequestCount = await stub.completedRequestCount()
+            return completedRequestCount == 1
+        }
+
+        // ASSERT
+        #expect(viewModel.items.isEmpty)
+        #expect(viewModel.latestResult == nil)
+        #expect(viewModel.loadState == .idle)
+    }
+
     private func makeViewModel(
         with stub: FetchStub
     ) -> PaginatedListViewModelImpl<Int, NullPaginationParams> {
@@ -240,11 +396,16 @@ struct PaginatedListViewModelImplTests {
         from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>
     ) async -> Task<Result<Page, Error>?, Never> {
         let (_, stream) = await viewModel.pageLoadedEvent.stream()
-
-        return Task {
+        let reader = Task {
             var iterator = stream.makeAsyncIterator()
             return await iterator.next()
         }
+        await busyWaitAsync {
+            let observerCount = await viewModel.pageLoadedEvent.observerCount
+            return observerCount > 0
+        }
+
+        return reader
     }
 
     private func readPageLoadedEvents(
@@ -252,8 +413,7 @@ struct PaginatedListViewModelImplTests {
         count: Int
     ) async -> Task<[Result<Page, Error>], Never> {
         let (_, stream) = await viewModel.pageLoadedEvent.stream()
-
-        return Task {
+        let reader = Task {
             var iterator = stream.makeAsyncIterator()
             var values: [Result<Page, Error>] = []
 
@@ -265,6 +425,12 @@ struct PaginatedListViewModelImplTests {
 
             return values
         }
+        await busyWaitAsync {
+            let observerCount = await viewModel.pageLoadedEvent.observerCount
+            return observerCount > 0
+        }
+
+        return reader
     }
 
     private func requireSuccess(_ result: Result<Page, Error>) throws -> Page {
@@ -279,25 +445,59 @@ struct PaginatedListViewModelImplTests {
 
 private actor FetchStub {
     typealias Page = Pagination<NullPaginationParams>.Page<Int>
+    
+    enum Response {
+        case immediate(Result<Page, Error>)
+        case suspended
+    }
 
-    private var results: [Result<Page, Error>]
+    private var responses: [Response]
     private var recordedPages: [Pagination<NullPaginationParams>?] = []
+    private var pendingContinuations: [CheckedContinuation<Result<Page, Error>, Never>] = []
+    private var completedFetchCount = 0
 
     init(_ results: [Result<Page, Error>]) {
-        self.results = results
+        self.responses = results.map(Response.immediate)
+    }
+    
+    init(responses: [Response]) {
+        self.responses = responses
     }
 
     func fetch(_ page: Pagination<NullPaginationParams>?) async throws -> Page {
         recordedPages.append(page)
 
-        guard !results.isEmpty else {
+        guard !responses.isEmpty else {
             throw InvalidDataError()
         }
 
-        return try results.removeFirst().get()
+        let result = switch responses.removeFirst() {
+        case .immediate(let result):
+            result
+        case .suspended:
+            await withCheckedContinuation { continuation in
+                pendingContinuations.append(continuation)
+            }
+        }
+        completedFetchCount += 1
+
+        return try result.get()
     }
 
     func requestedPages() -> [Pagination<NullPaginationParams>?] {
         recordedPages
+    }
+    
+    func pendingRequestCount() -> Int {
+        pendingContinuations.count
+    }
+    
+    func resumeNextRequest(with result: Result<Page, Error>) {
+        guard !pendingContinuations.isEmpty else { return }
+        pendingContinuations.removeFirst().resume(returning: result)
+    }
+    
+    func completedRequestCount() -> Int {
+        completedFetchCount
     }
 }

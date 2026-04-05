@@ -11,11 +11,11 @@ import Observation
 protocol SongListViewModel: AnyObject, Observable, Sendable {
     var recentList: any PaginatedListViewModel<Song, NullPaginationParams> { get }
     
-    var searchText: String { get set }
+    var workingSearchQuery: String { get set }
     var currentQuery: String { get }
     var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)? { get }
     
-    var currentList: any PaginatedListViewModel { get }
+    var currentList: any BasePaginatedListViewModel<Song> { get }
     
     var player: any PresentationViewModel<any SongPlayerViewModel> { get }
     var album: any PresentationViewModel<any AlbumViewModel> { get }

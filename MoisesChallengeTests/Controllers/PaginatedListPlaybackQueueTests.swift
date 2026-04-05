@@ -294,8 +294,7 @@ struct PaginatedListPlaybackQueueTests {
         // ARRANGE
         let list = PaginatedListViewModelStub(
             items: [TestData.song1, TestData.song2],
-            latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2)),
-            intervalBetweenLoads: 0.5
+            latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2))
         )
         let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
@@ -304,12 +303,14 @@ struct PaginatedListPlaybackQueueTests {
         }
 
         await busyWaitAsync {
+            let observerCount = await list.pageLoadedEvent.observerCount
             let loadNextPageCallCount = await list.recordedLoadNextPageCallCount()
-            return loadNextPageCallCount == 1
+            return loadNextPageCallCount == 1 && observerCount > 0
         }
         queue.currentIndex = 0
 
         // ACT
+        list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         let latestResult = try #require(list.latestResult)
         await list.pageLoadedEvent.emit(.success(latestResult))
@@ -329,6 +330,10 @@ struct PaginatedListPlaybackQueueTests {
             var iterator = stream.makeAsyncIterator()
             return await iterator.next()
         }
+        await busyWaitAsync {
+            let observerCount = await queue.currentItemChangedEvent.observerCount
+            return observerCount > 0
+        }
 
         // ACT
         queue.currentIndex = 1
@@ -345,30 +350,20 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
     var latestResult: Pagination<NullPaginationParams>.Page<Song>?
     var pageLoadedEvent = Event<Result<Pagination<NullPaginationParams>.Page<Song>, Error>>()
     private(set) var loadNextPageCallCount = 0
-    var intervalBetweenLoads: TimeInterval = 0
 
     init(
         items: [Song],
-        latestResult: Pagination<NullPaginationParams>.Page<Song>? = nil,
-        intervalBetweenLoads: Double = 0
+        latestResult: Pagination<NullPaginationParams>.Page<Song>? = nil
     ) {
         self.items = items
         self.latestResult = latestResult
-        self.intervalBetweenLoads = intervalBetweenLoads
     }
 
     func loadFirstPageIfNeeded() {
     }
 
     func loadNextPage() {
-        if intervalBetweenLoads == 0 {
-            loadNextPageCallCount += 1
-        } else {
-            Task {
-                try? await Task.sleep(for: .seconds(intervalBetweenLoads))
-                loadNextPageCallCount += 1
-            }
-        }
+        loadNextPageCallCount += 1
     }
 
     func recordedLoadNextPageCallCount() -> Int {
