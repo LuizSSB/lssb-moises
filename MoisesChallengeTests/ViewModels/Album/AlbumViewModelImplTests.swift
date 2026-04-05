@@ -119,11 +119,12 @@ struct AlbumViewModelImplTests {
         viewModel.select(song: TestData.song2)
 
         // ASSERT
-        let queue = try #require(container.capturedQueue)
-        #expect(queue.currentItem == TestData.song2)
-        #expect(queue.has(.previous))
-        #expect(!queue.has(.next))
-        #expect(viewModel.player.presented === container.songPlayerViewModelStub)
+        let songList = try #require(container.capturedSongList)
+        songList.loadFirstPageIfNeeded()
+        await busyWait { songList.items == [TestData.song1, TestData.song2] }
+        #expect(songList.items == [TestData.song1, TestData.song2])
+        #expect(container.capturedSelectedSong == TestData.song2)
+        #expect(viewModel.player.presented === container.completeSongPlayerViewModelStub)
     }
 
     @Test func select_doesNothingWhenAlbumDidNotLoadSuccessfully() {
@@ -140,7 +141,8 @@ struct AlbumViewModelImplTests {
         viewModel.select(song: TestData.song1)
 
         // ASSERT
-        #expect(container.capturedQueue == nil)
+        #expect(container.capturedSongList == nil)
+        #expect(container.capturedSelectedSong == nil)
         #expect(viewModel.player.presented == nil)
     }
 
@@ -184,22 +186,40 @@ private actor AlbumServiceSpy {
 
 @MainActor
 private final class IoCContainerStub: IoCContainer {
-    let songPlayerViewModelStub = SongPlayerViewModelStub()
-    private(set) var capturedQueue: (any PlaybackQueue<Song>)?
+    let completeSongPlayerViewModelStub = CompleteSongPlayerViewModelStub()
+    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
+    private(set) var capturedSelectedSong: Song?
 
-    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
-        capturedQueue = queue
-        return songPlayerViewModelStub
+    func completeSongPlayerViewModel(
+        songList: any PaginatedListViewModel<Song>,
+        selectedSong: Song
+    ) -> any CompleteSongPlayerViewModel {
+        capturedSongList = songList
+        capturedSelectedSong = selectedSong
+        return completeSongPlayerViewModelStub
     }
 
     func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        return PresentationViewModelImpl<T>()
+        PresentationViewModelImpl<T>()
+    }
+}
+
+@MainActor
+private final class CompleteSongPlayerViewModelStub: CompleteSongPlayerViewModel {
+    let actualPlayer: any FocusedSongPlayerViewModel = FocusedSongPlayerViewModelStub()
+    let songList: any PaginatedListViewModel<Song> = PaginatedListViewModelImpl<Song, NullPaginationParams>(staticItems: [])
+    var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl<any AlbumViewModel>()
+
+    func select(song: Song) {
+    }
+
+    func selectAlbum(of song: Song) {
     }
 }
 
 @MainActor
 @Observable
-private final class SongPlayerViewModelStub: FocusedSongPlayerViewModel {
+private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var playbackState: PlaybackState = .idle
     var currentSong: Song?
     var repeatMode: PlaybackRepeatMode = .none

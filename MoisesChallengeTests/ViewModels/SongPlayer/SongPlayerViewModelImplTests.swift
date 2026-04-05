@@ -526,7 +526,7 @@ private final class IoCContainerStub: IoCContainer {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any FocusedSongPlayerViewModel> = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
+    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
     var lastRequestedAlbumId: String?
 
     func onAppear() {

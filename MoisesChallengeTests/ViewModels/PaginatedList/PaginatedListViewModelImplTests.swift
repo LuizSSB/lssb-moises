@@ -21,7 +21,33 @@ struct PaginatedListViewModelImplTests {
         // ASSERT
         #expect(viewModel.items.isEmpty)
         #expect(viewModel.loadState == .idle)
+        #expect(!viewModel.hasMore)
         #expect(viewModel.latestResult == nil)
+    }
+
+    @Test func hasMore_tracksWhetherLatestPageCanLoadAnotherPage() async throws {
+        // ARRANGE
+        let stub = FetchStub([
+            .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
+            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
+        ])
+        let viewModel = makeViewModel(with: stub)
+
+        let firstLoad = await readNextPageLoadedEvent(from: viewModel)
+        viewModel.loadFirstPageIfNeeded()
+        _ = try requireSuccessEntries(try #require(await firstLoad.value))
+
+        // ASSERT
+        #expect(viewModel.hasMore)
+
+        let nextLoad = await readNextPageLoadedEvent(from: viewModel)
+
+        // ACT
+        viewModel.loadNextPage()
+        _ = try requireSuccessEntries(try #require(await nextLoad.value))
+
+        // ASSERT
+        #expect(!viewModel.hasMore)
     }
 
     @Test func loadFirstPageIfNeeded_loadsFirstPageAndStoresFetchedEntries() async throws {
@@ -35,13 +61,14 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.loadFirstPageIfNeeded()
 
-        let page = try requireSuccess(try #require(await result.value))
+        let entries = try requireSuccessEntries(try #require(await result.value))
 
         // ASSERT
-        #expect(page.entries == [1, 2])
+        #expect(entries == [1, 2])
         #expect(viewModel.items == [1, 2])
         #expect(viewModel.loadState == .loaded)
-        #expect(viewModel.latestResult == page)
+        #expect(viewModel.latestResult == Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2)))
+        #expect(viewModel.hasMore)
         #expect(await stub.requestedPages() == [nil])
     }
 
@@ -56,11 +83,13 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.loadFirstPageIfNeeded()
 
-        _ = try requireSuccess(try #require(await result.value))
+        let entries = try requireSuccessEntries(try #require(await result.value))
 
         // ASSERT
+        #expect(entries.isEmpty)
         #expect(viewModel.items.isEmpty)
         #expect(viewModel.loadState == .empty)
+        #expect(!viewModel.hasMore)
         #expect(viewModel.latestResult == Page(entries: [], pagination: .init(offset: 0, limit: 2)))
     }
 
@@ -74,20 +103,21 @@ struct PaginatedListViewModelImplTests {
 
         let firstLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await firstLoad.value))
+        _ = try requireSuccessEntries(try #require(await firstLoad.value))
 
         let nextLoad = await readNextPageLoadedEvent(from: viewModel)
 
         // ACT
         viewModel.loadNextPage()
 
-        let page = try requireSuccess(try #require(await nextLoad.value))
+        let entries = try requireSuccessEntries(try #require(await nextLoad.value))
 
         // ASSERT
-        #expect(page.entries == [3])
+        #expect(entries == [3])
         #expect(viewModel.items == [1, 2, 3])
         #expect(viewModel.loadState == .loaded)
-        #expect(viewModel.latestResult == page)
+        #expect(!viewModel.hasMore)
+        #expect(viewModel.latestResult == Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
         #expect(
             await stub.requestedPages() == [
                 nil,
@@ -107,7 +137,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let refreshEvents = await readPageLoadedEvents(from: viewModel, count: 2)
 
@@ -118,10 +148,11 @@ struct PaginatedListViewModelImplTests {
 
         // ASSERT
         #expect(events.count == 2)
-        #expect(try requireSuccess(events[0]).entries == [10, 11])
-        #expect(try requireSuccess(events[1]).entries == [12])
+        #expect(try requireSuccessEntries(events[0]) == [10, 11])
+        #expect(try requireSuccessEntries(events[1]) == [12])
         #expect(viewModel.items == [10, 11, 12])
         #expect(viewModel.loadState == .loaded)
+        #expect(!viewModel.hasMore)
         #expect(viewModel.latestResult == Page(entries: [12], pagination: .init(offset: 2, limit: 2)))
         #expect(
             await stub.requestedPages() == [
@@ -154,6 +185,7 @@ struct PaginatedListViewModelImplTests {
         }
 
         #expect(viewModel.items.isEmpty)
+        #expect(!viewModel.hasMore)
         #expect(viewModel.latestResult == nil)
         #expect(viewModel.loadState == .error(InvalidDataError().userFacingError))
     }
@@ -175,10 +207,10 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let page = try requireSuccess(try #require(await retriedLoad.value))
+        let entries = try requireSuccessEntries(try #require(await retriedLoad.value))
 
         // ASSERT
-        #expect(page.entries == [1])
+        #expect(entries == [1])
         #expect(viewModel.items == [1])
         #expect(viewModel.loadState == .loaded)
         #expect(await stub.requestedPages() == [nil, nil])
@@ -195,7 +227,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let failedNextLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadNextPage()
@@ -206,13 +238,13 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let page = try requireSuccess(try #require(await retriedNextLoad.value))
+        let entries = try requireSuccessEntries(try #require(await retriedNextLoad.value))
 
         // ASSERT
-        #expect(page.entries == [3])
+        #expect(entries == [3])
         #expect(viewModel.items == [1, 2, 3])
         #expect(viewModel.loadState == .loaded)
-        #expect(viewModel.latestResult == page)
+        #expect(viewModel.latestResult == Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
         #expect(
             await stub.requestedPages() == [
                 nil,
@@ -251,7 +283,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let nextLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadNextPage()
@@ -263,6 +295,7 @@ struct PaginatedListViewModelImplTests {
         // ASSERT
         #expect(viewModel.loadState == .loaded)
         #expect(viewModel.items == [1, 2])
+        #expect(viewModel.hasMore)
         #expect(viewModel.latestResult == Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2)))
     }
 
@@ -277,7 +310,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
 
@@ -294,6 +327,7 @@ struct PaginatedListViewModelImplTests {
             #expect(error is InvalidDataError)
         }
         #expect(viewModel.items == [1, 2])
+        #expect(viewModel.hasMore)
         #expect(viewModel.latestResult == initialPage)
         #expect(viewModel.loadState == .error(InvalidDataError().userFacingError))
     }
@@ -309,7 +343,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
         await viewModel.refresh()
@@ -320,6 +354,7 @@ struct PaginatedListViewModelImplTests {
 
         // ASSERT
         #expect(viewModel.items == [1, 2])
+        #expect(viewModel.hasMore)
         #expect(viewModel.latestResult == initialPage)
         #expect(viewModel.loadState == .loaded)
     }
@@ -337,7 +372,7 @@ struct PaginatedListViewModelImplTests {
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccess(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(try #require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
         await viewModel.refresh()
@@ -348,12 +383,13 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let page = try requireSuccess(try #require(await retriedRefresh.value))
+        let entries = try requireSuccessEntries(try #require(await retriedRefresh.value))
 
         // ASSERT
-        #expect(page == refreshedPage)
+        #expect(entries == refreshedPage.entries)
         #expect(viewModel.items == [10, 11])
         #expect(viewModel.latestResult == refreshedPage)
+        #expect(viewModel.hasMore)
         #expect(viewModel.loadState == .loaded)
         #expect(await stub.requestedPages() == [nil, nil, nil])
     }
@@ -380,6 +416,7 @@ struct PaginatedListViewModelImplTests {
 
         // ASSERT
         #expect(viewModel.items.isEmpty)
+        #expect(!viewModel.hasMore)
         #expect(viewModel.latestResult == nil)
         #expect(viewModel.loadState == .idle)
     }
@@ -394,7 +431,7 @@ struct PaginatedListViewModelImplTests {
 
     private func readNextPageLoadedEvent(
         from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>
-    ) async -> Task<Result<Page, Error>?, Never> {
+    ) async -> Task<Result<[Int], Error>?, Never> {
         let (_, stream) = await viewModel.pageLoadedEvent.stream()
         let reader = Task {
             var iterator = stream.makeAsyncIterator()
@@ -411,11 +448,11 @@ struct PaginatedListViewModelImplTests {
     private func readPageLoadedEvents(
         from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>,
         count: Int
-    ) async -> Task<[Result<Page, Error>], Never> {
+    ) async -> Task<[Result<[Int], Error>], Never> {
         let (_, stream) = await viewModel.pageLoadedEvent.stream()
         let reader = Task {
             var iterator = stream.makeAsyncIterator()
-            var values: [Result<Page, Error>] = []
+            var values: [Result<[Int], Error>] = []
 
             for _ in 0..<count {
                 if let value = await iterator.next() {
@@ -433,10 +470,10 @@ struct PaginatedListViewModelImplTests {
         return reader
     }
 
-    private func requireSuccess(_ result: Result<Page, Error>) throws -> Page {
+    private func requireSuccessEntries(_ result: Result<[Int], Error>) throws -> [Int] {
         switch result {
-        case .success(let page):
-            return page
+        case .success(let entries):
+            return entries
         case .failure(let error):
             throw error
         }

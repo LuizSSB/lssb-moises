@@ -142,10 +142,10 @@ struct SongListViewModelImplTests {
         viewModel.select(song: TestData.song1)
 
         // ASSERT
-        #expect(container.capturedQueueList === container.recentListSpy)
+        #expect(container.capturedSongList === container.recentListSpy)
         #expect(container.capturedSelectedSong == TestData.song1)
-        let presented = try #require(viewModel.player.presented as? SongPlayerViewModelStub)
-        #expect(presented === container.songPlayerViewModelStub)
+        let presented = try #require(viewModel.player.presented as? CompleteSongPlayerViewModelStub)
+        #expect(presented === container.completeSongPlayerViewModelStub)
     }
 
     @Test func select_usesSearchListQueueWhenSearchListIsShowingAndPresentsPlayer() throws {
@@ -158,10 +158,10 @@ struct SongListViewModelImplTests {
         viewModel.select(song: TestData.song2)
 
         // ASSERT
-        #expect(container.capturedQueueList === container.searchListSpy)
+        #expect(container.capturedSongList === container.searchListSpy)
         #expect(container.capturedSelectedSong == TestData.song2)
-        let presented = try #require(viewModel.player.presented as? SongPlayerViewModelStub)
-        #expect(presented === container.songPlayerViewModelStub)
+        let presented = try #require(viewModel.player.presented as? CompleteSongPlayerViewModelStub)
+        #expect(presented === container.completeSongPlayerViewModelStub)
     }
 
     @Test func selectAlbum_presentsAlbumViewModelWhenSongHasAlbum() throws {
@@ -241,18 +241,23 @@ struct SongListViewModelImplTests {
 private final class IoCContainerStub: IoCContainer {
     let recentListSpy = PaginatedListViewModelSpy<Song, NullPaginationParams>()
     let searchListSpy = PaginatedListViewModelSpy<Song, SongSearchParams>()
-    let songPlayerViewModelStub = SongPlayerViewModelStub()
+    let completeSongPlayerViewModelStub = CompleteSongPlayerViewModelStub()
     let albumViewModelStub = AlbumViewModelStub()
 
-    private let playerPresentation = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
+    private let playerPresentation = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
     private let albumPresentation = PresentationViewModelImpl<any AlbumViewModel>()
 
-    private(set) var capturedQueueList: AnyObject?
+    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
     private(set) var capturedSelectedSong: Song?
     private(set) var capturedAlbumId: String?
 
-    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
-        songPlayerViewModelStub
+    func completeSongPlayerViewModel(
+        songList: any PaginatedListViewModel<Song>,
+        selectedSong: Song
+    ) -> any CompleteSongPlayerViewModel {
+        capturedSongList = songList
+        capturedSelectedSong = selectedSong
+        return completeSongPlayerViewModelStub
     }
 
     func albumViewModel(albumId: String) -> any AlbumViewModel {
@@ -273,35 +278,26 @@ private final class IoCContainerStub: IoCContainer {
     }
 
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
-    ) -> any PaginatedListViewModel<Item, PaginationParams> {
-        if let recentList = recentListSpy as? any PaginatedListViewModel<Item, PaginationParams> {
+        ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
+    ) -> any PaginatedListViewModel<Item> {
+        if Item.self == Song.self,
+           PaginationParams.self == NullPaginationParams.self,
+           let recentList = recentListSpy as? any PaginatedListViewModel<Item> {
             return recentList
         }
 
-        if let searchList = searchListSpy as? any PaginatedListViewModel<Item, PaginationParams> {
+        if Item.self == Song.self,
+           PaginationParams.self == SongSearchParams.self,
+           let searchList = searchListSpy as? any PaginatedListViewModel<Item> {
             return searchList
         }
 
-        return PaginatedListViewModelImpl(fetch: fetch)
-    }
-    
-    
-    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
-        selectedItem: Item
-    ) -> (any PlaybackQueue<Item>)? {
-        if let song = selectedItem as? Song {
-            capturedSelectedSong = song
-        }
-        
         switch kind {
+        case let .dynamic(fetch):
+            return PaginatedListViewModelImpl(fetch: fetch)
         case .static:
-            break
-        case let .paginated(list):
-            capturedQueueList = list as AnyObject
+            fatalError("Unexpected static paginated list request in SongListViewModelImplTests")
         }
-        return PlaybackQueueStub(selectedItem: selectedItem)
     }
 }
 
@@ -309,8 +305,9 @@ private final class IoCContainerStub: IoCContainer {
 private final class PaginatedListViewModelSpy<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>: PaginatedListViewModel {
     var items: [Item] = []
     var loadState: PaginatedListLoadState = .idle
+    var hasMore = false
     var latestResult: Pagination<PaginationParams>.Page<Item>?
-    var pageLoadedEvent = Event<Result<Pagination<PaginationParams>.Page<Item>, Error>>()
+    var pageLoadedEvent = Event<Result<[Item], Error>>()
 
     private(set) var loadFirstPageIfNeededCallCount = 0
     private(set) var loadNextPageCallCount = 0
@@ -340,30 +337,21 @@ private final class PaginatedListViewModelSpy<Item: Hashable & Sendable, Paginat
 }
 
 @MainActor
-private final class PlaybackQueueStub<Item: Hashable & Sendable>: PlaybackQueue {
-    private(set) var currentItem: Item?
-    var currentIndex: Int?
-    var currentItemChangedEvent = Event<Item?>()
+private final class CompleteSongPlayerViewModelStub: CompleteSongPlayerViewModel {
+    let actualPlayer: any FocusedSongPlayerViewModel = FocusedSongPlayerViewModelStub()
+    let songList: any PaginatedListViewModel<Song> = PaginatedListViewModelImpl<Song, NullPaginationParams>(staticItems: [])
+    var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl<any AlbumViewModel>()
 
-    init(selectedItem: Item) {
-        self.currentItem = selectedItem
+    func select(song: Song) {
     }
 
-    func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
-        false
-    }
-
-    func has(_ direction: PlaybackQueueDirection) -> Bool {
-        false
-    }
-
-    func move(to direction: PlaybackQueueDirection) async throws {
+    func selectAlbum(of song: Song) {
     }
 }
 
 @MainActor
 @Observable
-private final class SongPlayerViewModelStub: FocusedSongPlayerViewModel {
+private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var playbackState: PlaybackState = .idle
     var currentSong: Song?
     var repeatMode: PlaybackRepeatMode = .none
@@ -406,7 +394,7 @@ private final class SongPlayerViewModelStub: FocusedSongPlayerViewModel {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any FocusedSongPlayerViewModel> = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
+    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
 
     func onAppear() {
     }

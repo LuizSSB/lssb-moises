@@ -207,7 +207,7 @@ struct PaginatedListPlaybackQueueTests {
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         let latestResult = try #require(list.latestResult)
-        await list.pageLoadedEvent.emit(.success(latestResult))
+        await list.pageLoadedEvent.emit(.success(latestResult.entries))
         try await moveTask.value
 
         // ASSERT
@@ -280,7 +280,7 @@ struct PaginatedListPlaybackQueueTests {
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         if let latestResult = list.latestResult {
-            await list.pageLoadedEvent.emit(.success(latestResult))
+            await list.pageLoadedEvent.emit(.success(latestResult.entries))
         } else {
             Issue.record("Expected the stub to have a latest result before emitting success.")
         }
@@ -313,7 +313,7 @@ struct PaginatedListPlaybackQueueTests {
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         let latestResult = try #require(list.latestResult)
-        await list.pageLoadedEvent.emit(.success(latestResult))
+        await list.pageLoadedEvent.emit(.success(latestResult.entries))
         try await moveTask.value
 
         // ASSERT
@@ -347,8 +347,11 @@ struct PaginatedListPlaybackQueueTests {
 private final class PaginatedListViewModelStub: PaginatedListViewModel {
     var items: [Song]
     var loadState: PaginatedListLoadState = .loaded
+    var hasMore: Bool {
+        latestResult?.hasMore ?? false
+    }
     var latestResult: Pagination<NullPaginationParams>.Page<Song>?
-    var pageLoadedEvent = Event<Result<Pagination<NullPaginationParams>.Page<Song>, Error>>()
+    var pageLoadedEvent = Event<Result<[Song], Error>>()
     private(set) var loadNextPageCallCount = 0
 
     init(

@@ -3,11 +3,11 @@
 Coding challenge for the position of iOS Engineer at Moises AI.
 
 - Proposal: build a music player app that searches for songs using the iTunes API. 
-- Screens:
-  - Splash
-  - Home: shows recently played songs; allows searching for songs
-  - Song player: plays queue of songs
-  - Album details: details and track list for a given album
+- Main flows:
+  - Launch screen
+  - Home/song list: shows recently played songs and allows searching for songs
+  - Complete song player: plays songs from either the recent/search list or an album
+  - Album details: loads album metadata and its track list
 
 ## Details
 
@@ -40,14 +40,14 @@ Coding challenge for the position of iOS Engineer at Moises AI.
 - ✅ Network abstraction layer
 
 ### Notes
-- I've deliverately chosen to mimic some behavior seem in macOS' Music app:
-  - The main screen's listing starts with some local content (in this case, the list of recently played songs) and, when the search bar receives focus, the content is immediately replaced by the search results list (which starts off with a placeholder).
+- I've deliberately chosen to mimic some behavior seen in macOS' Music app:
+  - The main screen starts with local content (in this case, the list of recently played songs) and, when the search bar receives focus, that content is immediately replaced by the search results flow.
   - When a song fails to load, skips to the next one, instead of alerting the user.
     - It wouldn't be hard to alert the user, if required, though: the code necessary for such is already there.
 - There are three repeat modes:
   - None (default): plays one song after another, loading more (if available). Pauses when there are no more songs to load.
   - Current: plays the same song indefinitely.
-  - All: plays one song after another, loading more (if available). Restarts from the first one when it reaches last song is played
+  - All: plays one song after another, loading more (if available). Restarts from the first song after the last one finishes.
 
 # Running the app
 
@@ -55,7 +55,7 @@ The app was developed with Xcode 26.3 and targets iOS 26 and above.
 
 Running the app in the Simulator should require no setup. Running it on a device may require the usual setup for running an app on a device, which may include having to change the app's Team and Bundle Identifier, and trusting the developer over at Settings -> General -> VPN and device management -> Developer apps.
 
-The apps's main and only test plan includes tests for the everything under and except the View layer (below) and doesn't require any setup.
+The project's main test plan runs the unit-test target and does not require any setup. It currently covers controllers, services, and view models. A UI-test target also exists in the project, but it is disabled in the shared test plan for now.
 
 ## Architecture
 
@@ -93,9 +93,10 @@ They are ignorant of UI and (except for events which they may trigger) stateless
 
 The main layer of the app: it controls the business logic by acquiring data to be displayed and handling user interaction.
 
-There are view models for each main screen of the app (above), as well as to repeatable pieces of business logic:
+There are view models for each main screen of the app, as well as for reusable pieces of business logic:
 - Paginated list with refresh
 - View presentation
+- Focused and complete song player flows
 
 Each view model will have a corresponding `View` or view modifier which will connect/respond to its properties and call its methods on user interaction.
 
@@ -137,5 +138,4 @@ Some files were authored by Codex and bear its name as author; in the interest o
 
 ## Areas of improvement
 - UI tests
-- Proper iPad support (in the Figma, but not required)
 - watchOS and CarPlay support (in the Figma, but not required)

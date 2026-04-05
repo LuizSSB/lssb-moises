@@ -37,17 +37,22 @@ It also presents the song player and album screens when the user selects a song 
 
 The player screen view model lives in `ViewModels/SongPlayer`.
 
-- `SongPlayerViewModel.swift`: defines the player-facing state and playback controls.
-- `SongPlayerViewModelImpl.swift`: coordinates the playback queue, playback controller, repeat behavior, progress updates, and recent-play persistence.
+- `FocusedSongPlayerViewModel.swift`: defines the focused player contract used by the playback UI controls.
+- `FocusedSimpleSongPlayerViewModelImpl.swift`: coordinates the playback queue, playback controller, repeat behavior, progress updates, and recent-play persistence.
+- `CompleteSongPlayerViewModel.swift`: defines the higher-level player flow that combines the focused player, the visible song list, and album presentation.
+- `CompleteSongPlayerViewModelImpl.swift`: wires a paginated song list into a playback queue and composes the focused player with album navigation.
 
-This is the main orchestration point for playback behavior in the UI layer.
+Together, these types split playback into:
+
+- a focused player responsible for playback mechanics
+- a complete player responsible for the full-screen player flow and related navigation
 
 ### `Album`
 
 The album details screen view model lives in `ViewModels/Album`.
 
 - `AlbumViewModel.swift`: the public contract for album loading and song selection.
-- `AlbumViewModelImpl.swift`: loads album details, exposes loading/error state, and opens the player for selected album tracks.
+- `AlbumViewModelImpl.swift`: loads album details, exposes loading/error state, and opens the complete player for selected album tracks.
 
 ### `PaginatedList`
 
@@ -79,13 +84,21 @@ The main view model for the app's home flow.
 - Owns presentation state for the player and album screens.
 - Refreshes recent songs when playback interactions change.
 
-### `SongPlayerViewModel`
+### `FocusedSongPlayerViewModel`
 
-The main view model for playback.
+The main view model for playback mechanics.
 
 - Observes both the playback queue and the playback controller.
 - Tracks playback state, progress, elapsed time, duration, and repeat mode.
 - Handles next/previous movement and playback-end behavior.
+
+### `CompleteSongPlayerViewModel`
+
+The higher-level player flow view model.
+
+- Owns the focused player used by the main player controls.
+- Exposes the current paginated song list so the full-screen player can render the queue.
+- Owns presentation state for navigating from the player to album details.
 
 ### `PaginatedListViewModel`
 

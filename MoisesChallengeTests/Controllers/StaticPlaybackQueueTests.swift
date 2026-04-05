@@ -11,14 +11,15 @@ import Testing
 @MainActor
 struct StaticPlaybackQueueTests {
 
-    @Test func init_returnsNilWhenSelectedItemIsNotInNonEmptyItems() {
+    @Test func init_keepsSelectedItemEvenWhenItIsNotInItems() {
         // ARRANGE
         let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 4)
 
         // ACT
 
         // ASSERT
-        #expect(queue == nil)
+        #expect(queue.currentItem == 4)
+        #expect(queue.currentIndex == nil)
     }
 
     @Test func init_createsQueueWhenItemsAreEmpty() {
@@ -28,14 +29,13 @@ struct StaticPlaybackQueueTests {
         // ACT
 
         // ASSERT
-        #expect(queue != nil)
-        #expect(queue?.currentItem == 1)
-        #expect(queue?.currentIndex == nil)
+        #expect(queue.currentItem == 1)
+        #expect(queue.currentIndex == nil)
     }
 
-    @Test func currentIndex_returnsIndexOfCurrentItem() throws {
+    @Test func currentIndex_returnsIndexOfCurrentItem() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
 
@@ -43,9 +43,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentIndex == 1)
     }
 
-    @Test func currentIndex_setsCurrentItemWhenIndexIsValid() throws {
+    @Test func currentIndex_setsCurrentItemWhenIndexIsValid() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
 
         // ACT
         queue.currentIndex = 2
@@ -55,9 +55,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentIndex == 2)
     }
 
-    @Test func currentIndex_clearsCurrentItemWhenSetToNil() throws {
+    @Test func currentIndex_clearsCurrentItemWhenSetToNil() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
         queue.currentIndex = nil
@@ -67,9 +67,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentIndex == nil)
     }
 
-    @Test func currentIndex_ignoresOutOfBoundsValues() throws {
+    @Test func currentIndex_ignoresOutOfBoundsValues() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
         queue.currentIndex = -1
@@ -86,9 +86,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentIndex == 1)
     }
 
-    @Test func has_returnsWhetherPreviousAndNextItemsExist() throws {
+    @Test func has_returnsWhetherPreviousAndNextItemsExist() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
 
@@ -97,9 +97,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.has(.next))
     }
 
-    @Test func has_returnsFalseForPreviousAtFirstItem() throws {
+    @Test func has_returnsFalseForPreviousAtFirstItem() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
 
         // ACT
 
@@ -107,9 +107,9 @@ struct StaticPlaybackQueueTests {
         #expect(!queue.has(.previous))
     }
 
-    @Test func has_returnsFalseForNextAtLastItem() throws {
+    @Test func has_returnsFalseForNextAtLastItem() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3)
 
         // ACT
 
@@ -119,7 +119,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func move_movesToPreviousItem() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
         try await queue.move(to: .previous)
@@ -130,7 +130,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func move_movesToNextItem() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 2)
 
         // ACT
         try await queue.move(to: .next)
@@ -141,7 +141,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func move_keepsCurrentItemWhenMovingPreviousFromFirstItem() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
 
         // ACT
         try await queue.move(to: .previous)
@@ -152,7 +152,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func move_keepsCurrentItemWhenMovingNextFromLastItem() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3)
 
         // ACT
         try await queue.move(to: .next)
@@ -163,7 +163,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func move_selectsFirstItemWhenCurrentItemIsNil() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
         queue.currentIndex = nil
 
         // ACT
@@ -173,9 +173,9 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentItem == 1)
     }
 
-    @Test func moveToFirst_selectsFirstItem() throws {
+    @Test func moveToFirst_selectsFirstItem() {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 3)
 
         // ACT
         queue.moveToFirst()
@@ -186,7 +186,7 @@ struct StaticPlaybackQueueTests {
 
     @Test func currentItemChangedEvent_emitsUpdatedItemWhenCurrentIndexChanges() async throws {
         // ARRANGE
-        let queue = try #require(StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1))
+        let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
         let (_, stream) = await queue.currentItemChangedEvent.stream()
 
         let reader = Task {
