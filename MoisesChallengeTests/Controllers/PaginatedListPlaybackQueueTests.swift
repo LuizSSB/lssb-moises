@@ -21,7 +21,7 @@ struct PaginatedListPlaybackQueueTests {
         )
 
         // ACT
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         // ASSERT
         #expect(queue.currentItem == TestData.song2)
@@ -31,7 +31,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func currentIndex_returnsNilWhenCurrentSongIsNotInLoadedItems() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song3)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song3)
 
         // ACT
 
@@ -42,7 +42,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func currentIndex_setsCurrentItemWhenIndexIsValid() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
         queue.currentIndex = 2
@@ -55,7 +55,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func currentIndex_clearsCurrentItemWhenSetToNil() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
         queue.currentIndex = nil
@@ -68,7 +68,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func currentIndex_ignoresInvalidIndexes() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
         queue.currentIndex = -1
@@ -88,7 +88,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func has_returnsWhetherPreviousAndNextSongsExistInLoadedItems() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         // ACT
 
@@ -100,7 +100,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func has_returnsFalseForPreviousWhenCurrentSongIsFirstLoadedItem() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
 
@@ -114,7 +114,7 @@ struct PaginatedListPlaybackQueueTests {
             items: [TestData.song1, TestData.song2],
             latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2))
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         // ACT
 
@@ -128,7 +128,7 @@ struct PaginatedListPlaybackQueueTests {
             items: [TestData.song1],
             latestResult: Page(entries: [TestData.song1], pagination: .init(offset: 0, limit: 2))
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
 
@@ -139,7 +139,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func move_movesToPreviousLoadedSong() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         // ACT
         try await queue.move(to: .previous)
@@ -151,7 +151,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func move_movesToNextLoadedSong() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         // ACT
         try await queue.move(to: .next)
@@ -163,7 +163,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func move_keepsCurrentSongWhenMovingPreviousFromFirstItem() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
 
         // ACT
         try await queue.move(to: .previous)
@@ -175,7 +175,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func move_keepsCurrentSongWhenCurrentSongIsNotInLoadedItems() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song3)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song3)
 
         // ACT
         try await queue.move(to: .next)
@@ -191,7 +191,7 @@ struct PaginatedListPlaybackQueueTests {
             items: [TestData.song1, TestData.song2],
             latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2))
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         let moveTask = Task {
             try await queue.move(to: .next)
@@ -221,7 +221,7 @@ struct PaginatedListPlaybackQueueTests {
             items: [TestData.song1, TestData.song2],
             latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2))
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
         let moveTask = Task<Result<Void, Error>, Never> {
             do {
                 try await queue.move(to: .next)
@@ -258,7 +258,7 @@ struct PaginatedListPlaybackQueueTests {
             items: [TestData.song1, TestData.song2],
             latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2))
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         let moveTask = Task {
             try await queue.move(to: .next)
@@ -297,7 +297,7 @@ struct PaginatedListPlaybackQueueTests {
             latestResult: Page(entries: [TestData.song1, TestData.song2], pagination: .init(offset: 0, limit: 2)),
             intervalBetweenLoads: 0.5
         )
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song2)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song2)
 
         let moveTask = Task {
             try await queue.move(to: .next)
@@ -323,7 +323,7 @@ struct PaginatedListPlaybackQueueTests {
     @Test func currentItemChangedEvent_emitsUpdatedSongWhenCurrentIndexChanges() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
-        let queue = PaginatedListPlaybackQueue(list: list, selectedSong: TestData.song1)
+        let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
         let (_, stream) = await queue.currentItemChangedEvent.stream()
         let reader = Task {
             var iterator = stream.makeAsyncIterator()

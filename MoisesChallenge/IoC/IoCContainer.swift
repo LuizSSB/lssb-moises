@@ -20,6 +20,9 @@ protocol IoCContainer: AnyObject {
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
         fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
     ) -> any PaginatedListViewModel<Item, PaginationParams>
+    func paginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
+        list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item
+    ) -> any PlaybackQueue<Item>
 }
 
 extension IoCContainer {
@@ -72,6 +75,12 @@ extension IoCContainer {
         fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
     ) -> any PaginatedListViewModel<Item, PaginationParams> {
         PaginatedListViewModelImpl(fetch: fetch)
+    }
+    
+    func paginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
+        list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item
+    ) -> any PlaybackQueue<Item> {
+        PaginatedListPlaybackQueue(list: list, selectedItem: selectedItem)
     }
 }
 

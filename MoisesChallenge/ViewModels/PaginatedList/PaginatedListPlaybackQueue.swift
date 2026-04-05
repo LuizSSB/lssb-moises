@@ -6,22 +6,25 @@
 //
 
 
-class PaginatedListPlaybackQueue<PaginationParams: Hashable & Sendable>: PlaybackQueue {
+class PaginatedListPlaybackQueue<
+    Item: Equatable & Hashable & Sendable,
+    PaginationParams: Hashable & Sendable
+>: PlaybackQueue {
     // MARK: - Private State
     
     private var nextIndexBeingLoaded: Int?
-    private let list: any PaginatedListViewModel<Song, PaginationParams>
+    private let list: any PaginatedListViewModel<Item, PaginationParams>
     
     // MARK: - Lifecycle
     
-    init(list: any PaginatedListViewModel<Song, PaginationParams>, selectedSong: Song) {
+    init(list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item) {
         self.list = list
-        self.currentItem = selectedSong
+        self.currentItem = selectedItem
     }
     
     // MARK: - PlaybackQueue Conformance
     
-    private(set) var currentItem: Song? {
+    private(set) var currentItem: Item? {
         didSet {
             currentItemChangedEvent.emitAndForget(currentItem)
         }
@@ -29,8 +32,8 @@ class PaginatedListPlaybackQueue<PaginationParams: Hashable & Sendable>: Playbac
     
     var currentIndex: Int? {
         get {
-            guard let currentItemId = currentItem?.id else { return nil }
-            return list.items.firstIndex { $0.id == currentItemId }
+            guard let currentItem else { return nil }
+            return list.items.firstIndex { $0 == currentItem }
         }
         set {
             guard let newValue else {
@@ -43,7 +46,7 @@ class PaginatedListPlaybackQueue<PaginationParams: Hashable & Sendable>: Playbac
         }
     }
     
-    var currentItemChangedEvent = Event<Song?>()
+    var currentItemChangedEvent = Event<Item?>()
     
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
         direction == .next && nextIndexBeingLoaded != nil && list.items.last == currentItem
@@ -111,4 +114,4 @@ class PaginatedListPlaybackQueue<PaginationParams: Hashable & Sendable>: Playbac
             throw error
         }
     }
-    }
+}
