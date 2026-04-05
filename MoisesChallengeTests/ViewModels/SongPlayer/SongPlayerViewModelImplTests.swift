@@ -345,10 +345,10 @@ struct SongPlayerViewModelImplTests {
         queue: PlaybackQueueStub,
         playbackController: SongPlaybackControllerStub,
         interactionStore: PlayedSongsStore = PlayedSongsStore()
-    ) -> SongPlayerViewModelImpl {
+    ) -> FocusedSimpleSongPlayerViewModelImpl {
         let container = IoCContainerStub()
 
-        return SongPlayerViewModelImpl(
+        return FocusedSimpleSongPlayerViewModelImpl(
             queue: queue,
             playbackController: playbackController,
             interactionService: .init(
@@ -526,7 +526,7 @@ private final class IoCContainerStub: IoCContainer {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl<any SongPlayerViewModel>()
+    var player: any PresentationViewModel<any FocusedSongPlayerViewModel> = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
     var lastRequestedAlbumId: String?
 
     func onAppear() {

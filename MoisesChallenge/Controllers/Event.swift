@@ -32,6 +32,7 @@ actor Event<T: Sendable> {
         )
     }
     
+    // Technically, leaving emit public-like like this isn't good, as anyone with a reference to the Event could post a message, but we are all adults here and we don't do that.
     func emit(_ value: T) {
         for continuation in continuations.values {
             continuation.yield(value)

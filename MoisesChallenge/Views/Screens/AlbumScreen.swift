@@ -58,7 +58,7 @@ struct AlbumScreen: View {
                 viewModel.onDisappear()
             }
             .navigationDestination(presentationViewModel: viewModel.player) {
-                SongPlayerScreen(viewModel: $0, showsOptions: false)
+                CompleteSongPlayerScreen(viewModel: $0, showOptions: false)
             }
         case .failure(let error):
             ContentUnavailableView {

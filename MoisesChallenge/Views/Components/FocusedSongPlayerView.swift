@@ -1,5 +1,5 @@
 //
-//  SongPlayerScreen.swift
+//  FocusedSongPlayerScreen.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 01/04/26.
@@ -7,11 +7,8 @@
 
 import SwiftUI
 
-struct SongPlayerScreen: View {
-    @State var viewModel: any SongPlayerViewModel
-    var showsOptions = true
-    
-    @State private var actionSheetSong: Song?
+struct FocusedSongPlayerView: View {
+    @State var viewModel: any FocusedSongPlayerViewModel
     
     var body: some View {
         VStack(spacing: 0) {
@@ -25,39 +22,11 @@ struct SongPlayerScreen: View {
             
             controlsSection
         }
-        .frame(maxHeight: .infinity)
-        .padding(24)
-        .navigationTitle(viewModel.currentSong?.displayAlbumTitle ?? "-")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
         }
         .onDisappear {
             viewModel.onDisappear()
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if showsOptions,
-                   let currentSong = viewModel.currentSong{
-                    Button {
-                        actionSheetSong = currentSong
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel(String(localized: .commonMoreOptions))
-                    .accessibilityHint(currentSong.displayTitle)
-                }
-            }
-        }
-        .songActionSheet(for: $actionSheetSong) { song, action in
-            switch action {
-            case .viewAlbum:
-                viewModel.selectAlbum(of: song)
-            }
-        }
-        .navigationDestination(presentationViewModel: viewModel.album) {
-            AlbumScreen(viewModel: $0)
         }
     }
     

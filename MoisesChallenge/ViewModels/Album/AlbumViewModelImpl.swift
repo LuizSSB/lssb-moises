@@ -12,7 +12,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
     // MARK: - Public State
 
     var album: ActionStatus<Album, UserFacingError> = .none
-    private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
+    private(set) var player: any PresentationViewModel<any CompleteSongPlayerViewModel>
 
     // MARK: - Private State
 
@@ -78,11 +78,11 @@ final class AlbumViewModelImpl: AlbumViewModel {
 
     func select(song: Song) {
         guard case let .success(album) = album,
-              let songs = album.songs,
-              let queue = container.playbackQueue(ofKind: .init(staticItems: songs), selectedItem: song)
+              let songs = album.songs
         else { return }
         
-        let viewModel = container.songPlayerViewModel(queue: queue)
+        let list = container.paginatedListViewModel(ofKind: .init(staticItems: songs))
+        let viewModel = container.completeSongPlayerViewModel(songList: list, selectedSong: song)
         player.present(viewModel)
     }
 }

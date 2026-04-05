@@ -187,7 +187,7 @@ private final class IoCContainerStub: IoCContainer {
     let songPlayerViewModelStub = SongPlayerViewModelStub()
     private(set) var capturedQueue: (any PlaybackQueue<Song>)?
 
-    func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel {
+    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         capturedQueue = queue
         return songPlayerViewModelStub
     }
@@ -199,7 +199,7 @@ private final class IoCContainerStub: IoCContainer {
 
 @MainActor
 @Observable
-private final class SongPlayerViewModelStub: SongPlayerViewModel {
+private final class SongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var playbackState: PlaybackState = .idle
     var currentSong: Song?
     var repeatMode: PlaybackRepeatMode = .none

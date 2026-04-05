@@ -7,23 +7,31 @@
 
 @MainActor
 protocol IoCContainer: AnyObject {
+    // Services
     func interactionService() -> InteractionService
     func songSearchService() -> SongSearchService
     func albumSearchService() -> AlbumSearchService
     func songPlaybackController() -> any SongPlaybackController
     
+    // Main view models
     func songListViewModel() -> any SongListViewModel
-    func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel
+    func completeSongPlayerViewModel(
+        songList: any PaginatedListViewModel<Song>, selectedSong: Song
+    ) -> any CompleteSongPlayerViewModel
     func albumViewModel(albumId: String) -> any AlbumViewModel
     
+    // Utility view models
     func presentationViewModel<T>() -> any PresentationViewModel<T>
+    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
-    ) -> any PaginatedListViewModel<Item, PaginationParams>
-    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
+        ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
+    ) -> any PaginatedListViewModel<Item>
+    
+    // Controllers
+    func playbackQueue<Item: Equatable & Hashable & Sendable>(
+        ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
-    ) -> (any PlaybackQueue<Item>)?
+    ) -> any PlaybackQueue<Item>
 }
 
 extension IoCContainer {
@@ -51,8 +59,19 @@ extension IoCContainer {
         )
     }
     
-    func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel {
-        SongPlayerViewModelImpl(
+    func completeSongPlayerViewModel(
+        songList: any PaginatedListViewModel<Song>,
+        selectedSong: Song
+    ) -> any CompleteSongPlayerViewModel {
+        CompleteSongPlayerViewModelImpl(
+            songList: songList,
+            selectedSong: selectedSong,
+            container: self
+        )
+    }
+    
+    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
+        FocusedSimpleSongPlayerViewModelImpl(
             queue: queue,
             playbackController: songPlaybackController(),
             interactionService: interactionService(),
@@ -73,15 +92,18 @@ extension IoCContainer {
     }
     
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        fetch: @escaping @Sendable (Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
-    ) -> any PaginatedListViewModel<Item, PaginationParams> {
-        PaginatedListViewModelImpl(fetch: fetch)
+        ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
+    ) -> any PaginatedListViewModel<Item> {
+        switch kind {
+        case let .static(items): return PaginatedListViewModelImpl(staticItems: items)
+        case let .dynamic(fetch): return PaginatedListViewModelImpl(fetch: fetch)
+        }
     }
     
-    func playbackQueue<Item: Equatable & Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        ofKind kind: PlaybackQueueDependencyKind<Item, PaginationParams>,
+    func playbackQueue<Item: Equatable & Hashable & Sendable>(
+        ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
-    ) -> (any PlaybackQueue<Item>)? {
+    ) -> any PlaybackQueue<Item> {
         switch kind {
         case let .static(items):
             return StaticPlaybackQueue(items: items, selectedItem: selectedItem)

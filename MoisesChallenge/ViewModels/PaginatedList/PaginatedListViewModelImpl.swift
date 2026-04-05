@@ -14,7 +14,6 @@ final class PaginatedListViewModelImpl<
 >: PaginatedListViewModel {
     // MARK: - Types
 
-    typealias PageResult = Pagination<PaginationParams>.Page<Item>
     typealias PageFetch = @Sendable (
         _ page: Pagination<PaginationParams>? // a `nil` page means the first one (or whatever one the client feels like.
     ) async throws -> Pagination<PaginationParams>.Page<Item>
@@ -29,11 +28,14 @@ final class PaginatedListViewModelImpl<
 
     private(set) var items: [Item] = []
     private(set) var loadState: PaginatedListLoadState = .idle
-    private(set) var latestResult: PageResult?
-    var pageLoadedEvent = Event<Result<PageResult, Error>>()
+    var hasMore: Bool {
+        latestResult?.hasMore ?? false
+    }
+    var pageLoadedEvent = Event<Result<[Item], Error>>()
 
     // MARK: - Private State
 
+    private(set) var latestResult: Pagination<PaginationParams>.Page<Item>?
     private var activeFetchTask: Task<Void, Never>?
     private var lastFailedLoadMode: LoadMode?
 
@@ -147,7 +149,7 @@ final class PaginatedListViewModelImpl<
                         self.loadState = self.items.isEmpty ? .empty : .loaded
                         self.lastFailedLoadMode = nil
                     } completion: {
-                        pageLoadedEvent.emitAndForget(.success(result))
+                        pageLoadedEvent.emitAndForget(.success(result.entries))
                     }
                 }
             } catch is CancellationError {

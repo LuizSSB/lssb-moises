@@ -6,19 +6,16 @@
 //
 
 
-class PaginatedListPlaybackQueue<
-    Item: Equatable & Hashable & Sendable,
-    PaginationParams: Hashable & Sendable
->: PlaybackQueue {
+class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: PlaybackQueue {
     // MARK: - Private State
     
     private var currentItemChangeCount = 0
     private var nextIndexBeingLoaded: Int?
-    private let list: any PaginatedListViewModel<Item, PaginationParams>
+    private let list: any PaginatedListViewModel<Item>
     
     // MARK: - Lifecycle
     
-    init(list: any PaginatedListViewModel<Item, PaginationParams>, selectedItem: Item) {
+    init(list: any PaginatedListViewModel<Item>, selectedItem: Item) {
         self.list = list
         self.currentItem = selectedItem
     }
@@ -67,7 +64,7 @@ class PaginatedListPlaybackQueue<
                 return true
             }
             
-            return list.latestResult?.hasMore == true
+            return list.hasMore
         }
     }
     
@@ -86,7 +83,7 @@ class PaginatedListPlaybackQueue<
             let nextIndex = currentIndex + 1
             if nextIndex < list.items.count {
                 currentItem = list.items[nextIndex]
-            } else if list.latestResult?.hasMore == true {
+            } else if list.hasMore {
                 try await loadAndMoveToNext(at: nextIndex)
             }
         }

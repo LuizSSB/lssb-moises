@@ -14,16 +14,16 @@ private let defaultSizePage = 10
 final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Public State
 
-    private(set) var recentList: any PaginatedListViewModel<Song, NullPaginationParams>
+    private(set) var recentList: any PaginatedListViewModel<Song>
     var workingSearchQuery = ""
     private(set) var currentQuery = ""
-    private(set) var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)?
+    private(set) var searchList: (any PaginatedListViewModel<Song>)?
 
-    var currentList: any BasePaginatedListViewModel<Song> {
+    var currentList: any PaginatedListViewModel<Song> {
         searchList ?? recentList
     }
 
-    private(set) var player: any PresentationViewModel<any SongPlayerViewModel>
+    private(set) var player: any PresentationViewModel<any CompleteSongPlayerViewModel>
     private(set) var album: any PresentationViewModel<any AlbumViewModel>
 
     // MARK: - Private State
@@ -48,7 +48,7 @@ final class SongListViewModelImpl: SongListViewModel {
         self.player = container.presentationViewModel()
         self.album = container.presentationViewModel()
         self.recentList = container.paginatedListViewModel(
-            fetch: {
+            ofKind: .dynamic {
                 let page = try await interactionService.listPlayedSongs($0 ?? .first(limit: defaultSizePage))
                 return .init(
                     entries: page.entries.map(\.song),
@@ -80,7 +80,7 @@ final class SongListViewModelImpl: SongListViewModel {
         if focused {
             guard searchList == nil else { return }
             withAnimation {
-                searchList = container.paginatedListViewModel(fetch: fetchSearch)
+                searchList = container.paginatedListViewModel(ofKind: .dynamic(fetchSearch))
             }
         } else {
             guard searchList != nil else { return }
@@ -109,14 +109,12 @@ final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Navigation
 
     func select(song: Song) {
-        let queue: (any PlaybackQueue<Song>)? = if let searchList {
-            container.playbackQueue(ofKind: .paginated(searchList), selectedItem: song)
+        let songList: any PaginatedListViewModel<Song> = if let searchList {
+            searchList
         } else {
-            container.playbackQueue(ofKind: .paginated(recentList), selectedItem: song)
+            recentList
         }
-        guard let queue else { return }
-        let viewModel = container.songPlayerViewModel(queue: queue)
-        player.present(viewModel)
+        player.present(container.completeSongPlayerViewModel(songList: songList, selectedSong: song))
     }
     
     func selectAlbum(of song: Song) {

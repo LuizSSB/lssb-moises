@@ -244,14 +244,14 @@ private final class IoCContainerStub: IoCContainer {
     let songPlayerViewModelStub = SongPlayerViewModelStub()
     let albumViewModelStub = AlbumViewModelStub()
 
-    private let playerPresentation = PresentationViewModelImpl<any SongPlayerViewModel>()
+    private let playerPresentation = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
     private let albumPresentation = PresentationViewModelImpl<any AlbumViewModel>()
 
     private(set) var capturedQueueList: AnyObject?
     private(set) var capturedSelectedSong: Song?
     private(set) var capturedAlbumId: String?
 
-    func songPlayerViewModel(queue: any PlaybackQueue<Song>) -> any SongPlayerViewModel {
+    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         songPlayerViewModelStub
     }
 
@@ -363,7 +363,7 @@ private final class PlaybackQueueStub<Item: Hashable & Sendable>: PlaybackQueue 
 
 @MainActor
 @Observable
-private final class SongPlayerViewModelStub: SongPlayerViewModel {
+private final class SongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var playbackState: PlaybackState = .idle
     var currentSong: Song?
     var repeatMode: PlaybackRepeatMode = .none
@@ -406,7 +406,7 @@ private final class SongPlayerViewModelStub: SongPlayerViewModel {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any SongPlayerViewModel> = PresentationViewModelImpl<any SongPlayerViewModel>()
+    var player: any PresentationViewModel<any FocusedSongPlayerViewModel> = PresentationViewModelImpl<any FocusedSongPlayerViewModel>()
 
     func onAppear() {
     }

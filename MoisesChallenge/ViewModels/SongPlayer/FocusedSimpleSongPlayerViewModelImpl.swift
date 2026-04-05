@@ -8,7 +8,7 @@
 import SwiftUI
 
 @Observable
-final class SongPlayerViewModelImpl: SongPlayerViewModel {
+final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     // MARK: - Public state
 
     private(set) var playbackState: PlaybackState = .idle

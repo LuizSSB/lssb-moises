@@ -9,15 +9,15 @@ import Observation
 
 @MainActor
 protocol SongListViewModel: AnyObject, Observable, Sendable {
-    var recentList: any PaginatedListViewModel<Song, NullPaginationParams> { get }
+    var recentList: any PaginatedListViewModel<Song> { get }
     
     var workingSearchQuery: String { get set }
     var currentQuery: String { get }
-    var searchList: (any PaginatedListViewModel<Song, SongSearchParams>)? { get }
+    var searchList: (any PaginatedListViewModel<Song>)? { get }
     
-    var currentList: any BasePaginatedListViewModel<Song> { get }
+    var currentList: any PaginatedListViewModel<Song> { get }
     
-    var player: any PresentationViewModel<any SongPlayerViewModel> { get }
+    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> { get }
     var album: any PresentationViewModel<any AlbumViewModel> { get }
     
     func onAppear()

@@ -50,7 +50,7 @@ struct SongListScreen: View {
             }
         }
         .navigationDestination(presentationViewModel: viewModel.player) {
-            SongPlayerScreen(viewModel: $0)
+            CompleteSongPlayerScreen(viewModel: $0)
         }
         .navigationDestination(presentationViewModel: viewModel.album) {
             AlbumScreen(viewModel: $0)

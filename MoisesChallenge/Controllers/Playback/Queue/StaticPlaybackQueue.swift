@@ -8,12 +8,7 @@
 class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
     let items: [Item]
     
-    init?(items: [Item], selectedItem: Item) {
-        if !items.isEmpty,
-           !items.contains(where: { $0 == selectedItem }) {
-            return nil
-        }
-        
+    init(items: [Item], selectedItem: Item) {
         self.items = items
         self.currentItem = selectedItem
     }
