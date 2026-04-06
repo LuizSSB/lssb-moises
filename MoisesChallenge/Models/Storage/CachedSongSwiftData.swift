@@ -26,6 +26,9 @@ final class CachedSongSwiftData {
     var mainArtwork: String?
     var durationSeconds: Double?
     var preview: String?
+    var searchPage: CachedSongSearchPageSwiftData?
+    var album: CachedAlbumSwiftData?
+    var interaction: SongInteractionSwiftData?
     
     init(song: Song, sortIndex: Int = 0) {
         id = song.id
@@ -43,6 +46,9 @@ final class CachedSongSwiftData {
         mainArtwork = song.mainArtwork
         durationSeconds = song.durationSeconds
         preview = song.preview
+        searchPage = nil
+        album = nil
+        interaction = nil
     }
 }
 

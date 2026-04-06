@@ -48,4 +48,20 @@ import Testing
         #expect(page.pagination.offset == 1)
         #expect(page.pagination.limit == 1)
     }
+
+    @Test func markPlayed_linksStoredSongBackToItsInteraction() async throws {
+        // ARRANGE
+        let container = try makeTestModelContainer()
+        let service = InteractionService(with: container)
+
+        // ACT
+        try await service.markPlayed(TestData.song1)
+
+        let context = ModelContext(container)
+        let storedInteraction = try #require(try context.fetch(FetchDescriptor<SongInteractionSwiftData>()).first)
+
+        // ASSERT
+        #expect(storedInteraction.storedSong.interaction?.persistentModelID == storedInteraction.persistentModelID)
+        #expect(Song(from: storedInteraction.storedSong) == TestData.song1)
+    }
 }

@@ -87,4 +87,25 @@ import Testing
         // ASSERT
         #expect(stored == page)
     }
+
+    @Test func add_linksCachedEntriesBackToTheirStoredSearchPage() throws {
+        // ARRANGE
+        let container = try makeTestModelContainer()
+        let cache = SongSearchService.Cache(container: container)
+        let page = SongSearchPage(
+            entries: [TestData.song1, TestData.song2],
+            pagination: .first(params: .init(searchTerm: "beatles"), limit: 2)
+        )
+
+        // ACT
+        try cache.add(page: page)
+
+        let context = ModelContext(container)
+        let storedPage = try #require(try context.fetch(FetchDescriptor<CachedSongSearchPageSwiftData>()).first)
+
+        // ASSERT
+        #expect(storedPage.entries.count == 2)
+        #expect(storedPage.entries.map(\.sortIndex) == [0, 1])
+        #expect(storedPage.entries.allSatisfy { $0.searchPage?.persistentModelID == storedPage.persistentModelID })
+    }
 }

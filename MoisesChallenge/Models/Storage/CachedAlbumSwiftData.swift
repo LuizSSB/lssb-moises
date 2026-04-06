@@ -18,6 +18,7 @@ class CachedAlbumSwiftData {
     var artistName: String?
     var itemArtwork: String?
     var mainArtwork: String?
+    @Relationship(deleteRule: .cascade, inverse: \CachedSongSwiftData.album)
     var songs: [CachedSongSwiftData]
     var cachedAt: Date
     

@@ -13,6 +13,7 @@ final class SongInteractionSwiftData {
     #Unique<SongInteractionSwiftData>([\.id])
     
     var id: String
+    @Relationship(deleteRule: .cascade, inverse: \CachedSongSwiftData.interaction)
     var storedSong: CachedSongSwiftData
     var lastPlayedAt: Date
     

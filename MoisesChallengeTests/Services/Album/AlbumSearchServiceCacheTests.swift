@@ -73,4 +73,21 @@ import Testing
         // ASSERT
         #expect(stored == TestData.album)
     }
+
+    @Test func add_linksCachedSongsBackToTheirStoredAlbum() throws {
+        // ARRANGE
+        let container = try makeTestModelContainer()
+        let cache = AlbumSearchService.Cache(container: container)
+
+        // ACT
+        try cache.add(album: TestData.album)
+
+        let context = ModelContext(container)
+        let storedAlbum = try #require(try context.fetch(FetchDescriptor<CachedAlbumSwiftData>()).first)
+
+        // ASSERT
+        #expect(storedAlbum.songs.count == 2)
+        #expect(storedAlbum.songs.map(\.sortIndex) == [0, 1])
+        #expect(storedAlbum.songs.allSatisfy { $0.album?.persistentModelID == storedAlbum.persistentModelID })
+    }
 }

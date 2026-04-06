@@ -15,6 +15,7 @@ final class CachedSongSearchPageSwiftData {
     var searchTerm: String
     var offset: Int
     var limit: Int?
+    @Relationship(deleteRule: .cascade, inverse: \CachedSongSwiftData.searchPage)
     var entries: [CachedSongSwiftData]
     var cachedAt: Date
     
