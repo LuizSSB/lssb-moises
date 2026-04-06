@@ -11,9 +11,16 @@ import Observation
 final class AppViewModelImpl: AppViewModel {
     var songList: any SongListViewModel
     var album: (any AlbumViewModel)?
-    var player: (any CompleteSongPlayerViewModel)?
+    var completePlayer: (any CompleteSongPlayerViewModel)?
+    var miniPlayer: (any FocusedSongPlayerViewModel)? {
+        actualCompletePlayer?.actualPlayer
+    }
     
-    private(set) var innerPlayer: (any CompleteSongPlayerViewModel)?
+    private var actualCompletePlayer: (any CompleteSongPlayerViewModel)? {
+        didSet {
+            completePlayer = actualCompletePlayer
+        }
+    }
 
     private let container: any IoCContainer
     
@@ -36,20 +43,19 @@ final class AppViewModelImpl: AppViewModel {
         })
     }
     
-    func setPlayer(presented: Bool) {
+    func setCompletePlayer(presented: Bool) {
         if presented {
-            guard let innerPlayer else { return }
-            player = innerPlayer
+            guard let actualCompletePlayer else { return }
+            completePlayer = actualCompletePlayer
         } else {
-            player = nil
+            completePlayer = nil
         }
     }
     
     private func handlePlaybackRequired(songList: any PaginatedListViewModel<Song>, selectedSong: Song) {
-        innerPlayer = container.completeSongPlayerViewModel(
+        actualCompletePlayer = container.completeSongPlayerViewModel(
             songList: songList,
             selectedSong: selectedSong
         )
-        player = innerPlayer
     }
 }

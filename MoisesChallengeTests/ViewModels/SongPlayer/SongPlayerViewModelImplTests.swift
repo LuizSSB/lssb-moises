@@ -345,10 +345,10 @@ struct SongPlayerViewModelImplTests {
         queue: PlaybackQueueStub,
         playbackController: SongPlaybackControllerStub,
         interactionStore: PlayedSongsStore = PlayedSongsStore()
-    ) -> FocusedSimpleSongPlayerViewModelImpl {
+    ) -> FocusedSongPlayerViewModelImpl {
         let container = IoCContainerStub()
 
-        return FocusedSimpleSongPlayerViewModelImpl(
+        return FocusedSongPlayerViewModelImpl(
             queue: queue,
             playbackController: playbackController,
             interactionService: .init(

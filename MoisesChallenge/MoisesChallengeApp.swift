@@ -28,21 +28,21 @@ struct MoisesChallengeApp: App {
                     )
             }
             .safeAreaInset(edge: .bottom) {
-                if let currentPlayer = viewModel.innerPlayer {
+                if let miniPlayer = viewModel.miniPlayer {
                     MiniSongPlayerView(
-                        viewModel: currentPlayer.actualPlayer,
-                        openPlayer: { viewModel.setPlayer(presented: true) }
+                        viewModel: miniPlayer,
+                        openPlayer: { viewModel.setCompletePlayer(presented: true) }
                     )
                 }
             }
             .onFirstAppear {
                 viewModel.setup()
             }
-            .fullScreenCover(nonHashableItem: .init(from: viewModel, to: \.player)) { player in
+            .fullScreenCover(nonHashableItem: .constant(viewModel.completePlayer)) { player in
                 NavigationStack {
                     CompleteSongPlayerScreen(
                         viewModel: player,
-                        onMinimize: { viewModel.setPlayer(presented: false) }
+                        onMinimize: { viewModel.setCompletePlayer(presented: false) }
                     )
                 }
             }

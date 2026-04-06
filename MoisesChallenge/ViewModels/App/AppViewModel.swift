@@ -8,9 +8,9 @@
 protocol AppViewModel: ViewModel {
     var songList: any SongListViewModel { get }
     var album: (any AlbumViewModel)? { get set }
-    var player: (any CompleteSongPlayerViewModel)? { get set }
-    var innerPlayer: (any CompleteSongPlayerViewModel)? { get }
+    var completePlayer: (any CompleteSongPlayerViewModel)? { get set }
+    var miniPlayer: (any FocusedSongPlayerViewModel)? { get }
     
     func setup()
-    func setPlayer(presented: Bool)
+    func setCompletePlayer(presented: Bool)
 }

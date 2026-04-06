@@ -71,7 +71,7 @@ extension IoCContainer {
     }
     
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
-        FocusedSimpleSongPlayerViewModelImpl(
+        FocusedSongPlayerViewModelImpl(
             queue: queue,
             playbackController: songPlaybackController(),
             interactionService: interactionService()

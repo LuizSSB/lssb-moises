@@ -1,5 +1,5 @@
 //
-//  SongPlayerViewModelImpl.swift
+//  FocusedSongPlayerViewModelImpl.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 01/04/26.
@@ -9,7 +9,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
+final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     // MARK: - Public state
 
     private(set) var playbackState: PlaybackState = .idle
