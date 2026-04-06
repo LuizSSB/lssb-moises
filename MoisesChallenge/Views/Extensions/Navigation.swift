@@ -25,19 +25,6 @@ extension View {
         )
     }
     
-    func navigationDestination<T, Destination: View>(
-        presentationViewModel: any PresentationViewModel<T>,
-        @ViewBuilder destination: @escaping (T) -> Destination
-    ) -> some View {
-        self.navigationDestination(
-            nonHashableItem: .init(
-                get: { presentationViewModel.presented },
-                set: { _ in presentationViewModel.dismiss() }
-            ),
-            destination: destination
-        )
-    }
-    
     func fullScreenCover<T, Destination: View>(
         nonHashableItem: Binding<T?>,
         @ViewBuilder content: @escaping (T) -> Destination
@@ -55,16 +42,4 @@ extension View {
         )
     }
     
-    func fullScreenCover<T, Destination: View>(
-        presentationViewModel: any PresentationViewModel<T>,
-        @ViewBuilder content: @escaping (T) -> Destination
-    ) -> some View {
-        self.fullScreenCover(
-            nonHashableItem: .init(
-                get: { presentationViewModel.presented },
-                set: { _ in presentationViewModel.dismiss() }
-            ),
-            content: content
-        )
-    }
 }

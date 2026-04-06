@@ -5,11 +5,10 @@
 //  Created by Luiz SSB on 06/04/26.
 //
 
-@MainActor
-protocol AppViewModel: AnyObject {
+protocol AppViewModel: ViewModel {
     var songList: any SongListViewModel { get }
-    var album: any PresentationViewModel<AlbumViewModel> { get }
-    var player: any PresentationViewModel<CompleteSongPlayerViewModel> { get }
+    var album: (any AlbumViewModel)? { get set }
+    var player: (any CompleteSongPlayerViewModel)? { get set }
     var innerPlayer: (any CompleteSongPlayerViewModel)? { get }
     
     func setup()

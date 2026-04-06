@@ -5,8 +5,7 @@
 //  Created by Luiz SSB on 05/04/26.
 //
 
-@MainActor
-protocol CompleteSongPlayerViewModel: AnyObject {
+protocol CompleteSongPlayerViewModel: ViewModel {
     var actualPlayer: any FocusedSongPlayerViewModel { get }
     var songList: any PaginatedListViewModel<Song> { get }
     

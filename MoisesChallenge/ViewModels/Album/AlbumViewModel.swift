@@ -7,8 +7,7 @@
 
 import Observation
 
-@MainActor
-protocol AlbumViewModel: AnyObject, Observable, Sendable {
+protocol AlbumViewModel: ViewModel {
     var album: ActionStatus<Album, UserFacingError> { get }
     var playbackRequiredEvent: Event<any PlaybackQueue> { get }
     

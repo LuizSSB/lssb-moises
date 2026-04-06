@@ -23,7 +23,7 @@ final class SongListViewModelImpl: SongListViewModel {
         searchList ?? recentList
     }
 
-    let album: any PresentationViewModel<any AlbumViewModel>
+    var album: (any AlbumViewModel)?
     var songSelectedEvent: Event<Song> = Event<Song>()
 
     // MARK: - Private State
@@ -45,7 +45,6 @@ final class SongListViewModelImpl: SongListViewModel {
     ) {
         self.container = container
         self.songService = songService
-        self.album = container.presentationViewModel()
         self.recentList = container.paginatedListViewModel(
             ofKind: .dynamic {
                 let page = try await interactionService.listPlayedSongs($0 ?? .first(limit: defaultSizePage))
@@ -113,8 +112,7 @@ final class SongListViewModelImpl: SongListViewModel {
     
     func selectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        let viewModel = container.albumViewModel(albumId: albumId)
-        album.present(viewModel)
+        album = container.albumViewModel(albumId: albumId)
     }
 
     // MARK: - Private Helpers

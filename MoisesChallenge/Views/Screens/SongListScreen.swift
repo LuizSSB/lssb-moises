@@ -52,6 +52,10 @@ struct SongListScreen: View {
                 viewModel.selectAlbum(of: song)
             }
         }
+        .navigationDestination(
+            nonHashableItem: .init(from: viewModel, to: \.album),
+            destination: AlbumScreen.init(viewModel:)
+        )
     }
     
     @ViewBuilder func songRow(_ song: Song) -> some View {

@@ -31,7 +31,7 @@ This view model is responsible for switching between:
 - a recent songs list backed by `InteractionService`
 - a search results list backed by `SongSearchService`
 
-It also presents the song player and album screens when the user selects a song or album.
+It also drives the song player and album navigation flows when the user selects a song or album.
 
 ### `SongPlayer`
 
@@ -72,7 +72,7 @@ Presentation helpers live in `ViewModels/Presentation`.
 - `PresentationViewModelImpl.swift`: the observable implementation used by screens for navigation and sheet/full-screen presentation state.
 - `ErrorPresentation.swift`: maps internal errors into `UserFacingError` values suitable for display.
 
-These helpers keep navigation and user-facing error handling consistent across the app.
+These helpers support shared presentation patterns and keep user-facing error handling consistent across the app.
 
 ## Important components
 
@@ -81,7 +81,7 @@ These helpers keep navigation and user-facing error handling consistent across t
 The main view model for the app's home flow.
 
 - Manages both recent songs and search results.
-- Owns presentation state for the player and album screens.
+- Exposes optional destination view models that the view binds to for navigation.
 - Refreshes recent songs when playback interactions change.
 
 ### `FocusedSongPlayerViewModel`
@@ -98,7 +98,6 @@ The higher-level player flow view model.
 
 - Owns the focused player used by the main player controls.
 - Exposes the current paginated song list so the full-screen player can render the queue.
-- Owns presentation state for navigating from the player to album details.
 
 ### `PaginatedListViewModel`
 

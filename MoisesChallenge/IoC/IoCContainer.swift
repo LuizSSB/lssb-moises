@@ -22,7 +22,6 @@ protocol IoCContainer: AnyObject {
     func albumViewModel(albumId: String) -> any AlbumViewModel
     
     // Utility view models
-    func presentationViewModel<T>() -> any PresentationViewModel<T>
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
         ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
@@ -85,10 +84,6 @@ extension IoCContainer {
             service: albumSearchService(),
             container: self
         )
-    }
-    
-    func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        PresentationViewModelImpl<T>()
     }
     
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(

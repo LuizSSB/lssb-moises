@@ -7,8 +7,7 @@
 
 import Observation
 
-@MainActor
-protocol SongListViewModel: AnyObject, Observable, Sendable {
+protocol SongListViewModel: ViewModel {
     var recentList: any PaginatedListViewModel<Song> { get }
     
     var workingSearchQuery: String { get set }
@@ -17,7 +16,7 @@ protocol SongListViewModel: AnyObject, Observable, Sendable {
     
     var currentList: any PaginatedListViewModel<Song> { get }
     
-    var album: any PresentationViewModel<any AlbumViewModel> { get }
+    var album: (any AlbumViewModel)? { get set }
     var songSelectedEvent: Event<Song> { get }
     
     func onAppear()

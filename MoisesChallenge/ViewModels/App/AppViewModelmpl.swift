@@ -10,8 +10,8 @@ import Observation
 @Observable
 final class AppViewModelImpl: AppViewModel {
     var songList: any SongListViewModel
-    let album: any PresentationViewModel<any AlbumViewModel>
-    let player: any PresentationViewModel<any CompleteSongPlayerViewModel>
+    var album: (any AlbumViewModel)?
+    var player: (any CompleteSongPlayerViewModel)?
     
     private(set) var innerPlayer: (any CompleteSongPlayerViewModel)?
 
@@ -21,8 +21,6 @@ final class AppViewModelImpl: AppViewModel {
 
     init(container: any IoCContainer) {
         self.songList = container.songListViewModel()
-        self.album = container.presentationViewModel()
-        self.player = container.presentationViewModel()
         self.container = container
     }
     
@@ -41,9 +39,9 @@ final class AppViewModelImpl: AppViewModel {
     func setPlayer(presented: Bool) {
         if presented {
             guard let innerPlayer else { return }
-            player.present(innerPlayer)
+            player = innerPlayer
         } else {
-            player.dismiss()
+            player = nil
         }
     }
     
@@ -52,6 +50,6 @@ final class AppViewModelImpl: AppViewModel {
             songList: songList,
             selectedSong: selectedSong
         )
-        player.present(innerPlayer!)
+        player = innerPlayer
     }
 }

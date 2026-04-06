@@ -8,8 +8,7 @@
 import Foundation
 import Observation
 
-@MainActor
-protocol FocusedSongPlayerViewModel: AnyObject, Observable, Sendable {
+protocol FocusedSongPlayerViewModel: ViewModel {
     var playbackState: PlaybackState { get }
     var currentSong: Song? { get }
     var repeatMode: PlaybackRepeatMode { get }

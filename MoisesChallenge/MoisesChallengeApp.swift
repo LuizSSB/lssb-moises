@@ -22,9 +22,10 @@ struct MoisesChallengeApp: App {
         WindowGroup {
             NavigationStack {
                 SongListScreen(viewModel: viewModel.songList)
-                    .navigationDestination(presentationViewModel: viewModel.album) {
-                        AlbumScreen(viewModel: $0)
-                    }
+                    .navigationDestination(
+                        nonHashableItem: .init(from: viewModel, to: \.album),
+                        destination: AlbumScreen.init(viewModel:)
+                    )
             }
             .safeAreaInset(edge: .bottom) {
                 if let currentPlayer = viewModel.innerPlayer {
@@ -37,7 +38,7 @@ struct MoisesChallengeApp: App {
             .onFirstAppear {
                 viewModel.setup()
             }
-            .fullScreenCover(presentationViewModel: viewModel.player) { player in
+            .fullScreenCover(nonHashableItem: .init(from: viewModel, to: \.player)) { player in
                 NavigationStack {
                     CompleteSongPlayerScreen(
                         viewModel: player,

@@ -6,7 +6,7 @@
 //
 
 @MainActor
-protocol PaginatedListViewModel<Item>: AnyObject, Sendable {
+protocol PaginatedListViewModel<Item>: ViewModel {
     associatedtype Item: Hashable & Sendable
     
     var items: [Item] { get }

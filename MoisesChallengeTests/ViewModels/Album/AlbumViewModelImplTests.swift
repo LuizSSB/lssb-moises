@@ -223,7 +223,6 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var progress: Double = 0
     var elapsed: TimeInterval = 0
     var duration: TimeInterval?
-    var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl<any AlbumViewModel>()
 
     func onAppear() {
     }
