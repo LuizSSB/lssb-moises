@@ -20,7 +20,7 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     private(set) var duration: TimeInterval?
     // MARK: - Private state
 
-    private var lifetimeTasks = Set<Task<Void, Never>>()
+    nonisolated(unsafe) private var lifetimeTasks = Set<Task<Void, Never>>()
 
     // MARK: - Dependencies
 
@@ -41,8 +41,8 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     }
     
     deinit {
-        Task { [playbackController] in
-            await playbackController.pause()
+        for task in lifetimeTasks {
+            task.cancel()
         }
     }
 

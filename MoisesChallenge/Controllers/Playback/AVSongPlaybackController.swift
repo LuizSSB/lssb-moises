@@ -12,13 +12,20 @@ final class AVSongPlaybackController: SongPlaybackController {
     let event = Event<SongPlaybackControllerEvent>()
     
     private var player: AVPlayer?
-    private var timeObserverToken: Any?
+    nonisolated(unsafe) private var timeObserverToken: Any?
     private var itemObservation: Task<Void, Never>?
     private var playbackEndObservation: Task<Void, Never>?
     
     deinit {
+        let currentPlayer = player
+        currentPlayer?.pause()
+        if let token = timeObserverToken {
+            currentPlayer?.removeTimeObserver(token)
+            timeObserverToken = nil
+        }
         itemObservation?.cancel()
         playbackEndObservation?.cancel()
+        player = nil
     }
     
     func load(_ song: Song) {
@@ -70,9 +77,24 @@ final class AVSongPlaybackController: SongPlaybackController {
     }
     
     func stop() {
-        player?.pause()
+        teardownPlayback()
+    }
+    
+    private func attachTimeObserver(to player: AVPlayer) {
+        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let token = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            Task { @MainActor [weak self] in
+                self?.updateProgress(currentTime: time)
+            }
+        }
+        timeObserverToken = token
+    }
+
+    private func teardownPlayback() {
+        let currentPlayer = player
+        currentPlayer?.pause()
         if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
+            currentPlayer?.removeTimeObserver(token)
             timeObserverToken = nil
         }
         itemObservation?.cancel()
@@ -81,17 +103,6 @@ final class AVSongPlaybackController: SongPlaybackController {
         playbackEndObservation = nil
         player = nil
     }
-    
-    private func attachTimeObserver(to player: AVPlayer) {
-        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
-        let token = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            guard let self else { return }
-            Task { @MainActor in
-                self.updateProgress(currentTime: time, player: player)
-            }
-        }
-        timeObserverToken = token
-    }
 
     private func configureAudioSession() {
         let audioSession = AVAudioSession.sharedInstance()
@@ -99,7 +110,8 @@ final class AVSongPlaybackController: SongPlaybackController {
         try? audioSession.setActive(true)
     }
     
-    private func updateProgress(currentTime: CMTime, player: AVPlayer) {
+    private func updateProgress(currentTime: CMTime) {
+        guard let player else { return }
         guard let item = player.currentItem,
               item.duration.isNumeric
         else { return }
