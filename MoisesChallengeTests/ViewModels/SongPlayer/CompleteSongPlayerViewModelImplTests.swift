@@ -12,24 +12,24 @@ import Testing
 
 @MainActor
 struct CompleteSongPlayerViewModelImplTests {
-    @Test func init_keepsSongListAndBuildsFocusedPlayerFromPaginatedQueue() {
+    @Test func init_keepsSongListAndBuildsFocusedPlayerFromPaginatedQueue() throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
         let container = IoCContainerSpy()
-        let appCoordinator = AppCoordinatorSpy()
 
         // ACT
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container,
-            appCoordinator: appCoordinator
+            container: container
         )
 
         // ASSERT
+        let actualPlayer = try #require(viewModel.actualPlayer as? FocusedSongPlayerViewModelStub)
+        let capturedSongList = try #require(container.capturedSongList as? PaginatedListViewModelStub)
         #expect(viewModel.songList === list)
-        #expect(viewModel.actualPlayer as? FocusedSongPlayerViewModelStub === container.focusedPlayerStub)
-        #expect(container.capturedSongList === list)
+        #expect(actualPlayer === container.focusedPlayerStub)
+        #expect(capturedSongList === list)
         #expect(container.capturedSelectedSong == TestData.song1)
     }
 
@@ -37,12 +37,10 @@ struct CompleteSongPlayerViewModelImplTests {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
         let container = IoCContainerSpy()
-        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container,
-            appCoordinator: appCoordinator
+            container: container
         )
 
         // ACT
@@ -53,16 +51,14 @@ struct CompleteSongPlayerViewModelImplTests {
         #expect(container.playbackQueueSpy.currentItem == TestData.song2)
     }
 
-    @Test func selectAlbum_presentsAlbumViewModelWhenSongHasAlbum() throws {
+    @Test func selectAlbum_setsObservableSelectedAlbumIdWhenSongHasAlbum() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1])
         let container = IoCContainerSpy()
-        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container,
-            appCoordinator: appCoordinator
+            container: container
         )
         var song = TestData.song1
         song.album = TestData.album
@@ -71,26 +67,24 @@ struct CompleteSongPlayerViewModelImplTests {
         viewModel.selectAlbum(of: song)
 
         // ASSERT
-        #expect(appCoordinator.capturedAlbumId == TestData.album.id)
+        #expect(viewModel.observableSelectedAlbumId?.value == TestData.album.id)
     }
 
     @Test func selectAlbum_doesNothingWhenSongHasNoAlbum() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1])
         let container = IoCContainerSpy()
-        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container,
-            appCoordinator: appCoordinator
+            container: container
         )
 
         // ACT
         viewModel.selectAlbum(of: TestData.song1)
 
         // ASSERT
-        #expect(appCoordinator.capturedAlbumId == nil)
+        #expect(viewModel.observableSelectedAlbumId == nil)
     }
 }
 
@@ -104,10 +98,6 @@ private final class IoCContainerSpy: IoCContainer {
 
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         focusedPlayerStub
-    }
-
-    func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        PresentationViewModelImpl<T>()
     }
 
     func playbackQueue<Item: Equatable & Hashable & Sendable>(
@@ -128,24 +118,6 @@ private final class IoCContainerSpy: IoCContainer {
         playbackQueueSpy.currentIndex = playbackQueueSpy.items.firstIndex(of: selectedItem as? Song ?? TestData.song1)
 
         return playbackQueueSpy as! any PlaybackQueue<Item>
-    }
-}
-
-@MainActor
-private final class AppCoordinatorSpy: AppCoordinator {
-    private(set) var capturedAlbumId: String?
-
-    func play(song: Song, from songList: any PaginatedListViewModel<Song>) {
-    }
-
-    func showAlbum(albumId: String) {
-        capturedAlbumId = albumId
-    }
-
-    func presentPlayer() {
-    }
-
-    func dismissPlayer() {
     }
 }
 
@@ -227,9 +199,6 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     func onAppear() {
     }
 
-    func onDisappear() {
-    }
-
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
         false
     }
@@ -239,6 +208,9 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     }
 
     func togglePlayPause() {
+    }
+
+    func pause() {
     }
 
     func toggleRepeatMode() {

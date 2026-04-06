@@ -5,6 +5,7 @@
 //  Created by Luiz SSB on 06/04/26.
 //
 
+import Foundation
 import Observation
 
 @Observable
@@ -25,6 +26,7 @@ final class AppViewModelImpl: AppViewModel {
     private let container: any IoCContainer
 
     @ObservationIgnored private var hasSetObserversUp = false
+    @ObservationIgnored private var lastHandledPlayerAlbumSelectionId: UUID?
 
     init(container: any IoCContainer) {
         self.songList = container.songListViewModel()
@@ -87,7 +89,9 @@ final class AppViewModelImpl: AppViewModel {
         } onChangeAsync: { [weak self] in
             guard let self else { return }
             await self.observePlayerAlbumSelection()
-            guard let albumId = await self.completePlayer?.observableSelectedAlbumId?.value else { return }
+            guard let selection = await self.completePlayer?.observableSelectedAlbumId else { return }
+            guard await self.consumePlayerAlbumSelection(selection) else { return }
+            let albumId = selection.value
             await self.handleAlbumDisplayRequired(albumId: albumId)
         }
     }
@@ -113,5 +117,11 @@ final class AppViewModelImpl: AppViewModel {
             songList: songList,
             selectedSong: selectedSong
         )
+    }
+
+    private func consumePlayerAlbumSelection(_ selection: ObservedData<String>) -> Bool {
+        guard lastHandledPlayerAlbumSelectionId != selection.id else { return false }
+        lastHandledPlayerAlbumSelectionId = selection.id
+        return true
     }
 }

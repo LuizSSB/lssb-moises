@@ -299,8 +299,6 @@ struct SongPlayerViewModelImplTests {
         playbackController: SongPlaybackControllerStub,
         interactionStore: PlayedSongsStore = PlayedSongsStore()
     ) -> FocusedSongPlayerViewModelImpl {
-        let container = IoCContainerStub()
-
         return FocusedSongPlayerViewModelImpl(
             queue: queue,
             playbackController: playbackController,
@@ -452,39 +450,5 @@ private actor PlayedSongsStore {
 
     func append(_ song: Song) {
         songs.append(song)
-    }
-}
-
-@MainActor
-private final class IoCContainerStub: IoCContainer {
-    let albumViewModelStub = AlbumViewModelStub()
-
-    func albumViewModel(albumId: String, appCoordinator: any AppCoordinator) -> any AlbumViewModel {
-        albumViewModelStub.lastRequestedAlbumId = albumId
-        return albumViewModelStub
-    }
-
-    func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        PresentationViewModelImpl<T>()
-    }
-}
-
-@MainActor
-@Observable
-private final class AlbumViewModelStub: AlbumViewModel {
-    var album: ActionStatus<Album, UserFacingError> = .none
-    var observableSelectedSong: ObservedData<Song>?
-    var lastRequestedAlbumId: String?
-
-    func onAppear() {
-    }
-
-    func onDisappear() {
-    }
-
-    func loadAlbum() {
-    }
-
-    func select(song: Song) {
     }
 }

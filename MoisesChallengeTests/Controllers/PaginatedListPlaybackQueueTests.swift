@@ -326,8 +326,8 @@ struct PaginatedListPlaybackQueueTests {
 
         withObservationTracking {
             _ = queue.currentItem
-        } onChangeAsync: { @MainActor [weak self] in
-            self.observedItem = queue.currentItem
+        } onChangeAsync: { @MainActor in
+            observedItem = queue.currentItem
         }
 
         // ACT

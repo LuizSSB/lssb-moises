@@ -84,10 +84,11 @@ import Testing
 
         let context = ModelContext(container)
         let storedAlbum = try #require(try context.fetch(FetchDescriptor<CachedAlbumSwiftData>()).first)
+        let storedSongs = storedAlbum.songs.sorted { $0.sortIndex < $1.sortIndex }
 
         // ASSERT
         #expect(storedAlbum.songs.count == 2)
-        #expect(storedAlbum.songs.map(\.sortIndex) == [0, 1])
-        #expect(storedAlbum.songs.allSatisfy { $0.album?.persistentModelID == storedAlbum.persistentModelID })
+        #expect(storedSongs.map(\.sortIndex) == [0, 1])
+        #expect(storedSongs.allSatisfy { $0.album?.persistentModelID == storedAlbum.persistentModelID })
     }
 }
