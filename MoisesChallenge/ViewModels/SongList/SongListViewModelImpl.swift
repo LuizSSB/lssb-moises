@@ -93,10 +93,22 @@ final class SongListViewModelImpl: SongListViewModel {
 
     func submitSearch() {
         let query = workingSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isRetryingFailedSearch = if let searchList,
+                                        query == currentQuery,
+                                        case .error = searchList.loadState {
+            true
+        } else {
+            false
+        }
         guard !query.isEmpty,
-              query != currentQuery,
+              (query != currentQuery || isRetryingFailedSearch),
               let searchList
         else { return }
+
+        if isRetryingFailedSearch {
+            searchList.interactWithError(shouldRetry: true)
+            return
+        }
         
         currentQuery = query
         Task {

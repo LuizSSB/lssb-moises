@@ -133,6 +133,26 @@ struct SongListViewModelImplTests {
         #expect(container.searchListSpy.refreshCallCount == 1)
     }
 
+    @Test func submitSearch_retriesWhenCurrentQueryIsUnchangedButSearchIsInErrorState() async {
+        // ARRANGE
+        let container = IoCContainerStub()
+        let viewModel = makeViewModel(container: container)
+        viewModel.handleSearchBar(focused: true)
+        viewModel.workingSearchQuery = "query"
+        viewModel.submitSearch()
+        await busyWait { container.searchListSpy.refreshCallCount == 1 }
+        container.searchListSpy.loadState = .error(InvalidDataError().userFacingError)
+
+        // ACT
+        viewModel.workingSearchQuery = "query"
+        viewModel.submitSearch()
+
+        // ASSERT
+        #expect(viewModel.currentQuery == "query")
+        #expect(container.searchListSpy.refreshCallCount == 1)
+        #expect(container.searchListSpy.interactWithErrorCalls == [true])
+    }
+
     @Test func select_setsObservableSelectedSongFromRecentListWhenSearchListIsNotShowing() {
         // ARRANGE
         let container = IoCContainerStub()
