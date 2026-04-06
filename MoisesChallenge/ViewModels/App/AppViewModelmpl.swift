@@ -9,7 +9,7 @@ import Observation
 
 @Observable
 final class AppViewModelImpl: AppViewModel {
-    var songList: any SongListViewModel
+    let songList: any SongListViewModel
     var album: (any AlbumViewModel)?
     var completePlayer: (any CompleteSongPlayerViewModel)?
     var miniPlayer: (any FocusedSongPlayerViewModel)? {
@@ -23,8 +23,8 @@ final class AppViewModelImpl: AppViewModel {
     }
 
     private let container: any IoCContainer
-    
-    private var lifetimeTasks = Set<Task<Void, Never>>() // never really disposed of, since this view model is meant to be active for as long as the app is on
+
+    @ObservationIgnored private var hasSetObserversUp = false
 
     init(container: any IoCContainer) {
         self.songList = container.songListViewModel()
@@ -32,17 +32,73 @@ final class AppViewModelImpl: AppViewModel {
     }
     
     func setup() {
-        guard lifetimeTasks.isEmpty else { return }
-        
-        let listPlaybackEvent = songList.songSelectedEvent
-        lifetimeTasks.insert(Task { [weak self] in
-            for await song in await listPlaybackEvent.stream().stream {
-                guard let self else { return }
-                self.handlePlaybackRequired(songList: self.songList.currentList, selectedSong: song)
-            }
-        })
+        guard !hasSetObserversUp else { return }
+        hasSetObserversUp = true
+
+        observeListSongSelection()
+        observeListAlbumSelection()
+        observeAlbumSongSelection()
+        observePlayerAlbumSelection()
     }
     
+    private func observeListSongSelection() {
+        withObservationTracking {
+            _ = songList.observableSelectedSong
+        } onChangeAsync: { [weak self] in
+            guard let self else { return }
+            await self.observeListSongSelection()
+            guard let song =  await self.songList.observableSelectedSong?.value else { return }
+            await self.handlePlaybackRequired(songList: self.songList.currentList, selectedSong: song)
+        }
+    }
+    
+    private func observeAlbumSongSelection() {
+        withObservationTracking {
+            _ = album?.observableSelectedSong
+        } onChangeAsync: { @MainActor [weak self] in
+            guard let self else { return }
+            self.observeAlbumSongSelection()
+            
+            guard let song = album?.observableSelectedSong?.value else { return }
+            self.handlePlaybackRequired(
+                songList: self.container.paginatedListViewModel(
+                    ofKind: .init(staticItems: self.album?.album.result?.songs ?? [song])
+                ),
+                selectedSong: song
+            )
+        }
+    }
+    
+    private func observeListAlbumSelection() {
+        withObservationTracking {
+            _ = songList.observableSelectedAlbumId
+        } onChangeAsync: { [weak self] in
+            guard let self else { return }
+            await self.observeListAlbumSelection()
+            
+            guard let albumId = await self.songList.observableSelectedAlbumId?.value else { return }
+            await self.handleAlbumDisplayRequired(albumId: albumId)
+        }
+    }
+    
+    private func observePlayerAlbumSelection() {
+        withObservationTracking {
+            _ = completePlayer?.observableSelectedAlbumId
+        } onChangeAsync: { [weak self] in
+            guard let self else { return }
+            await self.observePlayerAlbumSelection()
+            guard let albumId = await self.completePlayer?.observableSelectedAlbumId?.value else { return }
+            await self.handleAlbumDisplayRequired(albumId: albumId)
+        }
+    }
+    
+    private func handleAlbumDisplayRequired(albumId: String) {
+        completePlayer = nil
+        
+        guard album?.album.result?.id != albumId else { return }
+        album = container.albumViewModel(albumId: albumId)
+    }
+
     func setCompletePlayer(presented: Bool) {
         if presented {
             guard let actualCompletePlayer else { return }

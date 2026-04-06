@@ -5,6 +5,7 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
+import Observation
 import SwiftUI
 
 @MainActor
@@ -18,9 +19,8 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval?
-    // MARK: - Private state
 
-    nonisolated(unsafe) private var lifetimeTasks = Set<Task<Void, Never>>()
+    @ObservationIgnored private var hasStartedObserving = false
 
     // MARK: - Dependencies
 
@@ -39,17 +39,12 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
         self.playbackController = playbackController
         self.interactionService = interactionService
     }
-    
-    deinit {
-        for task in lifetimeTasks {
-            task.cancel()
-        }
-    }
 
     func onAppear() {
         syncWithQueue()
 
-        guard lifetimeTasks.isEmpty else { return }
+        guard !hasStartedObserving else { return }
+        hasStartedObserving = true
 
         observeQueue()
         observePlayback()
@@ -123,25 +118,26 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     }
 
     private func observeQueue() {
-        let currentItemChangedEvent = queue.currentItemChangedEvent
-        lifetimeTasks.insert(Task { [weak self] in
-            for await _ in await currentItemChangedEvent.stream().stream {
-                guard let self else { return }
-                self.syncWithQueue()
-            }
-        })
+        withObservationTracking {
+            _ = queue.currentItem
+        } onChangeAsync: { [weak self] in
+            guard let self else { return }
+            await self.observeQueue()
+            await self.syncWithQueue()
+        }
     }
 
     // MARK: - Playback
 
     private func observePlayback() {
-        let playbackEvent = playbackController.event
-        lifetimeTasks.insert(Task { [weak self] in
-            for await event in await playbackEvent.stream().stream {
-                guard let self else { return }
-                self.handlePlaybackEvent(event)
-            }
-        })
+        withObservationTracking {
+            _ = playbackController.observableEvent
+        } onChangeAsync: { [weak self] in
+            guard let self else { return }
+            await self.observePlayback()
+            guard let event = await self.playbackController.observableEvent else { return }
+            await self.handlePlaybackEvent(event)
+        }
     }
 
     private func loadSong(_ song: Song?) {

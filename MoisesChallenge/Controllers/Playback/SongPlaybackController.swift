@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 
 enum SongPlaybackControllerEvent: Sendable {
     case readyToPlay
@@ -15,8 +16,8 @@ enum SongPlaybackControllerEvent: Sendable {
 }
 
 @MainActor
-protocol SongPlaybackController: AnyObject, Sendable {
-    var event: Event<SongPlaybackControllerEvent> { get }
+protocol SongPlaybackController: AnyObject, Sendable, Observable {
+    var observableEvent: SongPlaybackControllerEvent? { get }
     
     func load(_ song: Song)
     func play()

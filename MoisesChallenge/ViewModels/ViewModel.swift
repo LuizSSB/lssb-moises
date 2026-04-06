@@ -5,7 +5,8 @@
 //  Created by Luiz SSB on 06/04/26.
 //
 
+import Observation
 
 @MainActor
-protocol ViewModel: AnyObject, Sendable {
+protocol ViewModel: AnyObject, Sendable, Observable {
 }

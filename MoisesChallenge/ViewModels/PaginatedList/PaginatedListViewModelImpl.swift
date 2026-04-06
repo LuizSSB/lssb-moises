@@ -31,7 +31,7 @@ final class PaginatedListViewModelImpl<
     var hasMore: Bool {
         latestResult?.hasMore ?? false
     }
-    var pageLoadedEvent = Event<Result<[Item], Error>>()
+    private(set) var lastLoadResult: Result<[Item], Error>?
 
     // MARK: - Private State
 
@@ -98,6 +98,7 @@ final class PaginatedListViewModelImpl<
         activeFetchTask = nil
         items = []
         latestResult = nil
+        lastLoadResult = nil
         loadState = .idle
         lastFailedLoadMode = nil
     }
@@ -126,7 +127,6 @@ final class PaginatedListViewModelImpl<
         }
 
         let currentFetch = fetch
-        let pageLoadedEvent = pageLoadedEvent
 
         activeFetchTask = Task { [weak self, mode] in
             do {
@@ -146,10 +146,9 @@ final class PaginatedListViewModelImpl<
                         }
 
                         self.latestResult = result
+                        self.lastLoadResult = .success(result.entries)
                         self.loadState = self.items.isEmpty ? .empty : .loaded
                         self.lastFailedLoadMode = nil
-                    } completion: {
-                        pageLoadedEvent.emitAndForget(.success(result.entries))
                     }
                 }
             } catch is CancellationError {
@@ -162,9 +161,8 @@ final class PaginatedListViewModelImpl<
                 await MainActor.run {
                     withAnimation {
                         self.lastFailedLoadMode = mode
+                        self.lastLoadResult = .failure(error)
                         self.loadState = .error(error.userFacingError)
-                    } completion: {
-                        pageLoadedEvent.emitAndForget(.failure(error))
                     }
                 }
             }

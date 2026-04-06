@@ -150,11 +150,12 @@ private final class AppCoordinatorSpy: AppCoordinator {
 }
 
 @MainActor
+@Observable
 private final class PaginatedListViewModelStub: PaginatedListViewModel {
     var items: [Song]
     var loadState: PaginatedListLoadState = .loaded
     var hasMore = false
-    var pageLoadedEvent = Event<Result<[Song], Error>>()
+    var lastLoadResult: Result<[Song], Error>?
 
     init(items: [Song]) {
         self.items = items
@@ -177,13 +178,10 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
 }
 
 @MainActor
+@Observable
 private final class PlaybackQueueSpy: PlaybackQueue {
     fileprivate var items: [Song]
-    var currentItem: Song? {
-        didSet {
-            currentItemChangedEvent.emitAndForget(currentItem)
-        }
-    }
+    var currentItem: Song?
     var currentIndex: Int? {
         didSet {
             guard let currentIndex, items.indices.contains(currentIndex) else {
@@ -193,7 +191,6 @@ private final class PlaybackQueueSpy: PlaybackQueue {
             currentItem = items[currentIndex]
         }
     }
-    let currentItemChangedEvent = Event<Song?>()
 
     init(items: [Song], selectedItem: Song) {
         self.items = items

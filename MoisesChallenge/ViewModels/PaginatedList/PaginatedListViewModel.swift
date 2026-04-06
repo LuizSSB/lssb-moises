@@ -5,14 +5,13 @@
 //  Created by Luiz SSB on 03/04/26.
 //
 
-@MainActor
 protocol PaginatedListViewModel<Item>: ViewModel {
     associatedtype Item: Hashable & Sendable
     
     var items: [Item] { get }
     var loadState: PaginatedListLoadState { get }
     var hasMore: Bool { get }
-    var pageLoadedEvent: Event<Result<[Item], Error>> { get }
+    var lastLoadResult: Result<[Item], Error>? { get }
     
     func loadFirstPageIfNeeded()
     func loadNextPage()

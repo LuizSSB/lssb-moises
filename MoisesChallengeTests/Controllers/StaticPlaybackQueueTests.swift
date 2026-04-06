@@ -5,6 +5,7 @@
 //  Created by Codex on 04/04/26.
 //
 
+import Observation
 import Testing
 @testable import MoisesChallenge
 
@@ -184,20 +185,22 @@ struct StaticPlaybackQueueTests {
         #expect(queue.currentItem == 1)
     }
 
-    @Test func currentItemChangedEvent_emitsUpdatedItemWhenCurrentIndexChanges() async throws {
+    @Test func currentItemObservation_emitsUpdatedItemWhenCurrentIndexChanges() async throws {
         // ARRANGE
         let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 1)
-        let (_, stream) = await queue.currentItemChangedEvent.stream()
+        var observedItem: Int?
 
-        let reader = Task {
-            var iterator = stream.makeAsyncIterator()
-            return await iterator.next()
+        withObservationTracking {
+            _ = queue.currentItem
+        } onChangeAsync: { @MainActor in
+                observedItem = queue.currentItem
         }
 
         // ACT
         queue.currentIndex = 1
 
         // ASSERT
-        #expect(await reader.value == 2)
+        await busyWait { observedItem == 2 }
+        #expect(observedItem == 2)
     }
 }

@@ -5,6 +5,7 @@
 //  Created by Codex on 04/04/26.
 //
 
+import Observation
 import Testing
 @testable import MoisesChallenge
 
@@ -432,42 +433,38 @@ struct PaginatedListViewModelImplTests {
     private func readNextPageLoadedEvent(
         from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>
     ) async -> Task<Result<[Int], Error>?, Never> {
-        let (_, stream) = await viewModel.pageLoadedEvent.stream()
-        let reader = Task {
-            var iterator = stream.makeAsyncIterator()
-            return await iterator.next()
+        Task {
+            await observeNextLastLoadResult(from: viewModel)
         }
-        await busyWaitAsync {
-            let observerCount = await viewModel.pageLoadedEvent.observerCount
-            return observerCount > 0
-        }
-
-        return reader
     }
 
     private func readPageLoadedEvents(
         from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>,
         count: Int
     ) async -> Task<[Result<[Int], Error>], Never> {
-        let (_, stream) = await viewModel.pageLoadedEvent.stream()
-        let reader = Task {
-            var iterator = stream.makeAsyncIterator()
+        Task {
             var values: [Result<[Int], Error>] = []
 
             for _ in 0..<count {
-                if let value = await iterator.next() {
+                if let value = await observeNextLastLoadResult(from: viewModel) {
                     values.append(value)
                 }
             }
 
             return values
         }
-        await busyWaitAsync {
-            let observerCount = await viewModel.pageLoadedEvent.observerCount
-            return observerCount > 0
-        }
+    }
 
-        return reader
+    private func observeNextLastLoadResult(
+        from viewModel: PaginatedListViewModelImpl<Int, NullPaginationParams>
+    ) async -> Result<[Int], Error>? {
+        await withCheckedContinuation { continuation in
+            withObservationTracking {
+                _ = viewModel.lastLoadResult
+            } onChangeAsync: { @MainActor in
+                continuation.resume(returning: viewModel.lastLoadResult)
+            }
+        }
     }
 
     private func requireSuccessEntries(_ result: Result<[Int], Error>) throws -> [Int] {

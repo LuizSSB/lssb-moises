@@ -5,8 +5,6 @@
 //  Created by Luiz SSB on 03/04/26.
 //
 
-import Observation
-
 protocol SongListViewModel: ViewModel {
     var recentList: any PaginatedListViewModel<Song> { get }
     
@@ -16,8 +14,8 @@ protocol SongListViewModel: ViewModel {
     
     var currentList: any PaginatedListViewModel<Song> { get }
     
-    var album: (any AlbumViewModel)? { get set }
-    var songSelectedEvent: Event<Song> { get }
+    var observableSelectedAlbumId: ObservedData<String>? { get }
+    var observableSelectedSong: ObservedData<Song>? { get }
     
     func onAppear()
     func handleSearchBar(focused: Bool)

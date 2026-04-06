@@ -59,7 +59,7 @@ The album details screen view model lives in `ViewModels/Album`.
 Reusable paginated-list logic lives in `ViewModels/PaginatedList`.
 
 - `PaginatedListViewModel.swift`: defines the base paginated-list APIs and the full paginated contract.
-- `PaginatedListViewModelImpl.swift`: implements first-page loading, next-page loading, refresh, error recovery, and page-loaded events.
+- `PaginatedListViewModelImpl.swift`: implements first-page loading, next-page loading, refresh, error recovery, and tracks the latest load result.
 - `PaginatedListPlaybackQueue.swift`: adapts a paginated list into a playback queue, including loading the next page when playback advances beyond the currently loaded items.
 
 This folder provides a key shared abstraction used by multiple features, especially the song list flows.
@@ -82,6 +82,7 @@ The main view model for the app's home flow.
 
 - Manages both recent songs and search results.
 - Exposes optional destination view models that the view binds to for navigation.
+- Publishes the latest selected song through observable state for playback coordination.
 - Refreshes recent songs when playback interactions change.
 
 ### `FocusedSongPlayerViewModel`
@@ -104,7 +105,7 @@ The higher-level player flow view model.
 The reusable pagination engine for list-based features.
 
 - Centralizes paging, refresh, loading-state, and retry behavior.
-- Exposes `pageLoadedEvent`, which other components can react to.
+- Exposes `lastLoadResult`, which other components can observe for the latest page-load outcome.
 - Enables features like infinite scrolling and the paginated playback queue.
 
 ### `PresentationViewModel`

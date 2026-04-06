@@ -5,7 +5,10 @@
 //  Created by Luiz SSB on 03/04/26.
 //
 
-class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
+import Observation
+
+@Observable
+final class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
     let items: [Item]
     
     init(items: [Item], selectedItem: Item) {
@@ -13,11 +16,7 @@ class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
         self.currentItem = selectedItem
     }
     
-    private(set) var currentItem: Item? {
-        didSet {
-            currentItemChangedEvent.emitAndForget(currentItem)
-        }
-    }
+    private(set) var currentItem: Item?
     
     var currentIndex: Int? {
         get {
@@ -34,8 +33,6 @@ class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
             currentItem = items[newValue]
         }
     }
-    
-    let currentItemChangedEvent = Event<Item?>()
     
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
         false

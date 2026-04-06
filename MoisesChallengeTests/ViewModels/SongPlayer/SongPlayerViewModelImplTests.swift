@@ -45,11 +45,7 @@ struct SongPlayerViewModelImplTests {
 
         // ACT
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
-        await playbackController.event.emit(.readyToPlay)
+        playbackController.observableEvent = .readyToPlay
         await busyWait { viewModel.playbackState == .playing }
         await busyWaitAsync { await interactionStore.songs == [TestData.song1] }
 
@@ -67,13 +63,9 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
 
         // ACT
-        await playbackController.event.emit(.progress(elapsed: 30, duration: 120))
+        playbackController.observableEvent = .progress(elapsed: 30, duration: 120)
         await busyWait { viewModel.duration == 120 }
 
         // ASSERT
@@ -91,11 +83,7 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
-        await playbackController.event.emit(.readyToPlay)
+        playbackController.observableEvent = .readyToPlay
         await busyWait { viewModel.playbackState == .playing }
 
         // ACT
@@ -115,11 +103,7 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
-        await playbackController.event.emit(.readyToPlay)
+        playbackController.observableEvent = .readyToPlay
         await busyWait { viewModel.playbackState == .playing }
         viewModel.togglePlayPause()
 
@@ -168,11 +152,7 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
-        await playbackController.event.emit(.readyToPlay)
+        playbackController.observableEvent = .readyToPlay
         await busyWait { viewModel.playbackState == .playing }
         let stopCallCountBeforeFailure = playbackController.stopCallCount
 
@@ -195,14 +175,9 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let playbackObserverCount = await playbackController.event.observerCount
-            let queueObserverCount = await queue.currentItemChangedEvent.observerCount
-            return playbackObserverCount > 0 && queueObserverCount > 0
-        }
 
         // ACT
-        await playbackController.event.emit(.didFinishPlaying)
+        playbackController.observableEvent = .didFinishPlaying
         await busyWait { viewModel.currentSong == TestData.song2 }
 
         // ASSERT
@@ -220,15 +195,11 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
-        await playbackController.event.emit(.readyToPlay)
+        playbackController.observableEvent = .readyToPlay
         await busyWait { viewModel.playbackState == .playing }
 
         // ACT
-        await playbackController.event.emit(.didFinishPlaying)
+        playbackController.observableEvent = .didFinishPlaying
         await busyWait { playbackController.seekCalls == [0] }
 
         // ASSERT
@@ -246,13 +217,9 @@ struct SongPlayerViewModelImplTests {
         )
         viewModel.onAppear()
         viewModel.toggleRepeatMode()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
 
         // ACT
-        await playbackController.event.emit(.didFinishPlaying)
+        playbackController.observableEvent = .didFinishPlaying
         await busyWait { playbackController.restartCallCount == 1 }
 
         // ASSERT
@@ -274,14 +241,9 @@ struct SongPlayerViewModelImplTests {
         viewModel.onAppear()
         viewModel.toggleRepeatMode()
         viewModel.toggleRepeatMode()
-        await busyWaitAsync {
-            let playbackObserverCount = await playbackController.event.observerCount
-            let queueObserverCount = await queue.currentItemChangedEvent.observerCount
-            return playbackObserverCount > 0 && queueObserverCount > 0
-        }
 
         // ACT
-        await playbackController.event.emit(.didFinishPlaying)
+        playbackController.observableEvent = .didFinishPlaying
         await busyWait { viewModel.currentSong == TestData.song1 }
 
         // ASSERT
@@ -300,14 +262,9 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let playbackObserverCount = await playbackController.event.observerCount
-            let queueObserverCount = await queue.currentItemChangedEvent.observerCount
-            return playbackObserverCount > 0 && queueObserverCount > 0
-        }
 
         // ACT
-        await playbackController.event.emit(.failed)
+        playbackController.observableEvent = .failed
         await busyWait { viewModel.currentSong == TestData.song2 }
 
         // ASSERT
@@ -325,14 +282,10 @@ struct SongPlayerViewModelImplTests {
             playbackController: playbackController
         )
         viewModel.onAppear()
-        await busyWaitAsync {
-            let observerCount = await playbackController.event.observerCount
-            return observerCount > 0
-        }
         let stopCallCountBeforeFailure = playbackController.stopCallCount
 
         // ACT
-        await playbackController.event.emit(.failed)
+        playbackController.observableEvent = .failed
         await busyWait { viewModel.playbackState == .paused }
 
         // ASSERT
@@ -365,17 +318,11 @@ struct SongPlayerViewModelImplTests {
 }
 
 @MainActor
+@Observable
 private final class PlaybackQueueStub: PlaybackQueue {
     private let songs: [Song]
     private var storedCurrentIndex: Int?
-
-    let currentItemChangedEvent = Event<Song?>()
-
-    var currentItem: Song? {
-        didSet {
-            currentItemChangedEvent.emitAndForget(currentItem)
-        }
-    }
+    var currentItem: Song?
 
     var currentIndex: Int? {
         get {
@@ -464,8 +411,9 @@ private final class PlaybackQueueStub: PlaybackQueue {
 }
 
 @MainActor
+@Observable
 private final class SongPlaybackControllerStub: SongPlaybackController {
-    let event = Event<SongPlaybackControllerEvent>()
+    var observableEvent: SongPlaybackControllerEvent?
 
     private(set) var loadedSongs: [Song] = []
     private(set) var playCallCount = 0
@@ -525,6 +473,7 @@ private final class IoCContainerStub: IoCContainer {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
+    var observableSelectedSong: ObservedData<Song>?
     var lastRequestedAlbumId: String?
 
     func onAppear() {

@@ -12,7 +12,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
     // MARK: - Public State
 
     var album: ActionStatus<Album, UserFacingError> = .none
-    let playbackRequiredEvent = Event<any PlaybackQueue>()
+    private(set) var observableSelectedSong: ObservedData<Song>?
 
     // MARK: - Private State
 
@@ -80,11 +80,6 @@ final class AlbumViewModelImpl: AlbumViewModel {
     }
 
     func select(song: Song) {
-        guard case let .success(album) = album,
-              let songs = album.songs
-        else { return }
-        
-        let queue = container.playbackQueue(ofKind: .static(songs), selectedItem: song)
-        playbackRequiredEvent.emitAndForget(queue)
+        observableSelectedSong = .init(value: song)
     }
 }

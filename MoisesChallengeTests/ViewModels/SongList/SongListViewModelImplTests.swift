@@ -290,12 +290,13 @@ private final class AppCoordinatorSpy: AppCoordinator {
 }
 
 @MainActor
+@Observable
 private final class PaginatedListViewModelSpy<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>: PaginatedListViewModel {
     var items: [Item] = []
     var loadState: PaginatedListLoadState = .idle
     var hasMore = false
     var latestResult: Pagination<PaginationParams>.Page<Item>?
-    var pageLoadedEvent = Event<Result<[Item], Error>>()
+    var lastLoadResult: Result<[Item], Error>?
 
     private(set) var loadFirstPageIfNeededCallCount = 0
     private(set) var loadNextPageCallCount = 0

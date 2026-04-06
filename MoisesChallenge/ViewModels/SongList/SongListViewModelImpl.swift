@@ -23,8 +23,8 @@ final class SongListViewModelImpl: SongListViewModel {
         searchList ?? recentList
     }
 
-    var album: (any AlbumViewModel)?
-    var songSelectedEvent: Event<Song> = Event<Song>()
+    private(set) var observableSelectedAlbumId: ObservedData<String>?
+    private(set) var observableSelectedSong: ObservedData<Song>?
 
     // MARK: - Private State
 
@@ -107,12 +107,12 @@ final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Navigation
 
     func select(song: Song) {
-        songSelectedEvent.emitAndForget(song)
+        observableSelectedSong = .init(value: song)
     }
     
     func selectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
-        album = container.albumViewModel(albumId: albumId)
+        observableSelectedAlbumId = .init(value: albumId)
     }
 
     // MARK: - Private Helpers

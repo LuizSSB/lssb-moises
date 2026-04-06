@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import Testing
 @testable import MoisesChallenge
 
@@ -198,16 +199,15 @@ struct PaginatedListPlaybackQueueTests {
         }
 
         await busyWaitAsync {
-            let observerCount = await list.pageLoadedEvent.observerCount
             let loadNextPageCallCount = await list.recordedLoadNextPageCallCount()
-            return loadNextPageCallCount == 1 && observerCount > 0
+            return loadNextPageCallCount == 1
         }
 
         // ACT
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         let latestResult = try #require(list.latestResult)
-        await list.pageLoadedEvent.emit(.success(latestResult.entries))
+        list.lastLoadResult = .success(latestResult.entries)
         try await moveTask.value
 
         // ASSERT
@@ -232,13 +232,12 @@ struct PaginatedListPlaybackQueueTests {
         }
 
         await busyWaitAsync {
-            let observerCount = await list.pageLoadedEvent.observerCount
             let loadNextPageCallCount = await list.recordedLoadNextPageCallCount()
-            return loadNextPageCallCount == 1 && observerCount > 0
+            return loadNextPageCallCount == 1
         }
 
         // ACT
-        await list.pageLoadedEvent.emit(.failure(InvalidDataError()))
+        list.lastLoadResult = .failure(InvalidDataError())
         let result = await moveTask.value
 
         // ASSERT
@@ -265,9 +264,8 @@ struct PaginatedListPlaybackQueueTests {
         }
 
         await busyWaitAsync {
-            let observerCount = await list.pageLoadedEvent.observerCount
             let loadNextPageCallCount = await list.recordedLoadNextPageCallCount()
-            return loadNextPageCallCount == 1 && observerCount > 0
+            return loadNextPageCallCount == 1
         }
 
         // ACT
@@ -280,7 +278,7 @@ struct PaginatedListPlaybackQueueTests {
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         if let latestResult = list.latestResult {
-            await list.pageLoadedEvent.emit(.success(latestResult.entries))
+            list.lastLoadResult = .success(latestResult.entries)
         } else {
             Issue.record("Expected the stub to have a latest result before emitting success.")
         }
@@ -303,9 +301,8 @@ struct PaginatedListPlaybackQueueTests {
         }
 
         await busyWaitAsync {
-            let observerCount = await list.pageLoadedEvent.observerCount
             let loadNextPageCallCount = await list.recordedLoadNextPageCallCount()
-            return loadNextPageCallCount == 1 && observerCount > 0
+            return loadNextPageCallCount == 1
         }
         queue.currentIndex = 0
 
@@ -313,7 +310,7 @@ struct PaginatedListPlaybackQueueTests {
         list.items = [TestData.song1, TestData.song2, TestData.song3]
         list.latestResult = Page(entries: [TestData.song3], pagination: .init(offset: 2, limit: 2))
         let latestResult = try #require(list.latestResult)
-        await list.pageLoadedEvent.emit(.success(latestResult.entries))
+        list.lastLoadResult = .success(latestResult.entries)
         try await moveTask.value
 
         // ASSERT
@@ -321,29 +318,29 @@ struct PaginatedListPlaybackQueueTests {
         #expect(queue.currentIndex == 0)
     }
 
-    @Test func currentItemChangedEvent_emitsUpdatedSongWhenCurrentIndexChanges() async throws {
+    @Test func currentItemObservation_emitsUpdatedSongWhenCurrentIndexChanges() async throws {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2, TestData.song3])
         let queue = PaginatedListPlaybackQueue(list: list, selectedItem: TestData.song1)
-        let (_, stream) = await queue.currentItemChangedEvent.stream()
-        let reader = Task {
-            var iterator = stream.makeAsyncIterator()
-            return await iterator.next()
-        }
-        await busyWaitAsync {
-            let observerCount = await queue.currentItemChangedEvent.observerCount
-            return observerCount > 0
+        var observedItem: Song?
+
+        withObservationTracking {
+            _ = queue.currentItem
+        } onChangeAsync: { @MainActor [weak self] in
+            self.observedItem = queue.currentItem
         }
 
         // ACT
         queue.currentIndex = 1
 
         // ASSERT
-        #expect(await reader.value == TestData.song2)
+        await busyWait { observedItem == TestData.song2 }
+        #expect(observedItem == TestData.song2)
     }
 }
 
 @MainActor
+@Observable
 private final class PaginatedListViewModelStub: PaginatedListViewModel {
     var items: [Song]
     var loadState: PaginatedListLoadState = .loaded
@@ -351,7 +348,7 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
         latestResult?.hasMore ?? false
     }
     var latestResult: Pagination<NullPaginationParams>.Page<Song>?
-    var pageLoadedEvent = Event<Result<[Song], Error>>()
+    var lastLoadResult: Result<[Song], Error>?
     private(set) var loadNextPageCallCount = 0
 
     init(

@@ -8,7 +8,7 @@ Controllers are meant to be small, reusable, and ignorant of UI details. In this
 
 - Encapsulate supporting business logic that can be shared by `Services` and `ViewModels`.
 - Expose narrow interfaces so concrete implementations can be swapped through the app's IoC container.
-- Emit async updates without tightly coupling callers to a specific implementation.
+- Expose asynchronous state changes without tightly coupling callers to a specific implementation.
 
 ## Important components
 
@@ -37,7 +37,7 @@ Concrete `SongPlaybackController` implementation backed by `AVPlayer`.
 
 - Loads the song preview URL into an `AVPlayerItem`.
 - Starts playback and observes readiness, progress, and playback completion.
-- Emits controller events through `Event<SongPlaybackControllerEvent>`.
+- Publishes controller updates through the observable `eventObservable` state.
 - Handles transport controls such as pause, seek, restart, and stop.
 
 ### `Playback/Queue/PlaybackQueue.swift`
@@ -45,7 +45,7 @@ Concrete `SongPlaybackController` implementation backed by `AVPlayer`.
 Generic protocol that models navigation through a playable sequence of items.
 
 - Tracks the current item and current index.
-- Exposes `currentItemChangedEvent` so listeners can react to queue changes.
+- Exposes observable queue state through `currentItem`, so listeners can react with Observation tracking.
 - Defines directional navigation through `previous` and `next` moves.
 
 ### `Playback/Queue/StaticPlaybackQueue.swift`

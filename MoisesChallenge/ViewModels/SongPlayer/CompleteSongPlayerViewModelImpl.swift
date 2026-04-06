@@ -5,9 +5,14 @@
 //  Created by Luiz SSB on 05/04/26.
 //
 
+import Observation
+
+@Observable
 final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     let actualPlayer: any FocusedSongPlayerViewModel
     let songList: any PaginatedListViewModel<Song>
+    
+    var observableSelectedAlbumId: ObservedData<String>?
     
     private let queue: any PlaybackQueue<Song>
     
@@ -29,6 +34,6 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     
     func selectAlbum(of song: Song) {
         guard let songAlbum = song.album else { return }
-//        album.present(container.albumViewModel(albumId: songAlbum.id))
+        observableSelectedAlbumId = .init(value: songAlbum.id)
     }
 }

@@ -7,14 +7,16 @@
 
 import AVFoundation
 import Foundation
+import Observation
 
+@Observable
 final class AVSongPlaybackController: SongPlaybackController {
-    let event = Event<SongPlaybackControllerEvent>()
-    
-    private var player: AVPlayer?
-    nonisolated(unsafe) private var timeObserverToken: Any?
-    private var itemObservation: Task<Void, Never>?
-    private var playbackEndObservation: Task<Void, Never>?
+    private(set) var observableEvent: SongPlaybackControllerEvent?
+
+    @ObservationIgnored private var player: AVPlayer?
+    @ObservationIgnored nonisolated(unsafe) private var timeObserverToken: Any?
+    @ObservationIgnored private var itemObservation: Task<Void, Never>?
+    @ObservationIgnored private var playbackEndObservation: Task<Void, Never>?
     
     deinit {
         let currentPlayer = player
@@ -33,7 +35,7 @@ final class AVSongPlaybackController: SongPlaybackController {
         configureAudioSession()
         
         guard let url = song.previewURL else {
-            event.emitAndForget(.failed)
+            observableEvent = .failed
             return
         }
         
@@ -71,7 +73,10 @@ final class AVSongPlaybackController: SongPlaybackController {
             guard let self else { return }
             Task { @MainActor in
                 player.play()
-                self.event.emitAndForget(.progress(elapsed: 0, duration: player.currentItem?.duration.seconds ?? 0))
+                self.observableEvent = .progress(
+                    elapsed: 0,
+                    duration: player.currentItem?.duration.seconds ?? 0
+                )
             }
         }
     }
@@ -83,8 +88,8 @@ final class AVSongPlaybackController: SongPlaybackController {
     private func attachTimeObserver(to player: AVPlayer) {
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         let token = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            Task { @MainActor [weak self] in
-                self?.updateProgress(currentTime: time)
+            Task { [weak self] in
+                await self?.updateProgress(currentTime: time)
             }
         }
         timeObserverToken = token
@@ -119,7 +124,7 @@ final class AVSongPlaybackController: SongPlaybackController {
         let total = item.duration.seconds
         guard total > 0 else { return }
         
-        event.emitAndForget(.progress(elapsed: currentTime.seconds, duration: total))
+        observableEvent = .progress(elapsed: currentTime.seconds, duration: total)
     }
     
     private func observePlayerItem(_ item: AVPlayerItem) {
@@ -128,9 +133,13 @@ final class AVSongPlaybackController: SongPlaybackController {
                 guard let self else { return }
                 switch status {
                 case .readyToPlay:
-                    await self.event.emit(.readyToPlay)
+                    await MainActor.run {
+                        self.observableEvent = .readyToPlay
+                    }
                 case .failed:
-                    await self.event.emit(.failed)
+                    await MainActor.run {
+                        self.observableEvent = .failed
+                    }
                 default:
                     break
                 }
@@ -147,7 +156,9 @@ final class AVSongPlaybackController: SongPlaybackController {
             
             for await _ in notifications {
                 guard let self else { return }
-                await self.event.emit(.didFinishPlaying)
+                await MainActor.run {
+                    self.observableEvent = .didFinishPlaying
+                }
             }
         }
     }

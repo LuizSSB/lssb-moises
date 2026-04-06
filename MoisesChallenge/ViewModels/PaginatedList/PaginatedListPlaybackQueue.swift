@@ -5,8 +5,10 @@
 //  Created by Luiz SSB on 04/04/26.
 //
 
+import Observation
 
-class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: PlaybackQueue {
+@Observable
+final class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: PlaybackQueue {
     // MARK: - Private State
     
     private var currentItemChangeCount = 0
@@ -25,7 +27,6 @@ class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: Playbac
     private(set) var currentItem: Item? {
         didSet {
             currentItemChangeCount += 1
-            currentItemChangedEvent.emitAndForget(currentItem)
         }
     }
     
@@ -44,8 +45,6 @@ class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: Playbac
             currentItem = list.items[newValue]
         }
     }
-    
-    var currentItemChangedEvent = Event<Item?>()
     
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
         direction == .next && nextIndexBeingLoaded != nil && list.items.last == currentItem
@@ -93,27 +92,36 @@ class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: Playbac
     
     private func loadAndMoveToNext(at index: Int) async throws {
         guard nextIndexBeingLoaded == nil else { return }
-        
-        let streamData = await list.pageLoadedEvent.stream()
+
         let currentItemChangeCountBeforeLoading = currentItemChangeCount
         nextIndexBeingLoaded = index
+        
+        let nextLoadResultTask = Task { @MainActor [self] in
+            await withCheckedContinuation { continuation in
+                withObservationTracking {
+                    _ = list.lastLoadResult
+                } onChangeAsync: { [weak list] in
+                    await continuation.resume(returning: list?.lastLoadResult)
+                }
+            }
+        }
+        
         list.loadNextPage()
         
         defer {
             nextIndexBeingLoaded = nil
         }
         
-        var iterator = streamData.stream.makeAsyncIterator()
-        guard let result = await iterator.next() else { return }
-        
-        switch result {
+        switch await nextLoadResultTask.value {
         case .success:
             guard currentItemChangeCount == currentItemChangeCountBeforeLoading,
                   index < list.items.count
             else { return }
+            
             currentItem = list.items[index]
         case .failure(let error):
             throw error
+        case nil: break
         }
     }
 }
