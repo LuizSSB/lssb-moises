@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 @Observable
 final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     // MARK: - Public state
@@ -17,8 +18,6 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     private(set) var progress: Double = 0
     private(set) var elapsed: TimeInterval = 0
     private(set) var duration: TimeInterval?
-    private(set) var album: any PresentationViewModel<any AlbumViewModel>
-
     // MARK: - Private state
 
     private var lifetimeTasks = Set<Task<Void, Never>>()
@@ -28,21 +27,23 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     private let queue: any PlaybackQueue<Song>
     private let playbackController: any SongPlaybackController
     private let interactionService: InteractionService
-    private let container: any IoCContainer
 
     // MARK: - Lifecycle
 
     init(
         queue: any PlaybackQueue<Song>,
         playbackController: any SongPlaybackController,
-        interactionService: InteractionService,
-        container: any IoCContainer
+        interactionService: InteractionService
     ) {
         self.queue = queue
         self.playbackController = playbackController
         self.interactionService = interactionService
-        self.container = container
-        self.album = container.presentationViewModel()
+    }
+    
+    deinit {
+        Task { [playbackController] in
+            await playbackController.pause()
+        }
     }
 
     func onAppear() {
@@ -52,22 +53,6 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
 
         observeQueue()
         observePlayback()
-    }
-
-    func onDisappear() {
-        pause()
-        for task in lifetimeTasks {
-            task.cancel()
-        }
-        lifetimeTasks.removeAll()
-    }
-
-    // MARK: - Navigation
-
-    func selectAlbum(of song: Song) {
-        guard let albumId = song.album?.id else { return }
-        let viewModel = container.albumViewModel(albumId: albumId)
-        album.present(viewModel)
     }
 
     // MARK: - Controls
@@ -88,6 +73,13 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             play()
         case .loading:
             break
+        }
+    }
+    
+    func pause() {
+        playbackController.pause()
+        if case .playing = playbackState {
+            playbackState = .paused
         }
     }
 
@@ -147,9 +139,7 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
         lifetimeTasks.insert(Task { [weak self] in
             for await event in await playbackEvent.stream().stream {
                 guard let self else { return }
-                await MainActor.run {
-                    self.handlePlaybackEvent(event)
-                }
+                self.handlePlaybackEvent(event)
             }
         })
     }
@@ -180,13 +170,6 @@ final class FocusedSimpleSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
         guard currentSong != nil else { return }
         playbackController.play()
         playbackState = .playing
-    }
-
-    private func pause() {
-        playbackController.pause()
-        if case .playing = playbackState {
-            playbackState = .paused
-        }
     }
 
     private func stopCurrentPlayback() {

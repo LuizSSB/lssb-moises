@@ -16,8 +16,9 @@ private enum CompleteSongPlayerScreenLayout {
 }
 
 struct CompleteSongPlayerScreen: View {
-    @State var viewModel: CompleteSongPlayerViewModel
+    let viewModel: CompleteSongPlayerViewModel
     var showOptions = true
+    var onMinimize: (() -> Void)?
     
     @State private var actionSheetSong: Song?
     @State private var isShowingSongListSheet = false
@@ -76,9 +77,6 @@ struct CompleteSongPlayerScreen: View {
                     viewModel.selectAlbum(of: song)
                 }
             }
-            .navigationDestination(presentationViewModel: viewModel.album) {
-                AlbumScreen(viewModel: $0)
-            }
         }
     }
     
@@ -116,6 +114,16 @@ struct CompleteSongPlayerScreen: View {
     
     @ToolbarContentBuilder
     private func toolbarContent(showsInlineSongList: Bool) -> some ToolbarContent {
+        if let onMinimize {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onMinimize) {
+                    Image(systemName: "chevron.down")
+                        .fontWeight(.semibold)
+                }
+                .accessibilityLabel("Minimize player")
+            }
+        }
+
         ToolbarItemGroup(placement: .topBarTrailing) {
             if !showsInlineSongList {
                 Button {

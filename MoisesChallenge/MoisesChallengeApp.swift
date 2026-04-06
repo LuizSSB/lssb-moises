@@ -6,23 +6,46 @@
 //
 
 import SwiftUI
-import SwiftData
+import Observation
+
 
 @main
 struct MoisesChallengeApp: App {
-    private let container = LiveIoCContainer()
-    @State private var songListViewModel: any SongListViewModel
-
+    private var viewModel: any AppViewModel
+    
     init() {
         let container = LiveIoCContainer()
-        self._songListViewModel = State(initialValue: container.songListViewModel())
+        self.viewModel = AppViewModelImpl(container: container)
     }
-
+    
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                SongListScreen(viewModel: songListViewModel)
+                SongListScreen(viewModel: viewModel.songList)
+                    .navigationDestination(presentationViewModel: viewModel.album) {
+                        AlbumScreen(viewModel: $0)
+                    }
             }
+            .safeAreaInset(edge: .bottom) {
+                if let currentPlayer = viewModel.innerPlayer {
+                    MiniSongPlayerView(
+                        viewModel: currentPlayer.actualPlayer,
+                        openPlayer: { viewModel.setPlayer(presented: true) }
+                    )
+                }
+            }
+            .onFirstAppear {
+                viewModel.setup()
+            }
+            .fullScreenCover(presentationViewModel: viewModel.player) { player in
+                NavigationStack {
+                    CompleteSongPlayerScreen(
+                        viewModel: player,
+                        onMinimize: { viewModel.setPlayer(presented: false) }
+                    )
+                }
+            }
+            
         }
     }
 }

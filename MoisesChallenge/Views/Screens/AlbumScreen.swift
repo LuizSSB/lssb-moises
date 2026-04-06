@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AlbumScreen: View {
-    @State var viewModel: any AlbumViewModel
+    let viewModel: any AlbumViewModel
     
     var body: some View {
         switch viewModel.album {
@@ -56,9 +56,6 @@ struct AlbumScreen: View {
             }
             .onDisappear {
                 viewModel.onDisappear()
-            }
-            .navigationDestination(presentationViewModel: viewModel.player) {
-                CompleteSongPlayerScreen(viewModel: $0, showOptions: false)
             }
         case .failure(let error):
             ContentUnavailableView {

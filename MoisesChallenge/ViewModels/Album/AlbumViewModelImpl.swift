@@ -12,7 +12,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
     // MARK: - Public State
 
     var album: ActionStatus<Album, UserFacingError> = .none
-    private(set) var player: any PresentationViewModel<any CompleteSongPlayerViewModel>
+    let playbackRequiredEvent = Event<any PlaybackQueue>()
 
     // MARK: - Private State
 
@@ -26,11 +26,14 @@ final class AlbumViewModelImpl: AlbumViewModel {
 
     // MARK: - Lifecycle
 
-    init(albumId: String, service: AlbumSearchService, container: any IoCContainer) {
+    init(
+        albumId: String,
+        service: AlbumSearchService,
+        container: any IoCContainer
+    ) {
         self.albumId = albumId
         self.service = service
         self.container = container
-        self.player = container.presentationViewModel()
     }
 
     // MARK: - Screen Events
@@ -81,8 +84,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
               let songs = album.songs
         else { return }
         
-        let list = container.paginatedListViewModel(ofKind: .init(staticItems: songs))
-        let viewModel = container.completeSongPlayerViewModel(songList: list, selectedSong: song)
-        player.present(viewModel)
+        let queue = container.playbackQueue(ofKind: .static(songs), selectedItem: song)
+        playbackRequiredEvent.emitAndForget(queue)
     }
 }

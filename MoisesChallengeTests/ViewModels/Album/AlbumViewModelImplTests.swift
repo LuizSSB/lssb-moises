@@ -16,7 +16,7 @@ struct AlbumViewModelImplTests {
     @Test func onAppear_loadsAlbumWhenAlbumWasNotLoadedYet() async {
         // ARRANGE
         let service = AlbumServiceSpy(results: [.success(TestData.album)])
-        let viewModel = makeViewModel(service: makeService(spy: service))
+        let viewModel = makeViewModel(service: makeService(spy: service), appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.onAppear()
@@ -33,7 +33,7 @@ struct AlbumViewModelImplTests {
     @Test func onAppear_doesNotReloadAlbumWhenAlbumWasAlreadyLoaded() async {
         // ARRANGE
         let service = AlbumServiceSpy(results: [.success(TestData.album)])
-        let viewModel = makeViewModel(service: makeService(spy: service))
+        let viewModel = makeViewModel(service: makeService(spy: service), appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.onAppear()
@@ -51,7 +51,7 @@ struct AlbumViewModelImplTests {
     @Test func loadAlbum_setsAlbumDetailsWhenRequestSucceeds() async {
         // ARRANGE
         let service = AlbumServiceSpy(results: [.success(TestData.album)])
-        let viewModel = makeViewModel(service: makeService(spy: service))
+        let viewModel = makeViewModel(service: makeService(spy: service), appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.loadAlbum()
@@ -69,7 +69,7 @@ struct AlbumViewModelImplTests {
         // ARRANGE
         let error = InvalidDataError()
         let service = AlbumServiceSpy(results: [.failure(error)])
-        let viewModel = makeViewModel(service: makeService(spy: service))
+        let viewModel = makeViewModel(service: makeService(spy: service), appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.loadAlbum()
@@ -86,7 +86,7 @@ struct AlbumViewModelImplTests {
     @Test func loadAlbum_retriesLoadingAlbumAfterFailure() async {
         // ARRANGE
         let service = AlbumServiceSpy(results: [.failure(InvalidDataError()), .success(TestData.album)])
-        let viewModel = makeViewModel(service: makeService(spy: service))
+        let viewModel = makeViewModel(service: makeService(spy: service), appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.loadAlbum()
@@ -105,13 +105,15 @@ struct AlbumViewModelImplTests {
         #expect(await service.requestedAlbumIds() == [TestData.album.id, TestData.album.id])
     }
 
-    @Test func select_presentsSongPlayerStartingFromSelectedSong() async throws {
+    @Test func select_requestsSongPlaybackStartingFromSelectedSong() async throws {
         // ARRANGE
         let container = IoCContainerStub()
+        let appCoordinator = AppCoordinatorSpy()
         let viewModel = AlbumViewModelImpl(
             albumId: TestData.album.id,
             service: AlbumSearchService(get: { _ in TestData.album }),
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
         viewModel.album = .success(TestData.album)
 
@@ -119,21 +121,22 @@ struct AlbumViewModelImplTests {
         viewModel.select(song: TestData.song2)
 
         // ASSERT
-        let songList = try #require(container.capturedSongList)
+        let songList = try #require(appCoordinator.capturedSongList)
         songList.loadFirstPageIfNeeded()
         await busyWait { songList.items == [TestData.song1, TestData.song2] }
         #expect(songList.items == [TestData.song1, TestData.song2])
-        #expect(container.capturedSelectedSong == TestData.song2)
-        #expect(viewModel.player.presented === container.completeSongPlayerViewModelStub)
+        #expect(appCoordinator.capturedSelectedSong == TestData.song2)
     }
 
     @Test func select_doesNothingWhenAlbumDidNotLoadSuccessfully() {
         // ARRANGE
         let container = IoCContainerStub()
+        let appCoordinator = AppCoordinatorSpy()
         let viewModel = AlbumViewModelImpl(
             albumId: TestData.album.id,
             service: AlbumSearchService(get: { _ in TestData.album }),
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
         viewModel.album = .failure(InvalidDataError().userFacingError)
 
@@ -141,16 +144,19 @@ struct AlbumViewModelImplTests {
         viewModel.select(song: TestData.song1)
 
         // ASSERT
-        #expect(container.capturedSongList == nil)
-        #expect(container.capturedSelectedSong == nil)
-        #expect(viewModel.player.presented == nil)
+        #expect(appCoordinator.capturedSongList == nil)
+        #expect(appCoordinator.capturedSelectedSong == nil)
     }
 
-    private func makeViewModel(service: AlbumSearchService) -> AlbumViewModelImpl {
+    private func makeViewModel(
+        service: AlbumSearchService,
+        appCoordinator: any AppCoordinator
+    ) -> AlbumViewModelImpl {
         AlbumViewModelImpl(
             albumId: TestData.album.id,
             service: service,
-            container: IoCContainerStub()
+            container: IoCContainerStub(),
+            appCoordinator: appCoordinator
         )
     }
 
@@ -186,34 +192,25 @@ private actor AlbumServiceSpy {
 
 @MainActor
 private final class IoCContainerStub: IoCContainer {
-    let completeSongPlayerViewModelStub = CompleteSongPlayerViewModelStub()
-    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
-    private(set) var capturedSelectedSong: Song?
-
-    func completeSongPlayerViewModel(
-        songList: any PaginatedListViewModel<Song>,
-        selectedSong: Song
-    ) -> any CompleteSongPlayerViewModel {
-        capturedSongList = songList
-        capturedSelectedSong = selectedSong
-        return completeSongPlayerViewModelStub
-    }
-
-    func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        PresentationViewModelImpl<T>()
-    }
 }
 
 @MainActor
-private final class CompleteSongPlayerViewModelStub: CompleteSongPlayerViewModel {
-    let actualPlayer: any FocusedSongPlayerViewModel = FocusedSongPlayerViewModelStub()
-    let songList: any PaginatedListViewModel<Song> = PaginatedListViewModelImpl<Song, NullPaginationParams>(staticItems: [])
-    var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl<any AlbumViewModel>()
+private final class AppCoordinatorSpy: AppCoordinator {
+    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
+    private(set) var capturedSelectedSong: Song?
 
-    func select(song: Song) {
+    func play(song: Song, from songList: any PaginatedListViewModel<Song>) {
+        capturedSongList = songList
+        capturedSelectedSong = song
     }
 
-    func selectAlbum(of song: Song) {
+    func showAlbum(albumId: String) {
+    }
+
+    func presentPlayer() {
+    }
+
+    func dismissPlayer() {
     }
 }
 

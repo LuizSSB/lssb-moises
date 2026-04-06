@@ -23,8 +23,8 @@ final class SongListViewModelImpl: SongListViewModel {
         searchList ?? recentList
     }
 
-    private(set) var player: any PresentationViewModel<any CompleteSongPlayerViewModel>
-    private(set) var album: any PresentationViewModel<any AlbumViewModel>
+    let album: any PresentationViewModel<any AlbumViewModel>
+    var songSelectedEvent: Event<Song> = Event<Song>()
 
     // MARK: - Private State
 
@@ -45,7 +45,6 @@ final class SongListViewModelImpl: SongListViewModel {
     ) {
         self.container = container
         self.songService = songService
-        self.player = container.presentationViewModel()
         self.album = container.presentationViewModel()
         self.recentList = container.paginatedListViewModel(
             ofKind: .dynamic {
@@ -109,12 +108,7 @@ final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Navigation
 
     func select(song: Song) {
-        let songList: any PaginatedListViewModel<Song> = if let searchList {
-            searchList
-        } else {
-            recentList
-        }
-        player.present(container.completeSongPlayerViewModel(songList: songList, selectedSong: song))
+        songSelectedEvent.emitAndForget(song)
     }
     
     func selectAlbum(of song: Song) {

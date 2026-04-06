@@ -8,9 +8,7 @@
 final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     let actualPlayer: any FocusedSongPlayerViewModel
     let songList: any PaginatedListViewModel<Song>
-    private(set) var album: any PresentationViewModel<any AlbumViewModel>
     
-    private let container: any IoCContainer
     private let queue: any PlaybackQueue<Song>
     
     init(
@@ -22,8 +20,6 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
         self.queue = queue
         self.actualPlayer = container.focusedSongPlayerViewModel(queue: queue)
         self.songList = songList
-        self.album = container.presentationViewModel()
-        self.container = container
     }
     
     func select(song: Song) {
@@ -33,6 +29,6 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
     
     func selectAlbum(of song: Song) {
         guard let songAlbum = song.album else { return }
-        album.present(container.albumViewModel(albumId: songAlbum.id))
+//        album.present(container.albumViewModel(albumId: songAlbum.id))
     }
 }

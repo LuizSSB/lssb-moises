@@ -359,8 +359,7 @@ struct SongPlayerViewModelImplTests {
                 listPlayedSongs: { _ in
                     .init(entries: [], pagination: .first())
                 }
-            ),
-            container: container
+            )
         )
     }
 }
@@ -512,7 +511,7 @@ private actor PlayedSongsStore {
 private final class IoCContainerStub: IoCContainer {
     let albumViewModelStub = AlbumViewModelStub()
 
-    func albumViewModel(albumId: String) -> any AlbumViewModel {
+    func albumViewModel(albumId: String, appCoordinator: any AppCoordinator) -> any AlbumViewModel {
         albumViewModelStub.lastRequestedAlbumId = albumId
         return albumViewModelStub
     }
@@ -526,7 +525,6 @@ private final class IoCContainerStub: IoCContainer {
 @Observable
 private final class AlbumViewModelStub: AlbumViewModel {
     var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
     var lastRequestedAlbumId: String?
 
     func onAppear() {

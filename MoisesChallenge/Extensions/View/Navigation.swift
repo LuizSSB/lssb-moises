@@ -37,4 +37,34 @@ extension View {
             destination: destination
         )
     }
+    
+    func fullScreenCover<T, Destination: View>(
+        nonHashableItem: Binding<T?>,
+        @ViewBuilder content: @escaping (T) -> Destination
+    ) -> some View {
+        self.fullScreenCover(
+            isPresented: .init(
+                get: { nonHashableItem.wrappedValue != nil },
+                set: { _ in nonHashableItem.wrappedValue = nil}
+            ),
+            content: {
+                if let nonHashableItem = nonHashableItem.wrappedValue {
+                    content(nonHashableItem)
+                }
+            }
+        )
+    }
+    
+    func fullScreenCover<T, Destination: View>(
+        presentationViewModel: any PresentationViewModel<T>,
+        @ViewBuilder content: @escaping (T) -> Destination
+    ) -> some View {
+        self.fullScreenCover(
+            nonHashableItem: .init(
+                get: { presentationViewModel.presented },
+                set: { _ in presentationViewModel.dismiss() }
+            ),
+            content: content
+        )
+    }
 }

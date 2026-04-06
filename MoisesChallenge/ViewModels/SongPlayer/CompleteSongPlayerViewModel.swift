@@ -9,7 +9,6 @@
 protocol CompleteSongPlayerViewModel: AnyObject {
     var actualPlayer: any FocusedSongPlayerViewModel { get }
     var songList: any PaginatedListViewModel<Song> { get }
-    var album: any PresentationViewModel<any AlbumViewModel> { get }
     
     func select(song: Song)
     func selectAlbum(of song: Song)

@@ -16,12 +16,14 @@ struct CompleteSongPlayerViewModelImplTests {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
         let container = IoCContainerSpy()
+        let appCoordinator = AppCoordinatorSpy()
 
         // ACT
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
 
         // ASSERT
@@ -35,10 +37,12 @@ struct CompleteSongPlayerViewModelImplTests {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
         let container = IoCContainerSpy()
+        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
 
         // ACT
@@ -53,10 +57,12 @@ struct CompleteSongPlayerViewModelImplTests {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1])
         let container = IoCContainerSpy()
+        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
         var song = TestData.song1
         song.album = TestData.album
@@ -65,47 +71,39 @@ struct CompleteSongPlayerViewModelImplTests {
         viewModel.selectAlbum(of: song)
 
         // ASSERT
-        #expect(container.capturedAlbumId == TestData.album.id)
-        let presented = try #require(viewModel.album.presented as? AlbumViewModelStub)
-        #expect(presented === container.albumViewModelStub)
+        #expect(appCoordinator.capturedAlbumId == TestData.album.id)
     }
 
     @Test func selectAlbum_doesNothingWhenSongHasNoAlbum() {
         // ARRANGE
         let list = PaginatedListViewModelStub(items: [TestData.song1])
         let container = IoCContainerSpy()
+        let appCoordinator = AppCoordinatorSpy()
         let viewModel = CompleteSongPlayerViewModelImpl(
             songList: list,
             selectedSong: TestData.song1,
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
 
         // ACT
         viewModel.selectAlbum(of: TestData.song1)
 
         // ASSERT
-        #expect(container.capturedAlbumId == nil)
-        #expect(viewModel.album.presented == nil)
+        #expect(appCoordinator.capturedAlbumId == nil)
     }
 }
 
 @MainActor
 private final class IoCContainerSpy: IoCContainer {
     let focusedPlayerStub = FocusedSongPlayerViewModelStub()
-    let albumViewModelStub = AlbumViewModelStub()
     let playbackQueueSpy = PlaybackQueueSpy(items: [TestData.song1, TestData.song2], selectedItem: TestData.song1)
 
     private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
     private(set) var capturedSelectedSong: Song?
-    private(set) var capturedAlbumId: String?
 
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         focusedPlayerStub
-    }
-
-    func albumViewModel(albumId: String) -> any AlbumViewModel {
-        capturedAlbumId = albumId
-        return albumViewModelStub
     }
 
     func presentationViewModel<T>() -> any PresentationViewModel<T> {
@@ -130,6 +128,24 @@ private final class IoCContainerSpy: IoCContainer {
         playbackQueueSpy.currentIndex = playbackQueueSpy.items.firstIndex(of: selectedItem as? Song ?? TestData.song1)
 
         return playbackQueueSpy as! any PlaybackQueue<Item>
+    }
+}
+
+@MainActor
+private final class AppCoordinatorSpy: AppCoordinator {
+    private(set) var capturedAlbumId: String?
+
+    func play(song: Song, from songList: any PaginatedListViewModel<Song>) {
+    }
+
+    func showAlbum(albumId: String) {
+        capturedAlbumId = albumId
+    }
+
+    func presentPlayer() {
+    }
+
+    func dismissPlayer() {
     }
 }
 
@@ -235,24 +251,5 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     }
 
     func move(to direction: PlaybackQueueDirection) {
-    }
-}
-
-@MainActor
-@Observable
-private final class AlbumViewModelStub: AlbumViewModel {
-    var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
-
-    func onAppear() {
-    }
-
-    func onDisappear() {
-    }
-
-    func loadAlbum() {
-    }
-
-    func select(song: Song) {
     }
 }

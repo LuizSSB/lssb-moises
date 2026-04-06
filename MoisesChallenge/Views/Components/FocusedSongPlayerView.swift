@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FocusedSongPlayerView: View {
-    @State var viewModel: any FocusedSongPlayerViewModel
+    let viewModel: any FocusedSongPlayerViewModel
     
     var body: some View {
         VStack(spacing: 0) {
@@ -24,9 +24,6 @@ struct FocusedSongPlayerView: View {
         }
         .onAppear {
             viewModel.onAppear()
-        }
-        .onDisappear {
-            viewModel.onDisappear()
         }
     }
     
@@ -193,3 +190,5 @@ struct FocusedSongPlayerView: View {
         return message
     }
 }
+
+

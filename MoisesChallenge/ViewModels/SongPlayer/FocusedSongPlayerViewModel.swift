@@ -18,10 +18,10 @@ protocol FocusedSongPlayerViewModel: AnyObject, Observable, Sendable {
     var duration: TimeInterval? { get } // nil until it's resolved it
     
     func onAppear()
-    func onDisappear()
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool
     func has(_ direction: PlaybackQueueDirection) -> Bool
     func togglePlayPause()
+    func pause()
     func toggleRepeatMode()
     func seek(to fraction: Double)
     func move(to direction: PlaybackQueueDirection)

@@ -6,7 +6,7 @@
 //
 
 @MainActor
-protocol PlaybackQueue<Item>: AnyObject {
+protocol PlaybackQueue<Item>: AnyObject, Sendable {
     associatedtype Item: Sendable
     
     var currentItem: Item? { get }

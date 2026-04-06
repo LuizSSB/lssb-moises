@@ -16,9 +16,10 @@ struct SongListViewModelImplTests {
     @Test func init_startsWithRecentListAsCurrentListAndWithoutSearchList() {
         // ARRANGE
         let container = IoCContainerStub()
+        let appCoordinator = AppCoordinatorSpy()
 
         // ACT
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: appCoordinator)
 
         // ASSERT
         #expect(viewModel.searchList == nil)
@@ -30,7 +31,7 @@ struct SongListViewModelImplTests {
     @Test func onAppear_refreshesRecentListWhenSearchListIsNotShowing() async {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.onAppear()
@@ -44,7 +45,7 @@ struct SongListViewModelImplTests {
     @Test func onAppear_doesNothingWhenSearchListIsShowing() {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
         viewModel.handleSearchBar(focused: true)
 
         // ACT
@@ -58,7 +59,7 @@ struct SongListViewModelImplTests {
     @Test func handleSearchBar_focusedCreatesSearchListAndMakesItCurrent() {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
 
         // ACT
         viewModel.handleSearchBar(focused: true)
@@ -71,7 +72,7 @@ struct SongListViewModelImplTests {
     @Test func handleSearchBar_notFocusedClearsSearchStateAndLoadsRecentList() async {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
         viewModel.onAppear()
         await busyWait { container.recentListSpy.refreshCallCount == 1 }
         viewModel.handleSearchBar(focused: true)
@@ -94,7 +95,7 @@ struct SongListViewModelImplTests {
     @Test func submitSearch_trimsQueryUpdatesCurrentQueryAndRefreshesSearchList() async {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
         viewModel.handleSearchBar(focused: true)
         viewModel.workingSearchQuery = "  hello world  "
 
@@ -110,7 +111,7 @@ struct SongListViewModelImplTests {
     @Test func submitSearch_doesNothingWhenTrimmedQueryIsEmptyOrUnchanged() async {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let viewModel = makeViewModel(container: container, appCoordinator: AppCoordinatorSpy())
         viewModel.handleSearchBar(focused: true)
         viewModel.workingSearchQuery = "   "
 
@@ -133,41 +134,40 @@ struct SongListViewModelImplTests {
         #expect(container.searchListSpy.refreshCallCount == 1)
     }
 
-    @Test func select_usesRecentListQueueWhenSearchListIsNotShowingAndPresentsPlayer() throws {
+    @Test func select_usesRecentListQueueWhenSearchListIsNotShowingAndRequestsPlayback() {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let appCoordinator = AppCoordinatorSpy()
+        let viewModel = makeViewModel(container: container, appCoordinator: appCoordinator)
 
         // ACT
         viewModel.select(song: TestData.song1)
 
         // ASSERT
-        #expect(container.capturedSongList === container.recentListSpy)
-        #expect(container.capturedSelectedSong == TestData.song1)
-        let presented = try #require(viewModel.player.presented as? CompleteSongPlayerViewModelStub)
-        #expect(presented === container.completeSongPlayerViewModelStub)
+        #expect(appCoordinator.capturedSongList === container.recentListSpy)
+        #expect(appCoordinator.capturedSelectedSong == TestData.song1)
     }
 
-    @Test func select_usesSearchListQueueWhenSearchListIsShowingAndPresentsPlayer() throws {
+    @Test func select_usesSearchListQueueWhenSearchListIsShowingAndRequestsPlayback() {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let appCoordinator = AppCoordinatorSpy()
+        let viewModel = makeViewModel(container: container, appCoordinator: appCoordinator)
         viewModel.handleSearchBar(focused: true)
 
         // ACT
         viewModel.select(song: TestData.song2)
 
         // ASSERT
-        #expect(container.capturedSongList === container.searchListSpy)
-        #expect(container.capturedSelectedSong == TestData.song2)
-        let presented = try #require(viewModel.player.presented as? CompleteSongPlayerViewModelStub)
-        #expect(presented === container.completeSongPlayerViewModelStub)
+        #expect(appCoordinator.capturedSongList === container.searchListSpy)
+        #expect(appCoordinator.capturedSelectedSong == TestData.song2)
     }
 
-    @Test func selectAlbum_presentsAlbumViewModelWhenSongHasAlbum() throws {
+    @Test func selectAlbum_requestsAlbumWhenSongHasAlbum() {
         // ARRANGE
         let container = IoCContainerStub()
-        let viewModel = makeViewModel(container: container)
+        let appCoordinator = AppCoordinatorSpy()
+        let viewModel = makeViewModel(container: container, appCoordinator: appCoordinator)
         var song = TestData.song1
         song.album = TestData.album
 
@@ -175,9 +175,7 @@ struct SongListViewModelImplTests {
         viewModel.selectAlbum(of: song)
 
         // ASSERT
-        #expect(container.capturedAlbumId == TestData.album.id)
-        let presented = try #require(viewModel.album.presented as? AlbumViewModelStub)
-        #expect(presented === container.albumViewModelStub)
+        #expect(appCoordinator.capturedAlbumId == TestData.album.id)
     }
 
     @Test func handleSearchBar_notFocusedRefreshesRecentListWhenPlayedSongChangedTopRecentSong() async {
@@ -193,7 +191,8 @@ struct SongListViewModelImplTests {
                     Pagination<NullPaginationParams>.Page(entries: [], pagination: .first(limit: 10))
                 }
             ),
-            container: container
+            container: container,
+            appCoordinator: AppCoordinatorSpy()
         )
         viewModel.onAppear()
         await busyWait { container.recentListSpy.refreshCallCount == 1 }
@@ -227,12 +226,14 @@ struct SongListViewModelImplTests {
                 SongSearchPage(entries: [], pagination: .first(params: .init(searchTerm: ""), limit: 10))
             }
         ),
-        container: IoCContainerStub
+        container: IoCContainerStub,
+        appCoordinator: any AppCoordinator
     ) -> SongListViewModelImpl {
         SongListViewModelImpl(
             interactionService: interactionService,
             songService: songService,
-            container: container
+            container: container,
+            appCoordinator: appCoordinator
         )
     }
 }
@@ -241,41 +242,6 @@ struct SongListViewModelImplTests {
 private final class IoCContainerStub: IoCContainer {
     let recentListSpy = PaginatedListViewModelSpy<Song, NullPaginationParams>()
     let searchListSpy = PaginatedListViewModelSpy<Song, SongSearchParams>()
-    let completeSongPlayerViewModelStub = CompleteSongPlayerViewModelStub()
-    let albumViewModelStub = AlbumViewModelStub()
-
-    private let playerPresentation = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
-    private let albumPresentation = PresentationViewModelImpl<any AlbumViewModel>()
-
-    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
-    private(set) var capturedSelectedSong: Song?
-    private(set) var capturedAlbumId: String?
-
-    func completeSongPlayerViewModel(
-        songList: any PaginatedListViewModel<Song>,
-        selectedSong: Song
-    ) -> any CompleteSongPlayerViewModel {
-        capturedSongList = songList
-        capturedSelectedSong = selectedSong
-        return completeSongPlayerViewModelStub
-    }
-
-    func albumViewModel(albumId: String) -> any AlbumViewModel {
-        capturedAlbumId = albumId
-        return albumViewModelStub
-    }
-
-    func presentationViewModel<T>() -> any PresentationViewModel<T> {
-        if let playerPresentation = playerPresentation as? any PresentationViewModel<T> {
-            return playerPresentation
-        }
-
-        if let albumPresentation = albumPresentation as? any PresentationViewModel<T> {
-            return albumPresentation
-        }
-
-        return PresentationViewModelImpl<T>()
-    }
 
     func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
         ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
@@ -298,6 +264,28 @@ private final class IoCContainerStub: IoCContainer {
         case .static:
             fatalError("Unexpected static paginated list request in SongListViewModelImplTests")
         }
+    }
+}
+
+@MainActor
+private final class AppCoordinatorSpy: AppCoordinator {
+    private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
+    private(set) var capturedSelectedSong: Song?
+    private(set) var capturedAlbumId: String?
+
+    func play(song: Song, from songList: any PaginatedListViewModel<Song>) {
+        capturedSongList = songList
+        capturedSelectedSong = song
+    }
+
+    func showAlbum(albumId: String) {
+        capturedAlbumId = albumId
+    }
+
+    func presentPlayer() {
+    }
+
+    func dismissPlayer() {
     }
 }
 
@@ -333,19 +321,6 @@ private final class PaginatedListViewModelSpy<Item: Hashable & Sendable, Paginat
 
     func reset() {
         resetCallCount += 1
-    }
-}
-
-@MainActor
-private final class CompleteSongPlayerViewModelStub: CompleteSongPlayerViewModel {
-    let actualPlayer: any FocusedSongPlayerViewModel = FocusedSongPlayerViewModelStub()
-    let songList: any PaginatedListViewModel<Song> = PaginatedListViewModelImpl<Song, NullPaginationParams>(staticItems: [])
-    var album: any PresentationViewModel<any AlbumViewModel> = PresentationViewModelImpl<any AlbumViewModel>()
-
-    func select(song: Song) {
-    }
-
-    func selectAlbum(of song: Song) {
     }
 }
 
@@ -387,24 +362,5 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     }
 
     func move(to direction: PlaybackQueueDirection) {
-    }
-}
-
-@MainActor
-@Observable
-private final class AlbumViewModelStub: AlbumViewModel {
-    var album: ActionStatus<Album, UserFacingError> = .none
-    var player: any PresentationViewModel<any CompleteSongPlayerViewModel> = PresentationViewModelImpl<any CompleteSongPlayerViewModel>()
-
-    func onAppear() {
-    }
-
-    func onDisappear() {
-    }
-
-    func loadAlbum() {
-    }
-
-    func select(song: Song) {
     }
 }

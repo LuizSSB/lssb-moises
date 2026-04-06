@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SongListScreen: View {
-    @State var viewModel: any SongListViewModel
+    let viewModel: any SongListViewModel
     
     @State private var actionSheetSong: Song?
     
@@ -34,7 +34,10 @@ struct SongListScreen: View {
         }
         .navigationTitle(String(localized: .songsNavigationTitle))
         .searchable(
-            text: $viewModel.workingSearchQuery,
+            text: .init(
+                get: { viewModel.workingSearchQuery },
+                set: { viewModel.workingSearchQuery = $0 }
+            ),
             placement: .navigationBarDrawer(displayMode: .always)
         )
         .onSubmit(of: .search) {
@@ -48,12 +51,6 @@ struct SongListScreen: View {
             case .viewAlbum:
                 viewModel.selectAlbum(of: song)
             }
-        }
-        .navigationDestination(presentationViewModel: viewModel.player) {
-            CompleteSongPlayerScreen(viewModel: $0)
-        }
-        .navigationDestination(presentationViewModel: viewModel.album) {
-            AlbumScreen(viewModel: $0)
         }
     }
     

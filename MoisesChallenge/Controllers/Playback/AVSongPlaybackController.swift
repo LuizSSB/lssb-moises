@@ -23,6 +23,7 @@ final class AVSongPlaybackController: SongPlaybackController {
     
     func load(_ song: Song) {
         stop()
+        configureAudioSession()
         
         guard let url = song.previewURL else {
             event.emitAndForget(.failed)
@@ -41,6 +42,7 @@ final class AVSongPlaybackController: SongPlaybackController {
     }
     
     func play() {
+        configureAudioSession()
         player?.play()
     }
     
@@ -89,6 +91,12 @@ final class AVSongPlaybackController: SongPlaybackController {
             }
         }
         timeObserverToken = token
+    }
+
+    private func configureAudioSession() {
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(.playback, mode: .default)
+        try? audioSession.setActive(true)
     }
     
     private func updateProgress(currentTime: CMTime, player: AVPlayer) {

@@ -16,7 +16,8 @@ protocol IoCContainer: AnyObject {
     // Main view models
     func songListViewModel() -> any SongListViewModel
     func completeSongPlayerViewModel(
-        songList: any PaginatedListViewModel<Song>, selectedSong: Song
+        songList: any PaginatedListViewModel<Song>,
+        selectedSong: Song
     ) -> any CompleteSongPlayerViewModel
     func albumViewModel(albumId: String) -> any AlbumViewModel
     
@@ -74,8 +75,7 @@ extension IoCContainer {
         FocusedSimpleSongPlayerViewModelImpl(
             queue: queue,
             playbackController: songPlaybackController(),
-            interactionService: interactionService(),
-            container: self
+            interactionService: interactionService()
         )
     }
     
