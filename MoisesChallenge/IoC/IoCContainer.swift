@@ -6,7 +6,7 @@
 //
 
 @MainActor
-protocol IoCContainer: AnyObject {
+protocol IoCContainer: AnyObject, Sendable {
     // Services
     func interactionService() -> InteractionService
     func songSearchService() -> SongSearchService

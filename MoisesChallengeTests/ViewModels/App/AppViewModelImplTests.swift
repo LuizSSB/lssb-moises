@@ -17,11 +17,12 @@ struct AppViewModelImplTests {
         let recentList = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
         let songList = SongListViewModelStub(recentList: recentList)
         let container = IoCContainerSpy(songListStub: songList)
+        container.nextRecentSongsListItems = recentList.items
         let viewModel = AppViewModelImpl(container: container)
         viewModel.setup()
 
         // ACT
-        songList.observableSelectedSong = .init(value: TestData.song2)
+        songList.observableSelectedSong = ObservedData(value: TestData.song2)
         await busyWait { viewModel.completePlayer != nil }
 
         // ASSERT
@@ -30,7 +31,8 @@ struct AppViewModelImplTests {
         let actualPlayer = try #require(completePlayer.actualPlayer as? FocusedSongPlayerViewModelStub)
         let miniPlayer = try #require(viewModel.miniPlayer as? FocusedSongPlayerViewModelStub)
         #expect(container.lastSelectedSong == TestData.song2)
-        #expect(requestedSongList === recentList)
+        #expect(requestedSongList !== recentList)
+        #expect(requestedSongList.items == recentList.items)
         #expect(completePlayer === container.lastCompletePlayer)
         #expect(actualPlayer === miniPlayer)
     }
@@ -124,7 +126,8 @@ struct AppViewModelImplTests {
 
         // ACT
         completePlayer.selectAlbum(of: songWithAlbum)
-        await busyWait { viewModel.album != nil && viewModel.completePlayer == nil }
+        await busyWait { viewModel.album != nil }
+        await busyWait { viewModel.completePlayer == nil }
         let albumShownFromPlayer = try #require(viewModel.album as? AlbumViewModelStub)
 
         // ACT
@@ -138,6 +141,76 @@ struct AppViewModelImplTests {
         #expect(albumAfterReopen === albumShownFromPlayer)
         #expect(container.albumRequestCount == 1)
     }
+
+    @Test func setup_refreshingAndLoadingMoreInCompletePlayerAfterRecentSelectionDoesNotAffectSongListLists() async throws {
+        // ARRANGE
+        let recentList = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
+        let songList = SongListViewModelStub(recentList: recentList)
+        let container = IoCContainerSpy(songListStub: songList)
+        container.nextRecentSongsListItems = [TestData.song1, TestData.song2]
+        let viewModel = AppViewModelImpl(container: container)
+        viewModel.setup()
+
+        // ACT
+        songList.observableSelectedSong = .init(value: TestData.song2)
+        await busyWait { viewModel.completePlayer != nil }
+
+        let completePlayer = try #require(viewModel.completePlayer as? CompleteSongPlayerViewModelStub)
+        let completePlayerSongList = try #require(completePlayer.songList as? PaginatedListViewModelStub<Song>)
+        completePlayerSongList.refreshedItems = [TestData.song3]
+        completePlayerSongList.nextPageItems = [TestData.song1]
+
+        await completePlayer.songList.refresh()
+        completePlayer.songList.loadNextPage()
+
+        // ASSERT
+        #expect(container.lastSelectedSong == TestData.song2)
+        #expect(completePlayerSongList !== recentList)
+        #expect(completePlayerSongList.refreshCallCount == 1)
+        #expect(completePlayerSongList.loadNextPageCallCount == 1)
+        #expect(completePlayerSongList.items == [TestData.song3, TestData.song1])
+        #expect(recentList.refreshCallCount == 0)
+        #expect(recentList.loadNextPageCallCount == 0)
+        #expect(recentList.items == [TestData.song1, TestData.song2])
+        #expect(songList.searchList == nil)
+    }
+
+    @Test func setup_refreshingAndLoadingMoreInCompletePlayerAfterSearchSelectionDoesNotAffectSongListLists() async throws {
+        // ARRANGE
+        let recentList = PaginatedListViewModelStub(items: [TestData.song3])
+        let searchList = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])
+        let songList = SongListViewModelStub(recentList: recentList, searchList: searchList)
+        songList.currentQuery = "beatles"
+        let container = IoCContainerSpy(songListStub: songList)
+        container.nextSearchSongsListItems = [TestData.song1, TestData.song2]
+        let viewModel = AppViewModelImpl(container: container)
+        viewModel.setup()
+
+        // ACT
+        songList.observableSelectedSong = ObservedData(value: TestData.song1)
+        await busyWait { viewModel.completePlayer != nil }
+
+        let completePlayer = try #require(viewModel.completePlayer as? CompleteSongPlayerViewModelStub)
+        let completePlayerSongList = try #require(completePlayer.songList as? PaginatedListViewModelStub<Song>)
+        completePlayerSongList.refreshedItems = [TestData.song3]
+        completePlayerSongList.nextPageItems = [TestData.song2]
+
+        await completePlayer.songList.refresh()
+        completePlayer.songList.loadNextPage()
+
+        // ASSERT
+        #expect(container.lastSelectedSong == TestData.song1)
+        #expect(completePlayerSongList !== searchList)
+        #expect(completePlayerSongList.refreshCallCount == 1)
+        #expect(completePlayerSongList.loadNextPageCallCount == 1)
+        #expect(completePlayerSongList.items == [TestData.song3, TestData.song2])
+        #expect(searchList.refreshCallCount == 0)
+        #expect(searchList.loadNextPageCallCount == 0)
+        #expect(searchList.items == [TestData.song1, TestData.song2])
+        #expect(recentList.refreshCallCount == 0)
+        #expect(recentList.loadNextPageCallCount == 0)
+        #expect(recentList.items == [TestData.song3])
+    }
 }
 
 @MainActor
@@ -145,6 +218,8 @@ private final class IoCContainerSpy: IoCContainer {
     let songListStub: SongListViewModelStub
 
     var albumViewModelStub = AlbumViewModelStub(album: .success(TestData.album))
+    var nextRecentSongsListItems: [Song] = []
+    var nextSearchSongsListItems: [Song] = []
 
     private(set) var lastCompletePlayerSongList: (any PaginatedListViewModel<Song>)?
     private(set) var lastSelectedSong: Song?
@@ -187,8 +262,16 @@ private final class IoCContainerSpy: IoCContainer {
             if let songs = items as? [Song] {
                 lastStaticSongListItems = songs
             }
-            return PaginatedListViewModelStub(items: items)
+            return PaginatedListViewModelStub<Item>(items: items)
         case let .dynamic(fetch):
+            if PaginationParams.self == NullPaginationParams.self,
+               let items = nextRecentSongsListItems as? [Item] {
+                return PaginatedListViewModelStub<Item>(items: items)
+            }
+            if PaginationParams.self == SongSearchParams.self,
+               let items = nextSearchSongsListItems as? [Item] {
+                return PaginatedListViewModelStub<Item>(items: items)
+            }
             return PaginatedListViewModelImpl(fetch: fetch)
         }
     }
@@ -327,18 +410,30 @@ private final class PaginatedListViewModelStub<Item: Hashable & Sendable>: Pagin
     var loadState: PaginatedListLoadState = .loaded
     var hasMore = false
     var lastLoadResult: Result<[Item], Error>?
+    private(set) var loadFirstPageIfNeededCallCount = 0
+    private(set) var loadNextPageCallCount = 0
+    private(set) var refreshCallCount = 0
+    var refreshedItems: [Item]?
+    var nextPageItems: [Item] = []
 
     init(items: [Item]) {
         self.items = items
     }
 
     func loadFirstPageIfNeeded() {
+        loadFirstPageIfNeededCallCount += 1
     }
 
     func loadNextPage() {
+        loadNextPageCallCount += 1
+        items.append(contentsOf: nextPageItems)
     }
 
     func refresh() async {
+        refreshCallCount += 1
+        if let refreshedItems {
+            items = refreshedItems
+        }
     }
 
     func interactWithError(shouldRetry: Bool) {

@@ -102,10 +102,11 @@ import Testing
 
         let context = ModelContext(container)
         let storedPage = try #require(try context.fetch(FetchDescriptor<CachedSongSearchPageSwiftData>()).first)
+        let storedEntries = storedPage.entries.sorted { $0.sortIndex < $1.sortIndex }
 
         // ASSERT
         #expect(storedPage.entries.count == 2)
-        #expect(storedPage.entries.map(\.sortIndex) == [0, 1])
-        #expect(storedPage.entries.allSatisfy { $0.searchPage?.persistentModelID == storedPage.persistentModelID })
+        #expect(storedEntries.map(\.sortIndex) == [0, 1])
+        #expect(storedEntries.allSatisfy { $0.searchPage?.persistentModelID == storedPage.persistentModelID })
     }
 }

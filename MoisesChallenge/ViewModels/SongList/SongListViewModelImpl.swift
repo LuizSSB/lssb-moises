@@ -8,8 +8,6 @@
 import Observation
 import SwiftUI
 
-private let defaultSizePage = 10
-
 @Observable
 final class SongListViewModelImpl: SongListViewModel {
     // MARK: - Public State
@@ -45,15 +43,7 @@ final class SongListViewModelImpl: SongListViewModel {
     ) {
         self.container = container
         self.songService = songService
-        self.recentList = container.paginatedListViewModel(
-            ofKind: .dynamic {
-                let page = try await interactionService.listPlayedSongs($0 ?? .first(limit: defaultSizePage))
-                return .init(
-                    entries: page.entries.map(\.song),
-                    pagination: page.pagination
-                )
-            }
-        )
+        self.recentList = container.recentSongsPaginatedListViewModel()
         
         let songPlayedEvent = interactionService.songMarkedPlayedEvent
         recentSongsUpdatedTask = Task { [weak self] in
@@ -142,11 +132,7 @@ final class SongListViewModelImpl: SongListViewModel {
         page: Pagination<SongSearchParams>?
     ) async throws -> Pagination<SongSearchParams>.Page<Song> {
         try await songService.search(
-            page
-            ?? .first(
-                params: .init(searchTerm: currentQuery),
-                limit: defaultSizePage
-            )
+            page ?? .first(params: .init(searchTerm: currentQuery), limit: ViewModelConstants.defaultSizePage)
         )
     }
 }

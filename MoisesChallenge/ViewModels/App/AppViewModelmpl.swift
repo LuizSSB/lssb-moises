@@ -10,6 +10,8 @@ import Observation
 
 @Observable
 final class AppViewModelImpl: AppViewModel {
+    // MARK: - Public State
+    
     let songList: any SongListViewModel
     var album: (any AlbumViewModel)?
     var completePlayer: (any CompleteSongPlayerViewModel)?
@@ -17,21 +19,27 @@ final class AppViewModelImpl: AppViewModel {
         actualCompletePlayer?.actualPlayer
     }
     
-    private var actualCompletePlayer: (any CompleteSongPlayerViewModel)? {
+    // MARK: - Private State
+    
+    @ObservationIgnored private var actualCompletePlayer: (any CompleteSongPlayerViewModel)? {
         didSet {
             completePlayer = actualCompletePlayer
         }
     }
+    @ObservationIgnored private var hasSetObserversUp = false
+    
+    // MARK: - Dependencies
 
     private let container: any IoCContainer
-
-    @ObservationIgnored private var hasSetObserversUp = false
-    @ObservationIgnored private var lastHandledPlayerAlbumSelectionId: UUID?
+    
+    // MARK: - Lifecycle
 
     init(container: any IoCContainer) {
         self.songList = container.songListViewModel()
         self.container = container
     }
+    
+    // MARK: - App Events
     
     func setup() {
         guard !hasSetObserversUp else { return }
@@ -43,6 +51,17 @@ final class AppViewModelImpl: AppViewModel {
         observePlayerAlbumSelection()
     }
     
+    func setCompletePlayer(presented: Bool) {
+        if presented {
+            guard let actualCompletePlayer else { return }
+            completePlayer = actualCompletePlayer
+        } else {
+            completePlayer = nil
+        }
+    }
+    
+    // MARK: - Observers
+    
     private func observeListSongSelection() {
         withObservationTracking {
             _ = songList.observableSelectedSong
@@ -50,7 +69,12 @@ final class AppViewModelImpl: AppViewModel {
             guard let self else { return }
             await self.observeListSongSelection()
             guard let song =  await self.songList.observableSelectedSong?.value else { return }
-            await self.handlePlaybackRequired(songList: self.songList.currentList, selectedSong: song)
+            let list = if await self.songList.currentQuery.isEmpty {
+                await self.container.recentSongsPaginatedListViewModel()
+            } else {
+                await self.container.songSearchPaginatedListViewModel(params: .init(searchTerm: self.songList.currentQuery))
+            }
+            await self.handlePlaybackRequired(songList: list, selectedSong: song)
         }
     }
     
@@ -83,18 +107,23 @@ final class AppViewModelImpl: AppViewModel {
         }
     }
     
-    private func observePlayerAlbumSelection() {
+    private func observePlayerAlbumSelection(lastEventData: ObservedData<String>? = nil) {
         withObservationTracking {
             _ = completePlayer?.observableSelectedAlbumId
         } onChangeAsync: { [weak self] in
             guard let self else { return }
-            await self.observePlayerAlbumSelection()
-            guard let selection = await self.completePlayer?.observableSelectedAlbumId else { return }
-            guard await self.consumePlayerAlbumSelection(selection) else { return }
-            let albumId = selection.value
-            await self.handleAlbumDisplayRequired(albumId: albumId)
+            guard let selection = await self.completePlayer?.observableSelectedAlbumId,
+                  lastEventData?.id != selection.id
+            else {
+                await self.observePlayerAlbumSelection(lastEventData: lastEventData)
+                return
+            }
+            await self.observePlayerAlbumSelection(lastEventData: selection)
+            await self.handleAlbumDisplayRequired(albumId: selection.value)
         }
     }
+    
+    // MARK: - Observation handlers
     
     private func handleAlbumDisplayRequired(albumId: String) {
         completePlayer = nil
@@ -102,26 +131,11 @@ final class AppViewModelImpl: AppViewModel {
         guard album?.album.result?.id != albumId else { return }
         album = container.albumViewModel(albumId: albumId)
     }
-
-    func setCompletePlayer(presented: Bool) {
-        if presented {
-            guard let actualCompletePlayer else { return }
-            completePlayer = actualCompletePlayer
-        } else {
-            completePlayer = nil
-        }
-    }
     
     private func handlePlaybackRequired(songList: any PaginatedListViewModel<Song>, selectedSong: Song) {
         actualCompletePlayer = container.completeSongPlayerViewModel(
             songList: songList,
             selectedSong: selectedSong
         )
-    }
-
-    private func consumePlayerAlbumSelection(_ selection: ObservedData<String>) -> Bool {
-        guard lastHandledPlayerAlbumSelectionId != selection.id else { return false }
-        lastHandledPlayerAlbumSelectionId = selection.id
-        return true
     }
 }

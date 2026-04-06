@@ -9,12 +9,18 @@ import Observation
 
 @Observable
 final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
+    // MARK: - Public State
+    
     let actualPlayer: any FocusedSongPlayerViewModel
     let songList: any PaginatedListViewModel<Song>
     
     var observableSelectedAlbumId: ObservedData<String>?
     
+    // MARK: - Dependencies
+    
     private let queue: any PlaybackQueue<Song>
+    
+    // MARK: - Lifecycle
     
     init(
         songList: any PaginatedListViewModel<Song>,
@@ -26,6 +32,8 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
         self.actualPlayer = container.focusedSongPlayerViewModel(queue: queue)
         self.songList = songList
     }
+    
+    // MARK: - Screen Events
     
     func select(song: Song) {
         guard let index = songList.items.firstIndex(of: song) else { return }

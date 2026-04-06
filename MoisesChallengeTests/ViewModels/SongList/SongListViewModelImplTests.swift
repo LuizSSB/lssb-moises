@@ -236,16 +236,11 @@ struct SongListViewModelImplTests {
                 Pagination<NullPaginationParams>.Page(entries: [], pagination: .first(limit: 10))
             }
         ),
-        songService: SongSearchService = .init(
-            search: { _ in
-                SongSearchPage(entries: [], pagination: .first(params: .init(searchTerm: ""), limit: 10))
-            }
-        ),
         container: IoCContainerStub
     ) -> SongListViewModelImpl {
         SongListViewModelImpl(
             interactionService: interactionService,
-            songService: songService,
+            songService: container.songSearchService(),
             container: container
         )
     }
