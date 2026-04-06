@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct SongListScreen: View {
+    @Environment(\.rootBottomContentHeight) private var rootBottomContentHeight
+
     let viewModel: any SongListViewModel
     
     @State private var actionSheetSong: Song?
@@ -29,6 +31,11 @@ struct SongListScreen: View {
                 },
                 onError: currentList.interactWithError(shouldRetry:)
             )
+            .safeAreaInset(edge: .bottom) {
+                Color.clear
+                    .frame(height: rootBottomContentHeight)
+                    .accessibilityHidden(true)
+            }
         } onSearchStatusChanged: {
             viewModel.handleSearchBar(focused: $0)
         }

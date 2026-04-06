@@ -7,15 +7,15 @@
 
 import SwiftUI
 
-private enum CompleteSongPlayerScreenLayout {
-    static let sideListMinimumWidth: CGFloat = 650
-    static let sideListPreferredWidthRatio: CGFloat = 0.34
-    static let sideListMinWidth: CGFloat = 280
-    static let sideListMaxWidth: CGFloat = 340
-    static let sideListCornerRadius: CGFloat = 12
-}
-
 struct CompleteSongPlayerScreen: View {
+    private enum Layout {
+        static let sideListMinimumWidth: CGFloat = 650
+        static let sideListPreferredWidthRatio: CGFloat = 0.34
+        static let sideListMinWidth: CGFloat = 280
+        static let sideListMaxWidth: CGFloat = 340
+        static let sideListCornerRadius: CGFloat = 12
+    }
+    
     let viewModel: CompleteSongPlayerViewModel
     var showOptions = true
     var onMinimize: (() -> Void)?
@@ -25,7 +25,7 @@ struct CompleteSongPlayerScreen: View {
     
     var body: some View {
         GeometryReader { proxy in
-            let showsInlineSongList = proxy.size.width >= CompleteSongPlayerScreenLayout.sideListMinimumWidth
+            let showsInlineSongList = proxy.size.width >= Layout.sideListMinimumWidth
             
             HStack(spacing: 24) {
                 playerSection
@@ -33,10 +33,10 @@ struct CompleteSongPlayerScreen: View {
                 if showsInlineSongList {
                     let songListWidth = min(
                         max(
-                            proxy.size.width * CompleteSongPlayerScreenLayout.sideListPreferredWidthRatio,
-                            CompleteSongPlayerScreenLayout.sideListMinWidth
+                            proxy.size.width * Layout.sideListPreferredWidthRatio,
+                            Layout.sideListMinWidth
                         ),
-                        CompleteSongPlayerScreenLayout.sideListMaxWidth
+                        Layout.sideListMaxWidth
                     )
                     
                     inlineSongList(width: songListWidth)
@@ -87,7 +87,7 @@ struct CompleteSongPlayerScreen: View {
     
     private func inlineSongList(width: CGFloat) -> some View {
         let shape = RoundedRectangle(
-            cornerRadius: CompleteSongPlayerScreenLayout.sideListCornerRadius,
+            cornerRadius: Layout.sideListCornerRadius,
             style: .continuous
         )
         

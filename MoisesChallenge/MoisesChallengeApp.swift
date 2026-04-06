@@ -13,6 +13,8 @@ import Observation
 struct MoisesChallengeApp: App {
     private var viewModel: any AppViewModel
     
+    @State private var bottomContentHeight: CGFloat = 0
+    
     init() {
         let container = LiveIoCContainer()
         self.viewModel = AppViewModelImpl(container: container)
@@ -27,12 +29,20 @@ struct MoisesChallengeApp: App {
                         destination: AlbumScreen.init(viewModel:)
                     )
             }
+            .environment(\.rootBottomContentHeight, bottomContentHeight)
             .safeAreaInset(edge: .bottom) {
                 if let miniPlayer = viewModel.miniPlayer {
                     MiniSongPlayerView(
                         viewModel: miniPlayer,
                         openPlayer: { viewModel.setCompletePlayer(presented: true) }
                     )
+                    .overlay {
+                        GeometryReader { reader in
+                            Color.clear.onFirstAppear {
+                                bottomContentHeight = reader.size.height
+                            }
+                        }
+                    }
                 }
             }
             .onFirstAppear {

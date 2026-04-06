@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AlbumScreen: View {
+    @Environment(\.rootBottomContentHeight) private var rootBottomContentHeight
+
     let viewModel: any AlbumViewModel
     
     var body: some View {
@@ -50,6 +52,11 @@ struct AlbumScreen: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
+            }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear
+                    .frame(height: rootBottomContentHeight)
+                    .accessibilityHidden(true)
             }
             .onAppear {
                 viewModel.onAppear()

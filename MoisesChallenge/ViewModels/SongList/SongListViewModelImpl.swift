@@ -60,7 +60,7 @@ final class SongListViewModelImpl: SongListViewModel {
             for await interaction in await songPlayedEvent.stream().stream {
                 guard let self else { return }
                 
-                if self.recentList.items.first == nil || self.recentList.items.first!.id != interaction.song.id {
+                if self.recentList.items.first?.id != interaction.song.id {
                     self.shouldRefreshRecent = true
                 }
             }
