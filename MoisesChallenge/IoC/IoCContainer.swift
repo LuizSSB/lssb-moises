@@ -11,9 +11,9 @@ protocol IoCContainer: AnyObject, Sendable {
     func interactionService() -> InteractionService
     func songSearchService() -> SongSearchService
     func albumSearchService() -> AlbumSearchService
-    func songPlaybackController() -> any SongPlaybackController
     
     // Main view models
+    func appViewModel() -> any AppViewModel
     func songListViewModel() -> any SongListViewModel
     func completeSongPlayerViewModel(
         songList: any PaginatedListViewModel<Song>,
@@ -28,6 +28,7 @@ protocol IoCContainer: AnyObject, Sendable {
     ) -> any PaginatedListViewModel<Item>
     
     // Controllers
+    func songPlaybackController() -> any SongPlaybackController
     func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(
         ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
@@ -46,9 +47,9 @@ extension IoCContainer {
     func albumSearchService() -> AlbumSearchService {
         .hybrid
     }
-
-    func songPlaybackController() -> any SongPlaybackController {
-        AVSongPlaybackController()
+    
+    func appViewModel() -> any AppViewModel {
+        AppViewModelImpl(container: self)
     }
     
     func songListViewModel() -> any SongListViewModel {
@@ -95,6 +96,10 @@ extension IoCContainer {
         case let .dynamic(fetch, initialPage):
             return PaginatedListViewModelImpl(fetch: fetch, initialPage: initialPage)
         }
+    }
+    
+    func songPlaybackController() -> any SongPlaybackController {
+        AVSongPlaybackController()
     }
     
     func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(

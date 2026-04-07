@@ -17,7 +17,7 @@ struct MoisesChallengeApp: App {
     
     init() {
         let container = LiveIoCContainer()
-        self.viewModel = AppViewModelImpl(container: container)
+        self.viewModel = container.appViewModel()
     }
     
     var body: some Scene {

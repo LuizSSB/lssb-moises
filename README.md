@@ -6,14 +6,20 @@ Coding challenge for the position of iOS Engineer at Moises AI.
 - Main flows:
   - Launch screen
   - Home/song list: shows recently played songs and allows searching for songs
-  - Complete song player: plays songs from either the recent/search list or an album
-  - Album details: loads album metadata and its track list
+  - Song player: plays songs from either the recently played or search lists, or from an album
+    - Background playback
+  - Album details: loads album metadata and track list
+
+Demo: https://drive.google.com/file/d/1LwTEdyeEjG63f8K7BDQP2lost_kjR09Y/view
+Note: I forgot to capture error handling in the demo, as well playback while the app is in the background, but they are there - trust me, bro.
 
 ## Details
 
 ### Technical
 - iOS 26+
-- Platform: iPhone-first
+- Platforms:
+  - iPhone
+  - iPad
 - Third-party dependencies:
   - Alamofire: networking
   - Kingfisher: image caching
@@ -23,6 +29,7 @@ Coding challenge for the position of iOS Engineer at Moises AI.
   - Portuguese
 - Accessibility:
   - Dark/light color schemes
+  - System font size
   - SwiftUI accessibility modifiers in place
 
 ### Must-have requirements (per challenge description)
@@ -53,9 +60,11 @@ Coding challenge for the position of iOS Engineer at Moises AI.
 
 The app was developed with Xcode 26.3 and targets iOS 26 and above.
 
-Running the app in the Simulator should require no setup. Running it on a device may require the usual setup for running an app on a device, which may include having to change the app's Team and Bundle Identifier, and trusting the developer over at Settings -> General -> VPN and device management -> Developer apps.
+Running the app in the Simulator should require no setup - just run either the Debug or the Release scheme.
 
-The project's main test plan runs the unit-test target and does not require any setup. It currently covers controllers, services, and view models. A UI-test target also exists in the project, but it is disabled in the shared test plan for now.
+Running it on a device may require the usual setup for running an app on a device, which includes having to change the app's Team and Bundle Identifier, and trusting the developer in the device (Settings app -> General -> VPN and device management -> Developer apps).
+
+The project's main test plan is made for the Debug scheme. It runs the unit-test target and does not require any setup. It currently covers controllers, services, and view models. A UI-test target also exists in the project, but it is disabled in the shared test plan for now.
 
 ## Architecture
 
@@ -64,9 +73,9 @@ The app adopts a hierarchical architecture with three main functional layers (to
 - View Models
 - Services
 
-Each layer is only aware of the layer directly below it and it does so only via some kind of interface, the implementation of which is decided from outside it. 
+Each layer is only aware of the layer directly below it and it does so only via some kind of interface.
 
-In addition to the main layers, there are also Models and Controllers, which appear across all layers.
+In addition to the main layers, there are Models and Controllers, which appear across all layers.
 
 Lastly, the app also adopts Inversion of Control, so every major function of the app is abstracted in some way and which implementation will be used in a given moment is outside the control of the dependee.
 
@@ -95,8 +104,6 @@ The main layer of the app: it controls the business logic by acquiring data to b
 
 There are view models for each main screen of the app, as well as for reusable pieces of business logic:
 - Paginated list with refresh
-- View presentation
-- Focused and complete song player flows
 
 Each view model will have a corresponding `View` or view modifier which will connect/respond to its properties and call its methods on user interaction.
 
@@ -106,7 +113,7 @@ Each view model is defined in two "phases":
 
 ### Views
 
-Views present/format data provided by the View Models to the user and pass user interaction to them. 
+Views present data provided by the View Models to the user and pass user interaction to them. 
 
 Although under SwiftUI all visible elements are implementations of the `View` protocol, we still separate them into:
 - `Screens`: full-screen views that correspond to main app features
@@ -127,6 +134,8 @@ IoC is implemented via a protocol, `IoCContainer`, with functions to provide eac
 An instance of `IoCContainer` is passed arround such that, when some piece of code requires one of the dependencies, it asks the container for it, instead of manually instantiating something.
 
 An extension to `IoCContainer` provides default implementations to the protocol's methods, return the actual dependencies used by the app, but tests (as well as other, not-currently-existing circumstances, e.g.: different platform) can create they own `IoCContainer` that returns mock implementations and the like.
+
+I chose to have `IoCContainer` be a protocol to be adopted by classes, instead of a struct (like Services), because it has methods with type parameters, and those don't go well with that approach.
 
 ## On the use of AI
 
