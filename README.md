@@ -11,7 +11,7 @@ Coding challenge for the position of iOS Engineer at Moises AI.
   - Album details: loads album metadata and track list
 
 Demo: https://drive.google.com/file/d/1LwTEdyeEjG63f8K7BDQP2lost_kjR09Y/view
-* Note: I forgot to capture error handling in the demo, as well playback while the app is in the background, but they are there - trust me, bro.
+* Note: I forgot to capture error handling in the demo, as well playback while the app is in the background, but they are there.
 
 ## Details
 
