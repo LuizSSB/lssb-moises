@@ -14,7 +14,7 @@ extension View {
         @ViewBuilder message: (T) -> any View = { _ in EmptyView() },
         @ViewBuilder actions: (T) -> any View = { _ in EmptyView() }
     ) -> some View {
-        self.alert(
+        alert(
             {
                 if let presented = presenting.wrappedValue {
                     return title(presented)

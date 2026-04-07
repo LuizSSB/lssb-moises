@@ -1,15 +1,14 @@
 import Foundation
+@testable import MoisesChallenge
 import SwiftData
 import Testing
-@testable import MoisesChallenge
 
 @Suite(.serialized) struct AlbumSearchServiceCacheTests {
-
     @Test func get_returnsCachedAlbumWhenFresh() async throws {
         // ARRANGE
         let container = try makeTestModelContainer()
         let context = ModelContext(container)
-        context.insert(try #require(CachedAlbumSwiftData(from: TestData.album)))
+        try context.insert(#require(CachedAlbumSwiftData(from: TestData.album)))
         try context.save()
 
         let service = AlbumSearchService.Cache(container: container).service
@@ -40,8 +39,8 @@ import Testing
         // ARRANGE
         let container = try makeTestModelContainer()
         let context = ModelContext(container)
-        context.insert(
-            try #require(CachedAlbumSwiftData(
+        try context.insert(
+            #require(CachedAlbumSwiftData(
                 from: TestData.album,
                 cachedAt: .now.addingTimeInterval(-(swiftDataConfig.cacheTTL + 1))
             ))

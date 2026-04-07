@@ -7,7 +7,7 @@
 
 extension TaskGroup {
     mutating func allResults() async -> [ChildTaskResult] {
-        return await reduce(into: [ChildTaskResult]()) { partialResult, name in
+        await reduce(into: [ChildTaskResult]()) { partialResult, name in
             partialResult.append(name)
         }
     }

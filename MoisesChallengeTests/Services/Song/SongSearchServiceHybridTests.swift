@@ -1,9 +1,8 @@
 import Foundation
-import Testing
 @testable import MoisesChallenge
+import Testing
 
 @Suite(.serialized) struct SongSearchServiceHybridTests {
-
     @Test func search_returnsCachedPageWhenCacheHit() async throws {
         // ARRANGE
         let container = try makeTestModelContainer()

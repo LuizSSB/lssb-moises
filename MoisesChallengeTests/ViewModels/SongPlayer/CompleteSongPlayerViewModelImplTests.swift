@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct CompleteSongPlayerViewModelImplTests {
@@ -96,7 +96,7 @@ private final class IoCContainerSpy: IoCContainer {
     private(set) var capturedSongList: (any PaginatedListViewModel<Song>)?
     private(set) var capturedSelectedSong: Song?
 
-    func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
+    func focusedSongPlayerViewModel(queue _: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         focusedPlayerStub
     }
 
@@ -133,20 +133,15 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
         self.items = items
     }
 
-    func loadFirstPageIfNeeded() {
-    }
+    func loadFirstPageIfNeeded() {}
 
-    func loadNextPage() {
-    }
+    func loadNextPage() {}
 
-    func refresh() async {
-    }
+    func refresh() async {}
 
-    func interactWithError(shouldRetry: Bool) {
-    }
+    func interactWithError(shouldRetry _: Bool) {}
 
-    func reset() {
-    }
+    func reset() {}
 }
 
 @MainActor
@@ -166,24 +161,23 @@ private final class PlaybackQueueSpy: PlaybackQueue {
 
     init(items: [Song], selectedItem: Song) {
         self.items = items
-        self.currentIndex = items.firstIndex(of: selectedItem)
-        self.currentItem = selectedItem
+        currentIndex = items.firstIndex(of: selectedItem)
+        currentItem = selectedItem
     }
 
     func replaceItems(_ items: [Song]) {
         self.items = items
     }
 
-    func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
+    func isLoading(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func has(_ direction: PlaybackQueueDirection) -> Bool {
+    func has(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func move(to direction: PlaybackQueueDirection) async throws {
-    }
+    func move(to _: PlaybackQueueDirection) async throws {}
 }
 
 @MainActor
@@ -196,29 +190,23 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var elapsed: TimeInterval = 0
     var duration: TimeInterval?
 
-    func onAppear() {
-    }
+    func onAppear() {}
 
-    func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
+    func isLoading(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func has(_ direction: PlaybackQueueDirection) -> Bool {
+    func has(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func togglePlayPause() {
-    }
+    func togglePlayPause() {}
 
-    func pause() {
-    }
+    func pause() {}
 
-    func toggleRepeatMode() {
-    }
+    func toggleRepeatMode() {}
 
-    func seek(to fraction: Double) {
-    }
+    func seek(to _: Double) {}
 
-    func move(to direction: PlaybackQueueDirection) {
-    }
+    func move(to _: PlaybackQueueDirection) {}
 }

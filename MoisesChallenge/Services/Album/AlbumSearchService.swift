@@ -20,12 +20,12 @@ extension AlbumSearchService {
                     parameters: [
                         "id": albumId,
                         "limit": iTunesAPIConfig.maxLimit,
-                        "entity": iTunesAPIConfig.defaults.entity
+                        "entity": iTunesAPIConfig.defaults.entity,
                     ]
                 )
-                    .serializingDecodable(ITunesAPIResponse.self)
-                    .result
-                
+                .serializingDecodable(ITunesAPIResponse.self)
+                .result
+
                 switch result {
                 case let .success(response):
                     guard response.resultCount != 0 else { throw NotFoundError() }
@@ -37,6 +37,6 @@ extension AlbumSearchService {
             }
         )
     }
-    
+
     static let iTunes = Self(iTunesAPISession: AF)
 }

@@ -10,14 +10,14 @@ import Observation
 @Observable
 final class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
     let items: [Item]
-    
+
     init(items: [Item], selectedItem: Item) {
         self.items = items
-        self.currentItem = selectedItem
+        currentItem = selectedItem
     }
-    
+
     private(set) var currentItem: Item?
-    
+
     var currentIndex: Int? {
         get {
             guard let currentItem else { return nil }
@@ -28,23 +28,26 @@ final class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
                 currentItem = nil
                 return
             }
-            
-            guard newValue >= 0 && newValue < items.endIndex && newValue != currentIndex else { return }
+
+            guard newValue >= 0,
+                  newValue < items.endIndex,
+                  newValue != currentIndex
+            else { return }
             currentItem = items[newValue]
         }
     }
-    
-    func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
+
+    func isLoading(_: PlaybackQueueDirection) -> Bool {
         false
     }
-    
+
     func has(_ direction: PlaybackQueueDirection) -> Bool {
         switch direction {
-        case .previous: return (currentIndex ?? 0) > 0
-        case .next: return (currentIndex ?? .max) < items.count - 1
+        case .previous: (currentIndex ?? 0) > 0
+        case .next: (currentIndex ?? .max) < items.count - 1
         }
     }
-    
+
     func move(to direction: PlaybackQueueDirection) async throws {
         switch direction {
         case .previous:
@@ -52,27 +55,27 @@ final class StaticPlaybackQueue<Item: Sendable & Equatable>: PlaybackQueue {
                 currentItem = items[0]
                 return
             }
-            
+
             if currentIndex == 0 {
                 return
             }
-            
+
             currentItem = items[currentIndex - 1]
-            
+
         case .next:
             guard let currentIndex else {
                 currentItem = items[0]
                 return
             }
-            
+
             if currentIndex == items.count - 1 {
                 return
             }
-            
+
             currentItem = items[currentIndex + 1]
         }
     }
-    
+
     func moveToFirst() {
         guard let firstItem = items.first else { return }
         currentItem = firstItem

@@ -5,21 +5,20 @@
 //  Created by Luiz SSB on 31/03/26.
 //
 
-import SwiftUI
 import Observation
-
+import SwiftUI
 
 @main
 struct MoisesChallengeApp: App {
     private var viewModel: any AppViewModel
-    
+
     @State private var bottomContentHeight: CGFloat = 0
-    
+
     init() {
         let container = LiveIoCContainer()
-        self.viewModel = container.appViewModel()
+        viewModel = container.appViewModel()
     }
-    
+
     var body: some Scene {
         WindowGroup {
             NavigationStack {
@@ -56,7 +55,6 @@ struct MoisesChallengeApp: App {
                     )
                 }
             }
-            
         }
     }
 }

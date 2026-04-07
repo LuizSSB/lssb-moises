@@ -11,7 +11,7 @@ struct AlbumScreen: View {
     @Environment(\.rootBottomContentHeight) private var rootBottomContentHeight
 
     let viewModel: any AlbumViewModel
-    
+
     var body: some View {
         switch viewModel.album {
         case .none, .running, .success:
@@ -29,17 +29,17 @@ struct AlbumScreen: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .padding(.bottom, 16)
                     .accessibilityHidden(true)
-                    
+
                     Text(album?.displayTitle ?? "-")
                         .font(.title3.bold())
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 8)
                         .accessibilityAddTraits(.isHeader)
-                    
+
                     Text(album?.displayArtistName ?? "-")
                         .font(.subheadline)
                         .padding(.bottom, 40)
-                    
+
                     ForEach(album?.songs ?? []) { song in
                         Button {
                             viewModel.select(song: song)
@@ -64,7 +64,7 @@ struct AlbumScreen: View {
             .onDisappear {
                 viewModel.onDisappear()
             }
-        case .failure(let error):
+        case let .failure(error):
             ContentUnavailableView {
                 Label(error.title, systemImage: "exclamationmark.triangle")
             } description: {

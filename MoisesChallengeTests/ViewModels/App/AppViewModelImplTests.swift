@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct AppViewModelImplTests {
@@ -233,11 +233,13 @@ private final class IoCContainerSpy: IoCContainer {
             return PaginatedListViewModelStub<Item>(items: items)
         case let .dynamic(fetch, _):
             if PaginationParams.self == NullPaginationParams.self,
-               let items = nextRecentSongsListItems as? [Item] {
+               let items = nextRecentSongsListItems as? [Item]
+            {
                 return PaginatedListViewModelStub<Item>(items: items)
             }
             if PaginationParams.self == SongSearchParams.self,
-               let items = nextSearchSongsListItems as? [Item] {
+               let items = nextSearchSongsListItems as? [Item]
+            {
                 return PaginatedListViewModelStub<Item>(items: items)
             }
             return PaginatedListViewModelImpl(fetch: fetch)
@@ -267,14 +269,11 @@ private final class SongListViewModelStub: SongListViewModel {
         self.searchList = searchList
     }
 
-    func onAppear() {
-    }
+    func onAppear() {}
 
-    func handleSearchBar(focused: Bool) {
-    }
+    func handleSearchBar(focused _: Bool) {}
 
-    func submitSearch() {
-    }
+    func submitSearch() {}
 
     func select(song: Song) {
         observableSelectedSong = .init(value: song)
@@ -296,14 +295,11 @@ private final class AlbumViewModelStub: AlbumViewModel {
         self.album = album
     }
 
-    func onAppear() {
-    }
+    func onAppear() {}
 
-    func onDisappear() {
-    }
+    func onDisappear() {}
 
-    func loadAlbum() {
-    }
+    func loadAlbum() {}
 
     func select(song: Song) {
         observableSelectedSong = .init(value: song)
@@ -325,8 +321,7 @@ private final class CompleteSongPlayerViewModelStub: CompleteSongPlayerViewModel
         self.actualPlayer = actualPlayer
     }
 
-    func select(song: Song) {
-    }
+    func select(song _: Song) {}
 
     func selectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
@@ -344,31 +339,25 @@ private final class FocusedSongPlayerViewModelStub: FocusedSongPlayerViewModel {
     var elapsed: TimeInterval = 0
     var duration: TimeInterval?
 
-    func onAppear() {
-    }
+    func onAppear() {}
 
-    func isLoading(_ direction: PlaybackQueueDirection) -> Bool {
+    func isLoading(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func has(_ direction: PlaybackQueueDirection) -> Bool {
+    func has(_: PlaybackQueueDirection) -> Bool {
         false
     }
 
-    func togglePlayPause() {
-    }
+    func togglePlayPause() {}
 
-    func pause() {
-    }
+    func pause() {}
 
-    func toggleRepeatMode() {
-    }
+    func toggleRepeatMode() {}
 
-    func seek(to fraction: Double) {
-    }
+    func seek(to _: Double) {}
 
-    func move(to direction: PlaybackQueueDirection) {
-    }
+    func move(to _: PlaybackQueueDirection) {}
 }
 
 @MainActor
@@ -404,9 +393,7 @@ private final class PaginatedListViewModelStub<Item: Hashable & Sendable>: Pagin
         }
     }
 
-    func interactWithError(shouldRetry: Bool) {
-    }
+    func interactWithError(shouldRetry _: Bool) {}
 
-    func reset() {
-    }
+    func reset() {}
 }

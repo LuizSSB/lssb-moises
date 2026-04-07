@@ -7,11 +7,9 @@
 
 import Foundation
 
-struct NotFoundError: Error {
-}
+struct NotFoundError: Error {}
 
-struct InvalidDataError: Error {
-}
+struct InvalidDataError: Error {}
 
 struct UserFacingError: Equatable, Hashable {
     enum AppErrorKind {
@@ -20,7 +18,7 @@ struct UserFacingError: Equatable, Hashable {
              invalidData,
              generic
     }
-    
+
     let kind: AppErrorKind
     let title: String
     let message: String

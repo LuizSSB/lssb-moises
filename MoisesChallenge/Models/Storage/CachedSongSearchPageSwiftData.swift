@@ -1,5 +1,5 @@
 //
-//  CachedSongSearchSwiftData.swift
+//  CachedSongSearchPageSwiftData.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 02/04/26.
@@ -11,14 +11,14 @@ import SwiftData
 @Model
 final class CachedSongSearchPageSwiftData {
     #Unique<CachedSongSearchPageSwiftData>([\.searchTerm, \.offset, \.limit])
-    
+
     var searchTerm: String
     var offset: Int
     var limit: Int?
     @Relationship(deleteRule: .cascade, inverse: \CachedSongSwiftData.searchPage)
     var entries: [CachedSongSwiftData]
     var cachedAt: Date
-    
+
     init(searchTerm: String, offset: Int, limit: Int? = nil, entries: [Song], cachedAt: Date = .now) {
         self.searchTerm = searchTerm
         self.offset = offset

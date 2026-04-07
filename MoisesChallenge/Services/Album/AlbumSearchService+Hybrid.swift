@@ -5,7 +5,6 @@
 //  Created by Luiz SSB on 02/04/26.
 //
 
-
 import Foundation
 import SwiftData
 
@@ -16,14 +15,14 @@ extension AlbumSearchService {
                 if let cached = try? await cache.service.get(albumId) {
                     return cached
                 }
-                
+
                 let fresh = try await actual.get(albumId)
                 try? cache.add(album: fresh)
                 return fresh
             }
         )
     }
-    
+
     static let hybrid = Self(
         cache: .init(container: swiftDataConfig.appModelContainer),
         actual: .iTunes

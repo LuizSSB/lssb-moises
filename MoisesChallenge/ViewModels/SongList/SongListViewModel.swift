@@ -7,16 +7,16 @@
 
 protocol SongListViewModel: ViewModel {
     var recentList: any PaginatedListViewModel<Song> { get }
-    
+
     var workingSearchQuery: String { get set }
     var currentQuery: String { get }
     var searchList: (any PaginatedListViewModel<Song>)? { get }
-    
+
     var currentList: any PaginatedListViewModel<Song> { get }
-    
+
     var observableSelectedAlbumId: ObservedData<String>? { get }
     var observableSelectedSong: ObservedData<Song>? { get }
-    
+
     func onAppear()
     func handleSearchBar(focused: Bool)
     func submitSearch()

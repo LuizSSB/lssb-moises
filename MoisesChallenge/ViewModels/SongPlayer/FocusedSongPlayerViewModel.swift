@@ -1,5 +1,5 @@
 //
-//  SimpleSongPlayerViewModel.swift
+//  FocusedSongPlayerViewModel.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 03/04/26.
@@ -15,7 +15,7 @@ protocol FocusedSongPlayerViewModel: ViewModel {
     var progress: Double { get }
     var elapsed: TimeInterval { get }
     var duration: TimeInterval? { get } // nil until it's resolved it
-    
+
     func onAppear()
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool
     func has(_ direction: PlaybackQueueDirection) -> Bool

@@ -31,6 +31,7 @@ final class PaginatedListViewModelImpl<
     var hasMore: Bool {
         latestResult?.hasMore ?? false
     }
+
     private(set) var lastLoadResult: Result<[Item], Error>?
 
     // MARK: - Private State
@@ -47,10 +48,10 @@ final class PaginatedListViewModelImpl<
 
     init(fetch: @escaping PageFetch, initialPage: Pagination<PaginationParams>.Page<Item>? = nil) {
         self.fetch = fetch
-        
+
         if let initialPage {
-            self.items = initialPage.entries
-            self.latestResult = initialPage
+            items = initialPage.entries
+            latestResult = initialPage
         }
     }
 
@@ -76,7 +77,8 @@ final class PaginatedListViewModelImpl<
 
         // HACK: after refreshing, if nothing has changed, the top items won't be rerendered, and, as such, their onAppear will not be triggered, so if all of the page's results fit into the list, it won't load more by itself.
         if case .success = await activeFetchTask?.result,
-           didAlreadyHaveStuff {
+           didAlreadyHaveStuff
+        {
             loadNextPage()
         }
     }

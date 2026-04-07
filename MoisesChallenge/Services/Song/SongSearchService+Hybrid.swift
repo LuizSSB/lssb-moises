@@ -14,14 +14,14 @@ extension SongSearchService {
                 if let cached = try? await cache.service.search(pagination) {
                     return cached
                 }
-                
+
                 let fresh = try await actual.search(pagination)
                 try? cache.add(page: fresh)
                 return fresh
             }
         )
     }
-    
+
     static let hybrid = Self(
         cache: .init(container: swiftDataConfig.appModelContainer),
         actual: .iTunes

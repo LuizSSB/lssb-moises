@@ -1,16 +1,15 @@
 import Foundation
-import Testing
 @testable import MoisesChallenge
+import Testing
 
 @Suite(.serialized) struct AlbumSearchServiceTests {
-
     @Test func get_requestsAlbumAndParsesSongs() async throws {
         // ARRANGE
         let session = MockNetwork.makeSession { request in
             #expect(request.url?.absoluteString.contains("itunes.apple.com/lookup") == true)
             #expect(request.url?.query?.contains("id=42") == true)
-            let response = HTTPURLResponse(
-                url: try #require(request.url),
+            let response = try HTTPURLResponse(
+                url: #require(request.url),
                 statusCode: 200,
                 httpVersion: nil,
                 headerFields: nil
@@ -75,8 +74,8 @@ import Testing
     @Test func get_throwsNotFoundWhenResponseIsEmpty() async throws {
         // ARRANGE
         let session = MockNetwork.makeSession { request in
-            let response = HTTPURLResponse(
-                url: try #require(request.url),
+            let response = try HTTPURLResponse(
+                url: #require(request.url),
                 statusCode: 200,
                 httpVersion: nil,
                 headerFields: nil

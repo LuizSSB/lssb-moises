@@ -5,13 +5,12 @@
 //  Created by Codex on 04/04/26.
 //
 
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct SongPlayerViewModelImplTests {
-
     @Test func onAppear_loadsCurrentSongFromQueue() {
         // ARRANGE
         let queue = PlaybackQueueStub(songs: [TestData.song1, TestData.song2], currentIndex: 0)
@@ -299,7 +298,7 @@ struct SongPlayerViewModelImplTests {
         playbackController: SongPlaybackControllerStub,
         interactionStore: PlayedSongsStore = PlayedSongsStore()
     ) -> FocusedSongPlayerViewModelImpl {
-        return FocusedSongPlayerViewModelImpl(
+        FocusedSongPlayerViewModelImpl(
             queue: queue,
             playbackController: playbackController,
             interactionService: .init(
@@ -358,8 +357,8 @@ private final class PlaybackQueueStub: PlaybackQueue {
 
     init(songs: [Song], currentIndex: Int?) {
         self.songs = songs
-        self.storedCurrentIndex = currentIndex
-        self.currentItem = currentIndex.flatMap { songs.indices.contains($0) ? songs[$0] : nil }
+        storedCurrentIndex = currentIndex
+        currentItem = currentIndex.flatMap { songs.indices.contains($0) ? songs[$0] : nil }
     }
 
     func isLoading(_ direction: PlaybackQueueDirection) -> Bool {

@@ -10,7 +10,7 @@ import Observation
 protocol AlbumViewModel: ViewModel {
     var album: ActionStatus<Album, UserFacingError> { get }
     var observableSelectedSong: ObservedData<Song>? { get }
-    
+
     func onAppear()
     func onDisappear()
     func loadAlbum()

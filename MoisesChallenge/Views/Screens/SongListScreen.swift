@@ -11,9 +11,9 @@ struct SongListScreen: View {
     @Environment(\.rootBottomContentHeight) private var rootBottomContentHeight
 
     let viewModel: any SongListViewModel
-    
+
     @State private var actionSheetSong: Song?
-    
+
     var body: some View {
         SearchBarContentContainer {
             let currentList = viewModel.currentList
@@ -60,7 +60,7 @@ struct SongListScreen: View {
             }
         }
     }
-    
+
     @ViewBuilder func songRow(_ song: Song) -> some View {
         HStack {
             Button {
@@ -70,7 +70,7 @@ struct SongListScreen: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            
+
             if song.album != nil {
                 Button {
                     actionSheetSong = song
@@ -86,12 +86,12 @@ struct SongListScreen: View {
         .listRowSeparator(.hidden)
         .listRowInsets([.vertical], 7)
     }
-    
+
     @ViewBuilder func placeholderContent(_ type: PaginatedListViewPlaceholderType) -> some View {
         switch (type, viewModel.searchList) {
         case (.idle, nil):
             EmptyView()
-            
+
         case (.idle, .some):
             VStack {
                 Image(systemName: "magnifyingglass")
@@ -103,20 +103,20 @@ struct SongListScreen: View {
                     .foregroundStyle(.secondary)
             }
             .accessibilityElement(children: .combine)
-            
+
         case (.empty, .some):
             ContentUnavailableView(
                 String(localized: .songsEmptySearchResults(viewModel.currentQuery)),
                 systemImage: "music.note.list"
             )
-            
+
         case (.empty, nil):
             ContentUnavailableView(
                 String(localized: .songsEmptyRecentTitle),
                 systemImage: "music.note.list",
                 description: Text(String(localized: .songsEmptyRecentDescription))
             )
-            
+
         case let (.error(error), _):
             ContentUnavailableView {
                 Label(error.title, systemImage: "exclamationmark.triangle")

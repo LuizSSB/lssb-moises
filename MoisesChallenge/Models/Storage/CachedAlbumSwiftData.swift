@@ -11,7 +11,7 @@ import SwiftData
 @Model
 class CachedAlbumSwiftData {
     #Unique<CachedAlbumSwiftData>([\.id])
-    
+
     var id: String
     var title: String?
     var artistId: String?
@@ -21,7 +21,7 @@ class CachedAlbumSwiftData {
     @Relationship(deleteRule: .cascade, inverse: \CachedSongSwiftData.album)
     var songs: [CachedSongSwiftData]
     var cachedAt: Date
-    
+
     init(
         id: String,
         title: String? = nil,
@@ -33,8 +33,8 @@ class CachedAlbumSwiftData {
     ) {
         self.id = id
         self.title = title
-        self.artistId = artist?.id
-        self.artistName = artist?.name
+        artistId = artist?.id
+        artistName = artist?.name
         self.itemArtwork = itemArtwork
         self.mainArtwork = mainArtwork
         self.songs = songs.enumerated().map { index, song in
@@ -47,7 +47,7 @@ class CachedAlbumSwiftData {
 extension CachedAlbumSwiftData {
     convenience init?(from album: Album, cachedAt: Date = .now) {
         guard let songs = album.songs else { return nil }
-        
+
         self.init(
             id: album.id,
             title: album.title,

@@ -11,7 +11,7 @@ protocol IoCContainer: AnyObject, Sendable {
     func interactionService() -> InteractionService
     func songSearchService() -> SongSearchService
     func albumSearchService() -> AlbumSearchService
-    
+
     // Main view models
     func appViewModel() -> any AppViewModel
     func songListViewModel() -> any SongListViewModel
@@ -20,13 +20,13 @@ protocol IoCContainer: AnyObject, Sendable {
         selectedSong: Song
     ) -> any CompleteSongPlayerViewModel
     func albumViewModel(albumId: String) -> any AlbumViewModel
-    
+
     // Utility view models
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel
-    func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
+    func paginatedListViewModel<Item: Hashable & Sendable>(
+        ofKind kind: PaginatedListViewModelDependencyKind<Item, some Hashable & Sendable>
     ) -> any PaginatedListViewModel<Item>
-    
+
     // Controllers
     func songPlaybackController() -> any SongPlaybackController
     func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(
@@ -39,19 +39,19 @@ extension IoCContainer {
     func interactionService() -> InteractionService {
         .swiftData
     }
-    
+
     func songSearchService() -> SongSearchService {
         .hybrid
     }
-    
+
     func albumSearchService() -> AlbumSearchService {
         .hybrid
     }
-    
+
     func appViewModel() -> any AppViewModel {
         AppViewModelImpl(container: self)
     }
-    
+
     func songListViewModel() -> any SongListViewModel {
         SongListViewModelImpl(
             interactionService: interactionService(),
@@ -59,7 +59,7 @@ extension IoCContainer {
             container: self
         )
     }
-    
+
     func completeSongPlayerViewModel(
         songList: any PaginatedListViewModel<Song>,
         selectedSong: Song
@@ -70,7 +70,7 @@ extension IoCContainer {
             container: self
         )
     }
-    
+
     func focusedSongPlayerViewModel(queue: any PlaybackQueue<Song>) -> any FocusedSongPlayerViewModel {
         FocusedSongPlayerViewModelImpl(
             queue: queue,
@@ -78,7 +78,7 @@ extension IoCContainer {
             interactionService: interactionService()
         )
     }
-    
+
     func albumViewModel(albumId: String) -> any AlbumViewModel {
         AlbumViewModelImpl(
             albumId: albumId,
@@ -86,34 +86,33 @@ extension IoCContainer {
             container: self
         )
     }
-    
-    func paginatedListViewModel<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable>(
-        ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
+
+    func paginatedListViewModel<Item: Hashable & Sendable>(
+        ofKind kind: PaginatedListViewModelDependencyKind<Item, some Hashable & Sendable>
     ) -> any PaginatedListViewModel<Item> {
         switch kind {
         case let .static(items):
-            return PaginatedListViewModelImpl(staticItems: items)
+            PaginatedListViewModelImpl(staticItems: items)
         case let .dynamic(fetch, initialPage):
-            return PaginatedListViewModelImpl(fetch: fetch, initialPage: initialPage)
+            PaginatedListViewModelImpl(fetch: fetch, initialPage: initialPage)
         }
     }
-    
+
     func songPlaybackController() -> any SongPlaybackController {
         AVSongPlaybackController()
     }
-    
+
     func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(
         ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
     ) -> any PlaybackQueue<Item> {
         switch kind {
         case let .static(items):
-            return StaticPlaybackQueue(items: items, selectedItem: selectedItem)
+            StaticPlaybackQueue(items: items, selectedItem: selectedItem)
         case let .paginated(list):
-            return PaginatedListPlaybackQueue(list: list, selectedItem: selectedItem)
+            PaginatedListPlaybackQueue(list: list, selectedItem: selectedItem)
         }
     }
 }
 
-final class LiveIoCContainer: IoCContainer {
-}
+final class LiveIoCContainer: IoCContainer {}

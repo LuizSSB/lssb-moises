@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct PaginatedListPlaybackQueueTests {
@@ -244,7 +244,7 @@ struct PaginatedListPlaybackQueueTests {
         switch result {
         case .success:
             Issue.record("Expected moving to the next page to fail.")
-        case .failure(let error):
+        case let .failure(error):
             #expect(error is InvalidDataError)
         }
         #expect(queue.currentItem == TestData.song2)
@@ -347,6 +347,7 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
     var hasMore: Bool {
         latestResult?.hasMore ?? false
     }
+
     var latestResult: Pagination<NullPaginationParams>.Page<Song>?
     var lastLoadResult: Result<[Song], Error>?
     private(set) var loadNextPageCallCount = 0
@@ -359,8 +360,7 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
         self.latestResult = latestResult
     }
 
-    func loadFirstPageIfNeeded() {
-    }
+    func loadFirstPageIfNeeded() {}
 
     func loadNextPage() {
         loadNextPageCallCount += 1
@@ -370,12 +370,9 @@ private final class PaginatedListViewModelStub: PaginatedListViewModel {
         loadNextPageCallCount
     }
 
-    func refresh() async {
-    }
+    func refresh() async {}
 
-    func interactWithError(shouldRetry: Bool) {
-    }
+    func interactWithError(shouldRetry _: Bool) {}
 
-    func reset() {
-    }
+    func reset() {}
 }

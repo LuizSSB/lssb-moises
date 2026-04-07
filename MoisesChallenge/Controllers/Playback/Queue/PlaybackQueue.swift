@@ -10,7 +10,7 @@ import Observation
 @MainActor
 protocol PlaybackQueue<Item>: AnyObject, Sendable, Observable {
     associatedtype Item: Sendable
-    
+
     var currentItem: Item? { get }
     var currentIndex: Int? { get set }
 

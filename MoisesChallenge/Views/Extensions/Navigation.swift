@@ -8,14 +8,14 @@
 import SwiftUI
 
 extension View {
-    func navigationDestination<T, Destination: View>(
+    func navigationDestination<T>(
         nonHashableItem: Binding<T?>,
-        @ViewBuilder destination: @escaping (T) -> Destination
+        @ViewBuilder destination: @escaping (T) -> some View
     ) -> some View {
-        self.navigationDestination(
+        navigationDestination(
             isPresented: .init(
                 get: { nonHashableItem.wrappedValue != nil },
-                set: { _ in nonHashableItem.wrappedValue = nil}
+                set: { _ in nonHashableItem.wrappedValue = nil }
             ),
             destination: {
                 if let nonHashableItem = nonHashableItem.wrappedValue {
@@ -24,15 +24,15 @@ extension View {
             }
         )
     }
-    
-    func fullScreenCover<T, Destination: View>(
+
+    func fullScreenCover<T>(
         nonHashableItem: Binding<T?>,
-        @ViewBuilder content: @escaping (T) -> Destination
+        @ViewBuilder content: @escaping (T) -> some View
     ) -> some View {
-        self.fullScreenCover(
+        fullScreenCover(
             isPresented: .init(
                 get: { nonHashableItem.wrappedValue != nil },
-                set: { _ in nonHashableItem.wrappedValue = nil}
+                set: { _ in nonHashableItem.wrappedValue = nil }
             ),
             content: {
                 if let nonHashableItem = nonHashableItem.wrappedValue {
@@ -41,5 +41,4 @@ extension View {
             }
         )
     }
-    
 }

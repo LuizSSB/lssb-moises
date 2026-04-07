@@ -1,10 +1,9 @@
 import Foundation
+@testable import MoisesChallenge
 import SwiftData
 import Testing
-@testable import MoisesChallenge
 
 @Suite(.serialized) struct InteractionServiceTests {
-
     @Test func markPlayed_persistsInteractionAndEmitsEvent() async throws {
         // ARRANGE
         let container = try makeTestModelContainer()

@@ -10,7 +10,7 @@ protocol AppViewModel: ViewModel {
     var album: (any AlbumViewModel)? { get set }
     var completePlayer: (any CompleteSongPlayerViewModel)? { get set }
     var miniPlayer: (any FocusedSongPlayerViewModel)? { get }
-    
+
     func setup()
     func setCompletePlayer(presented: Bool)
 }

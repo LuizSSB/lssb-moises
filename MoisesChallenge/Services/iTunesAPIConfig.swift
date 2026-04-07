@@ -11,7 +11,7 @@ let iTunesAPIConfig = (
         search: "https://itunes.apple.com/search",
         lookup: "https://itunes.apple.com/lookup"
     ),
-    defaults:  (
+    defaults: (
         media: "music",
         entity: "song",
     ),

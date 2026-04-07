@@ -13,7 +13,7 @@ private func makeAppModelContainer() -> ModelContainer {
         CachedSongSwiftData.self,
         SongInteractionSwiftData.self,
         CachedAlbumSwiftData.self,
-        CachedSongSearchPageSwiftData.self
+        CachedSongSearchPageSwiftData.self,
     ])
     let applicationSupportURL = FileManager.default.urls(
         for: .applicationSupportDirectory,
@@ -24,22 +24,22 @@ private func makeAppModelContainer() -> ModelContainer {
         withIntermediateDirectories: true
     )
     let storeURL = applicationSupportURL.appendingPathComponent("default.store")
-    
+
     func makeContainer() throws -> ModelContainer {
         let config = ModelConfiguration(schema: schema, url: storeURL)
         return try ModelContainer(for: schema, configurations: config)
     }
-    
+
     do {
         return try makeContainer()
     } catch {
         let sidecarURLs = [
             storeURL,
             storeURL.appendingPathExtension("shm"),
-            storeURL.appendingPathExtension("wal")
+            storeURL.appendingPathExtension("wal"),
         ]
         sidecarURLs.forEach { try? FileManager.default.removeItem(at: $0) }
-        
+
         do {
             return try makeContainer()
         } catch {

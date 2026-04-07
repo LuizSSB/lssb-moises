@@ -1,5 +1,5 @@
 //
-//  Extensions.swift
+//  ViewModelUtils.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 06/04/26.
@@ -7,7 +7,7 @@
 
 struct ViewModelConstants {
     private init() {}
-    
+
     static let defaultSizePage = 10
 }
 
@@ -30,7 +30,7 @@ extension IoCContainer {
             )
         )
     }
-    
+
     func recentSongsPaginatedListViewModel(
         limit: Int = ViewModelConstants.defaultSizePage
     ) -> any PaginatedListViewModel<Song> {

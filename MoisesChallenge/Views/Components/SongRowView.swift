@@ -15,7 +15,7 @@ struct SongRowView: View {
                 .frame(width: 52, height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .accessibilityHidden(true)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.displayTitle)
                     .font(.body)

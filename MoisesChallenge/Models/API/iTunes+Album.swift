@@ -7,21 +7,21 @@
 
 extension Album {
     init?(fromResponse r: ITunesAPIResponse) {
-        let albumsInResponse = r.results.compactMap { Self.init(fromResponseResult: $0) }
+        let albumsInResponse = r.results.compactMap { Self(fromResponseResult: $0) }
         if albumsInResponse.count != 1 {
             return nil
         }
-        
+
         var album = albumsInResponse.first!
         album.songs = r.results.compactMap { Song(fromResponseResult: $0) }
         self = album
     }
-    
+
     init?(fromResponseResult r: ITunesAPIResponse.Result, checkWrapperType: Bool = true) {
         guard let collectionId = r.collectionId,
               !checkWrapperType || r.wrapperType == .collection
         else { return nil }
-        
+
         self = Album(
             id: String(collectionId),
             title: r.collectionName,

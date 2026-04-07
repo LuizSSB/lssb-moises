@@ -1,5 +1,5 @@
 //
-//  PlaybackQueueDependencyKind.swift
+//  DependencyKinds.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 05/04/26.

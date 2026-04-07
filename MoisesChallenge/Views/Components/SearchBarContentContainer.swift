@@ -9,10 +9,10 @@ import SwiftUI
 
 struct SearchBarContentContainer<Content: View>: View {
     @Environment(\.isSearching) private var isSearching
-    
+
     let content: Content
     let onSearchStatusChanged: (_ enabled: Bool) -> Void
-    
+
     var body: some View {
         content
             .onFirstAppear {

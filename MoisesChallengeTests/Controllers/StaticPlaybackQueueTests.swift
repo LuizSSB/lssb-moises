@@ -5,13 +5,12 @@
 //  Created by Codex on 04/04/26.
 //
 
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct StaticPlaybackQueueTests {
-
     @Test func init_keepsSelectedItemEvenWhenItIsNotInItems() {
         // ARRANGE
         let queue = StaticPlaybackQueue(items: [1, 2, 3], selectedItem: 4)
@@ -193,7 +192,7 @@ struct StaticPlaybackQueueTests {
         withObservationTracking {
             _ = queue.currentItem
         } onChangeAsync: { @MainActor in
-                observedItem = queue.currentItem
+            observedItem = queue.currentItem
         }
 
         // ACT

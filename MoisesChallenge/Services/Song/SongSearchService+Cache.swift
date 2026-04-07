@@ -12,10 +12,10 @@ extension SongSearchService {
     struct Cache {
         let container: ModelContainer
         let service: SongSearchService
-        
+
         init(container: ModelContainer) {
             self.container = container
-            self.service = .init(
+            service = .init(
                 search: { pagination in
                     let context = ModelContext(container)
                     let searchTerm = pagination.params.searchTerm
@@ -24,23 +24,23 @@ extension SongSearchService {
                     var descriptor = FetchDescriptor<CachedSongSearchPageSwiftData>(
                         predicate: #Predicate {
                             $0.searchTerm == searchTerm &&
-                            $0.offset == offset &&
-                            $0.limit == limit
+                                $0.offset == offset &&
+                                $0.limit == limit
                         }
                     )
                     descriptor.fetchLimit = 1
-                    
+
                     guard let cachedPage = try context.fetch(descriptor).first,
                           cachedPage.cachedAt.distance(to: Date()) < swiftDataConfig.cacheTTL
                     else {
                         throw NotFoundError()
                     }
-                    
+
                     return .init(from: cachedPage)
                 }
             )
         }
-        
+
         @Sendable func add(page: SongSearchPage) throws {
             let context = ModelContext(container)
             context.insert(CachedSongSearchPageSwiftData(from: page))

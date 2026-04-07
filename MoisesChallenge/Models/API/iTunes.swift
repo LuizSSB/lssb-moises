@@ -11,6 +11,7 @@ struct ITunesAPIResponse: Codable {
         case collection,
              track
     }
+
     struct Result: Codable {
         let wrapperType: WrapperType
         let trackId: Int?
@@ -24,7 +25,7 @@ struct ITunesAPIResponse: Codable {
         let trackTimeMillis: Int?
         let previewUrl: String?
     }
-    
+
     let resultCount: Int
     let results: [Result]
 }

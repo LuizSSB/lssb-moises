@@ -1,5 +1,5 @@
 //
-//  SongDataSource.swift
+//  SongSearchService.swift
 //  MoisesChallenge
 //
 //  Created by Luiz SSB on 31/03/26.
@@ -19,12 +19,12 @@ extension SongSearchService {
             /// If we want to have that sweet infinite scroll action in the view (not necessary in prod, but perhaps necessary for a job application challenge), the way is to simulate pagination: in the first query for some term we actually query everything and then we just return slices of the list.
             search: { pagination in
                 let limit = pagination.limit ?? iTunesAPIConfig.maxLimit
-                
+
                 if let allResults = pagination.params.allResults {
                     try? await Task.sleep(for: .seconds(3)) // unnecessary, but here just so we can show the UI loading
-                    
+
                     return .init(
-                        entries: Array(allResults[pagination.offset..<min(allResults.count, pagination.offset + limit)]),
+                        entries: Array(allResults[pagination.offset ..< min(allResults.count, pagination.offset + limit)]),
                         pagination: .init(
                             params: pagination.params,
                             offset: pagination.offset,
@@ -32,24 +32,24 @@ extension SongSearchService {
                         )
                     )
                 }
-                
+
                 let result = await iTunesAPISession.request(
                     iTunesAPIConfig.urls.search,
                     parameters: [
                         "term": pagination.params.searchTerm,
                         "limit": iTunesAPIConfig.maxLimit,
                         "media": iTunesAPIConfig.defaults.media,
-                        "entity": iTunesAPIConfig.defaults.entity
+                        "entity": iTunesAPIConfig.defaults.entity,
                     ]
                 )
-                    .serializingDecodable(ITunesAPIResponse.self)
-                    .result
-                
+                .serializingDecodable(ITunesAPIResponse.self)
+                .result
+
                 switch result {
                 case let .success(response):
                     let songs = response.results.compactMap { Song(fromResponseResult: $0) }
                     return .init(
-                        entries: Array(songs[pagination.offset..<min(songs.count, pagination.offset + limit)]),
+                        entries: Array(songs[pagination.offset ..< min(songs.count, pagination.offset + limit)]),
                         pagination: .init(
                             params: .init(
                                 searchTerm: pagination.params.searchTerm,
@@ -65,6 +65,6 @@ extension SongSearchService {
             }
         )
     }
-    
+
     static let iTunes = Self(iTunesAPISession: AF)
 }

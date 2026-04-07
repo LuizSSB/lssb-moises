@@ -15,21 +15,21 @@ struct CompleteSongPlayerScreen: View {
         static let sideListMaxWidth: CGFloat = 340
         static let sideListCornerRadius: CGFloat = 12
     }
-    
+
     let viewModel: CompleteSongPlayerViewModel
     var showOptions = true
     var onMinimize: (() -> Void)?
-    
+
     @State private var actionSheetSong: Song?
     @State private var isShowingSongListSheet = false
-    
+
     var body: some View {
         GeometryReader { proxy in
             let showsInlineSongList = proxy.size.width >= Layout.sideListMinimumWidth
-            
+
             HStack(spacing: 24) {
                 playerSection
-                
+
                 if showsInlineSongList {
                     let songListWidth = min(
                         max(
@@ -38,7 +38,7 @@ struct CompleteSongPlayerScreen: View {
                         ),
                         Layout.sideListMaxWidth
                     )
-                    
+
                     inlineSongList(width: songListWidth)
                 }
             }
@@ -79,18 +79,18 @@ struct CompleteSongPlayerScreen: View {
             }
         }
     }
-    
+
     private var playerSection: some View {
         FocusedSongPlayerView(viewModel: viewModel.actualPlayer)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private func inlineSongList(width: CGFloat) -> some View {
         let shape = RoundedRectangle(
             cornerRadius: Layout.sideListCornerRadius,
             style: .continuous
         )
-        
+
         return songListContent(dismissAfterSelection: false)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
@@ -99,7 +99,7 @@ struct CompleteSongPlayerScreen: View {
             .frame(width: width)
             .frame(maxHeight: .infinity)
     }
-    
+
     private func songListContent(dismissAfterSelection: Bool) -> some View {
         CompleteSongPlayerSongListView(
             playerViewModel: viewModel.actualPlayer,
@@ -111,7 +111,7 @@ struct CompleteSongPlayerScreen: View {
             }
         }
     }
-    
+
     @ToolbarContentBuilder
     private func toolbarContent(showsInlineSongList: Bool) -> some ToolbarContent {
         if let onMinimize {
@@ -134,9 +134,10 @@ struct CompleteSongPlayerScreen: View {
                 }
                 .accessibilityLabel("Song list")
             }
-            
+
             if showOptions,
-               let currentSong = viewModel.actualPlayer.currentSong {
+               let currentSong = viewModel.actualPlayer.currentSong
+            {
                 Button {
                     actionSheetSong = currentSong
                 } label: {
@@ -154,7 +155,7 @@ private struct CompleteSongPlayerSongListView: View {
     @State var playerViewModel: any FocusedSongPlayerViewModel
     let listViewModel: any PaginatedListViewModel<Song>
     let onSelectSong: (Song) -> Void
-    
+
     var body: some View {
         PaginatedListView(
             items: listViewModel.items,
@@ -171,7 +172,7 @@ private struct CompleteSongPlayerSongListView: View {
             onError: listViewModel.interactWithError(shouldRetry:)
         )
     }
-    
+
     @ViewBuilder
     private func songRow(_ song: Song) -> some View {
         Button {
@@ -179,8 +180,9 @@ private struct CompleteSongPlayerSongListView: View {
         } label: {
             HStack {
                 SongRowView(song: song)
-                
-                if playerViewModel.currentSong?.id == song.id && playerViewModel.playbackState == .playing {
+
+                if playerViewModel.currentSong?.id == song.id,
+                   playerViewModel.playbackState == .playing {
                     Image(systemName: "speaker.wave.2.fill")
                         .foregroundStyle(.tint)
                         .accessibilityHidden(true)
@@ -200,16 +202,16 @@ private struct CompleteSongPlayerSongListView: View {
         .listRowInsets([.vertical], 0)
         .listRowSeparator(.hidden)
     }
-    
+
     @ViewBuilder
     private func placeholderContent(_ type: PaginatedListViewPlaceholderType) -> some View {
         switch type {
         case .idle:
             EmptyView()
-            
+
         case .empty:
             ContentUnavailableView("No songs", systemImage: "music.note.list")
-            
+
         case let .error(error):
             ContentUnavailableView {
                 Label(error.title, systemImage: "exclamationmark.triangle")

@@ -5,11 +5,10 @@
 //  Created by Codex on 03/04/26.
 //
 
-import Testing
 @testable import MoisesChallenge
+import Testing
 
 struct EventTests {
-
     @Test func stream_returnsDistinctIds() async {
         // ARRANGE
         let event = Event<Int>()
@@ -71,7 +70,7 @@ struct EventTests {
         let reader = Task {
             var iterator = stream.makeAsyncIterator()
             var values: [Int] = []
-            for _ in 0..<3 {
+            for _ in 0 ..< 3 {
                 if let v = await iterator.next() {
                     values.append(v)
                 }

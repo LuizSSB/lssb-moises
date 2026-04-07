@@ -5,9 +5,9 @@
 //  Created by Codex on 04/04/26.
 //
 
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct PaginatedListViewModelImplTests {
@@ -30,13 +30,13 @@ struct PaginatedListViewModelImplTests {
         // ARRANGE
         let stub = FetchStub([
             .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
-            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
+            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let firstLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await firstLoad.value))
+        _ = try requireSuccessEntries(#require(await firstLoad.value))
 
         // ASSERT
         #expect(viewModel.hasMore)
@@ -45,7 +45,7 @@ struct PaginatedListViewModelImplTests {
 
         // ACT
         viewModel.loadNextPage()
-        _ = try requireSuccessEntries(try #require(await nextLoad.value))
+        _ = try requireSuccessEntries(#require(await nextLoad.value))
 
         // ASSERT
         #expect(!viewModel.hasMore)
@@ -54,7 +54,7 @@ struct PaginatedListViewModelImplTests {
     @Test func loadFirstPageIfNeeded_loadsFirstPageAndStoresFetchedEntries() async throws {
         // ARRANGE
         let stub = FetchStub([
-            .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2)))
+            .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
         let result = await readNextPageLoadedEvent(from: viewModel)
@@ -62,7 +62,7 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.loadFirstPageIfNeeded()
 
-        let entries = try requireSuccessEntries(try #require(await result.value))
+        let entries = try requireSuccessEntries(#require(await result.value))
 
         // ASSERT
         #expect(entries == [1, 2])
@@ -76,7 +76,7 @@ struct PaginatedListViewModelImplTests {
     @Test func loadFirstPageIfNeeded_setsEmptyWhenFetchedPageHasNoEntries() async throws {
         // ARRANGE
         let stub = FetchStub([
-            .success(Page(entries: [], pagination: .init(offset: 0, limit: 2)))
+            .success(Page(entries: [], pagination: .init(offset: 0, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
         let result = await readNextPageLoadedEvent(from: viewModel)
@@ -84,7 +84,7 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.loadFirstPageIfNeeded()
 
-        let entries = try requireSuccessEntries(try #require(await result.value))
+        let entries = try requireSuccessEntries(#require(await result.value))
 
         // ASSERT
         #expect(entries.isEmpty)
@@ -98,20 +98,20 @@ struct PaginatedListViewModelImplTests {
         // ARRANGE
         let stub = FetchStub([
             .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
-            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
+            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let firstLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await firstLoad.value))
+        _ = try requireSuccessEntries(#require(await firstLoad.value))
 
         let nextLoad = await readNextPageLoadedEvent(from: viewModel)
 
         // ACT
         viewModel.loadNextPage()
 
-        let entries = try requireSuccessEntries(try #require(await nextLoad.value))
+        let entries = try requireSuccessEntries(#require(await nextLoad.value))
 
         // ASSERT
         #expect(entries == [3])
@@ -122,7 +122,7 @@ struct PaginatedListViewModelImplTests {
         #expect(
             await stub.requestedPages() == [
                 nil,
-                Pagination(offset: 2, limit: 2)
+                Pagination(offset: 2, limit: 2),
             ]
         )
     }
@@ -132,13 +132,13 @@ struct PaginatedListViewModelImplTests {
         let stub = FetchStub([
             .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
             .success(Page(entries: [10, 11], pagination: .init(offset: 0, limit: 2))),
-            .success(Page(entries: [12], pagination: .init(offset: 2, limit: 2)))
+            .success(Page(entries: [12], pagination: .init(offset: 2, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let refreshEvents = await readPageLoadedEvents(from: viewModel, count: 2)
 
@@ -159,7 +159,7 @@ struct PaginatedListViewModelImplTests {
             await stub.requestedPages() == [
                 nil,
                 nil,
-                Pagination(offset: 2, limit: 2)
+                Pagination(offset: 2, limit: 2),
             ]
         )
     }
@@ -167,7 +167,7 @@ struct PaginatedListViewModelImplTests {
     @Test func loadFirstPageIfNeeded_setsErrorStateAndEmitsFailureWhenFetchFails() async throws {
         // ARRANGE
         let stub = FetchStub([
-            .failure(InvalidDataError())
+            .failure(InvalidDataError()),
         ])
         let viewModel = makeViewModel(with: stub)
         let result = await readNextPageLoadedEvent(from: viewModel)
@@ -181,7 +181,7 @@ struct PaginatedListViewModelImplTests {
         switch failure {
         case .success:
             Issue.record("Expected the first page load to fail.")
-        case .failure(let error):
+        case let .failure(error):
             #expect(error is InvalidDataError)
         }
 
@@ -195,7 +195,7 @@ struct PaginatedListViewModelImplTests {
         // ARRANGE
         let stub = FetchStub([
             .failure(InvalidDataError()),
-            .success(Page(entries: [1], pagination: .init(offset: 0, limit: 1)))
+            .success(Page(entries: [1], pagination: .init(offset: 0, limit: 1))),
         ])
         let viewModel = makeViewModel(with: stub)
 
@@ -208,7 +208,7 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let entries = try requireSuccessEntries(try #require(await retriedLoad.value))
+        let entries = try requireSuccessEntries(#require(await retriedLoad.value))
 
         // ASSERT
         #expect(entries == [1])
@@ -222,13 +222,13 @@ struct PaginatedListViewModelImplTests {
         let stub = FetchStub([
             .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
             .failure(InvalidDataError()),
-            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2)))
+            .success(Page(entries: [3], pagination: .init(offset: 2, limit: 2))),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let failedNextLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadNextPage()
@@ -239,7 +239,7 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let entries = try requireSuccessEntries(try #require(await retriedNextLoad.value))
+        let entries = try requireSuccessEntries(#require(await retriedNextLoad.value))
 
         // ASSERT
         #expect(entries == [3])
@@ -250,7 +250,7 @@ struct PaginatedListViewModelImplTests {
             await stub.requestedPages() == [
                 nil,
                 Pagination(offset: 2, limit: 2),
-                Pagination(offset: 2, limit: 2)
+                Pagination(offset: 2, limit: 2),
             ]
         )
     }
@@ -258,7 +258,7 @@ struct PaginatedListViewModelImplTests {
     @Test func interactWithError_restoresIdleStateWhenAbandoningFailedFirstPageLoad() async throws {
         // ARRANGE
         let stub = FetchStub([
-            .failure(InvalidDataError())
+            .failure(InvalidDataError()),
         ])
         let viewModel = makeViewModel(with: stub)
         let result = await readNextPageLoadedEvent(from: viewModel)
@@ -278,13 +278,13 @@ struct PaginatedListViewModelImplTests {
         // ARRANGE
         let stub = FetchStub([
             .success(Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))),
-            .failure(InvalidDataError())
+            .failure(InvalidDataError()),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let nextLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadNextPage()
@@ -305,13 +305,13 @@ struct PaginatedListViewModelImplTests {
         let initialPage = Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))
         let stub = FetchStub([
             .success(initialPage),
-            .failure(InvalidDataError())
+            .failure(InvalidDataError()),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
 
@@ -324,7 +324,7 @@ struct PaginatedListViewModelImplTests {
         switch refreshResult {
         case .success:
             Issue.record("Expected refreshing the list to fail.")
-        case .failure(let error):
+        case let .failure(error):
             #expect(error is InvalidDataError)
         }
         #expect(viewModel.items == [1, 2])
@@ -338,13 +338,13 @@ struct PaginatedListViewModelImplTests {
         let initialPage = Page(entries: [1, 2], pagination: .init(offset: 0, limit: 2))
         let stub = FetchStub([
             .success(initialPage),
-            .failure(InvalidDataError())
+            .failure(InvalidDataError()),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
         await viewModel.refresh()
@@ -367,13 +367,13 @@ struct PaginatedListViewModelImplTests {
         let stub = FetchStub([
             .success(initialPage),
             .failure(InvalidDataError()),
-            .success(refreshedPage)
+            .success(refreshedPage),
         ])
         let viewModel = makeViewModel(with: stub)
 
         let initialLoad = await readNextPageLoadedEvent(from: viewModel)
         viewModel.loadFirstPageIfNeeded()
-        _ = try requireSuccessEntries(try #require(await initialLoad.value))
+        _ = try requireSuccessEntries(#require(await initialLoad.value))
 
         let failedRefresh = await readNextPageLoadedEvent(from: viewModel)
         await viewModel.refresh()
@@ -384,7 +384,7 @@ struct PaginatedListViewModelImplTests {
         // ACT
         viewModel.interactWithError(shouldRetry: true)
 
-        let entries = try requireSuccessEntries(try #require(await retriedRefresh.value))
+        let entries = try requireSuccessEntries(#require(await retriedRefresh.value))
 
         // ASSERT
         #expect(entries == refreshedPage.entries)
@@ -445,7 +445,7 @@ struct PaginatedListViewModelImplTests {
         Task {
             var values: [Result<[Int], Error>] = []
 
-            for _ in 0..<count {
+            for _ in 0 ..< count {
                 if let value = await observeNextLastLoadResult(from: viewModel) {
                     values.append(value)
                 }
@@ -469,9 +469,9 @@ struct PaginatedListViewModelImplTests {
 
     private func requireSuccessEntries(_ result: Result<[Int], Error>) throws -> [Int] {
         switch result {
-        case .success(let entries):
+        case let .success(entries):
             return entries
-        case .failure(let error):
+        case let .failure(error):
             throw error
         }
     }
@@ -479,7 +479,7 @@ struct PaginatedListViewModelImplTests {
 
 private actor FetchStub {
     typealias Page = Pagination<NullPaginationParams>.Page<Int>
-    
+
     enum Response {
         case immediate(Result<Page, Error>)
         case suspended
@@ -491,9 +491,9 @@ private actor FetchStub {
     private var completedFetchCount = 0
 
     init(_ results: [Result<Page, Error>]) {
-        self.responses = results.map(Response.immediate)
+        responses = results.map(Response.immediate)
     }
-    
+
     init(responses: [Response]) {
         self.responses = responses
     }
@@ -506,7 +506,7 @@ private actor FetchStub {
         }
 
         let result = switch responses.removeFirst() {
-        case .immediate(let result):
+        case let .immediate(result):
             result
         case .suspended:
             await withCheckedContinuation { continuation in
@@ -521,16 +521,16 @@ private actor FetchStub {
     func requestedPages() -> [Pagination<NullPaginationParams>?] {
         recordedPages
     }
-    
+
     func pendingRequestCount() -> Int {
         pendingContinuations.count
     }
-    
+
     func resumeNextRequest(with result: Result<Page, Error>) {
         guard !pendingContinuations.isEmpty else { return }
         pendingContinuations.removeFirst().resume(returning: result)
     }
-    
+
     func completedRequestCount() -> Int {
         completedFetchCount
     }

@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct SongListViewModelImplTests {
-
     @Test func init_startsWithRecentListAsCurrentListAndWithoutSearchList() {
         // ARRANGE
         let container = IoCContainerStub()
@@ -256,13 +255,15 @@ private final class IoCContainerStub: IoCContainer {
     ) -> any PaginatedListViewModel<Item> {
         if Item.self == Song.self,
            PaginationParams.self == NullPaginationParams.self,
-           let recentList = recentListSpy as? any PaginatedListViewModel<Item> {
+           let recentList = recentListSpy as? any PaginatedListViewModel<Item>
+        {
             return recentList
         }
 
         if Item.self == Song.self,
            PaginationParams.self == SongSearchParams.self,
-           let searchList = searchListSpy as? any PaginatedListViewModel<Item> {
+           let searchList = searchListSpy as? any PaginatedListViewModel<Item>
+        {
             return searchList
         }
 

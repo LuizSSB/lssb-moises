@@ -1,9 +1,8 @@
 import Foundation
-import Testing
 @testable import MoisesChallenge
+import Testing
 
 @Suite(.serialized) struct AlbumSearchServiceHybridTests {
-
     @Test func get_returnsCachedAlbumWhenCacheHit() async throws {
         // ARRANGE
         let container = try makeTestModelContainer()

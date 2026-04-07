@@ -5,15 +5,15 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     static let requestIdHeader = "X-Mock-Network-ID"
     private nonisolated(unsafe) static var handlers: [String: @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)] = [:]
     private static let lock = NSLock()
-    
-    override class func canInit(with request: URLRequest) -> Bool {
+
+    override class func canInit(with _: URLRequest) -> Bool {
         true
     }
-    
+
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
-    
+
     override func startLoading() {
         guard
             let requestId = request.value(forHTTPHeaderField: Self.requestIdHeader),
@@ -22,7 +22,7 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
-        
+
         do {
             let (response, data) = try handler(request)
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
@@ -32,7 +32,7 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: error)
         }
     }
-    
+
     override func stopLoading() {}
 
     static func register(
@@ -64,7 +64,7 @@ private struct MockRequestInterceptor: RequestInterceptor {
 
     func adapt(
         _ urlRequest: URLRequest,
-        for session: Session,
+        for _: Session,
         completion: @escaping @Sendable (Result<URLRequest, any Error>) -> Void
     ) {
         var request = urlRequest

@@ -43,15 +43,15 @@ final class SongListViewModelImpl: SongListViewModel {
     ) {
         self.container = container
         self.songService = songService
-        self.recentList = container.recentSongsPaginatedListViewModel()
-        
+        recentList = container.recentSongsPaginatedListViewModel()
+
         let songPlayedEvent = interactionService.songMarkedPlayedEvent
         recentSongsUpdatedTask = Task { [weak self] in
             for await interaction in await songPlayedEvent.stream().stream {
                 guard let self else { return }
-                
-                if self.recentList.items.first?.id != interaction.song.id {
-                    self.shouldRefreshRecent = true
+
+                if recentList.items.first?.id != interaction.song.id {
+                    shouldRefreshRecent = true
                 }
             }
         }
@@ -85,13 +85,14 @@ final class SongListViewModelImpl: SongListViewModel {
         let query = workingSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         let isRetryingFailedSearch = if let searchList,
                                         query == currentQuery,
-                                        case .error = searchList.loadState {
+                                        case .error = searchList.loadState
+        {
             true
         } else {
             false
         }
         guard !query.isEmpty,
-              (query != currentQuery || isRetryingFailedSearch),
+              query != currentQuery || isRetryingFailedSearch,
               let searchList
         else { return }
 
@@ -99,7 +100,7 @@ final class SongListViewModelImpl: SongListViewModel {
             searchList.interactWithError(shouldRetry: true)
             return
         }
-        
+
         currentQuery = query
         Task {
             await searchList.refresh()
@@ -111,7 +112,7 @@ final class SongListViewModelImpl: SongListViewModel {
     func select(song: Song) {
         observableSelectedSong = .init(value: song)
     }
-    
+
     func selectAlbum(of song: Song) {
         guard let albumId = song.album?.id else { return }
         observableSelectedAlbumId = .init(value: albumId)

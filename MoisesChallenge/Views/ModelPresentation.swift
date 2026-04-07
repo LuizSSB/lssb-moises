@@ -22,7 +22,7 @@ extension Song {
     var mainArtworkURL: URL? {
         URL(string: mainArtwork ?? "")
     }
-    
+
     var previewURL: URL? {
         URL(string: preview ?? "")
     }

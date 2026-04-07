@@ -18,7 +18,7 @@ enum SongPlaybackControllerEvent: Sendable {
 @MainActor
 protocol SongPlaybackController: AnyObject, Sendable, Observable {
     var observableEvent: SongPlaybackControllerEvent? { get }
-    
+
     func load(_ song: Song)
     func play()
     func pause()

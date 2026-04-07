@@ -5,7 +5,6 @@
 //  Created by Luiz SSB on 04/04/26.
 //
 
-
 import Foundation
 import SwiftData
 
@@ -29,7 +28,7 @@ final class CachedSongSwiftData {
     var searchPage: CachedSongSearchPageSwiftData?
     var album: CachedAlbumSwiftData?
     var interaction: SongInteractionSwiftData?
-    
+
     init(song: Song, sortIndex: Int = 0) {
         id = song.id
         self.sortIndex = sortIndex

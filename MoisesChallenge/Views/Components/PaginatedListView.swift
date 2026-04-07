@@ -19,7 +19,7 @@ struct PaginatedListView<
     PlaceholderContent: View
 >: View {
     private let topScrollId = "paginated-list-top"
-    
+
     let items: [Item]
     let loadState: PaginatedListLoadState
     let hasMore: Bool
@@ -38,7 +38,7 @@ struct PaginatedListView<
         case .empty:
             placeholderContent(.empty)
 
-        case .error(let error) where items.isEmpty:
+        case let .error(error) where items.isEmpty:
             placeholderContent(.error(error))
 
         default:
@@ -53,7 +53,7 @@ struct PaginatedListView<
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .listRowSeparator(.hidden)
                         }
-                        
+
                         ForEach(Array(items.enumerated()), id: \.element.id) { offset, element in
                             let row = rowContent(element)
                             if offset == 0 {
@@ -63,14 +63,14 @@ struct PaginatedListView<
                                 row
                             }
                         }
-                        
-                        if hasMore && loadState != .loadingNextPage {
+
+                        if hasMore, loadState != .loadingNextPage {
                             Color.clear
                                 .frame(height: 1)
                                 .onAppear(perform: loadNextPage)
                                 .listRowSeparator(.hidden)
                         }
-                        
+
                         if loadState == .loadingNextPage {
                             ProgressView()
                                 .ensureRerenderOnAppear()
@@ -100,7 +100,7 @@ struct PaginatedListView<
                             Button(String(localized: .commonTryAgain)) {
                                 onError(true)
                             }
-                            
+
                             Button(String(localized: .commonDismiss), role: .cancel) {
                                 onError(false)
                             }

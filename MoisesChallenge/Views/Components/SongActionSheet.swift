@@ -11,21 +11,21 @@ import SwiftUI
 
 enum SongAction: CaseIterable, Identifiable {
     case viewAlbum
-    
+
     var id: Self { self }
-    
+
     var label: String {
         switch self {
-        case .viewAlbum: return String(localized: .songActionsViewAlbum)
+        case .viewAlbum: String(localized: .songActionsViewAlbum)
         }
     }
-    
+
     var icon: String {
         switch self {
-        case .viewAlbum: return "square.stack"
+        case .viewAlbum: "square.stack"
         }
     }
-    
+
     var isDestructive: Bool { false }
 }
 
@@ -34,7 +34,7 @@ enum SongAction: CaseIterable, Identifiable {
 private struct SongActionSheetModifier: ViewModifier {
     @Binding var song: Song?
     let onAction: (Song, SongAction) -> Void
-    
+
     func body(content: Content) -> some View {
         content
             .sheet(item: $song) { song in
@@ -56,14 +56,14 @@ private struct SongActionSheetContent: View {
     private static let headerHeight: CGFloat = 72
     private static let rowHeight: CGFloat = 56
     private static let bottomPadding: CGFloat = 16
-    
+
     static var preferredHeight: CGFloat {
         headerHeight + CGFloat(SongAction.allCases.count) * rowHeight + bottomPadding
     }
-    
+
     let song: Song
     let onAction: (SongAction) -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             headerView
@@ -71,7 +71,7 @@ private struct SongActionSheetContent: View {
             actionsView
         }
     }
-    
+
     private var headerView: some View {
         VStack(spacing: 2) {
             Text(song.displayTitle)
@@ -88,7 +88,7 @@ private struct SongActionSheetContent: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
-    
+
     private var actionsView: some View {
         ForEach(SongAction.allCases) { action in
             Button {
@@ -107,7 +107,7 @@ private struct SongActionSheetContent: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            
+
             if action != SongAction.allCases.last {
                 Divider()
             }

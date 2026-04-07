@@ -5,13 +5,13 @@
 //  Created by Luiz SSB on 01/04/26.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct ArtworkView<PlaceholderContent: View>: View {
     let artworkURL: URL?
     @ViewBuilder let placeholderContent: (Progress?) -> PlaceholderContent
-    
+
     var body: some View {
         if let url = artworkURL {
             KFImage.url(url)

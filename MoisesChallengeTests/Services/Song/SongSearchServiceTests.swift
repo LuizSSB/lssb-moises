@@ -1,9 +1,8 @@
 import Foundation
-import Testing
 @testable import MoisesChallenge
+import Testing
 
 @Suite(.serialized) struct SongSearchServiceTests {
-
     @Test func search_requestsSongsAndReturnsPaginatedPage() async throws {
         // ARRANGE
         let session = MockNetwork.makeSession { request in
@@ -11,8 +10,8 @@ import Testing
             #expect(request.url?.query?.contains("term=beatles") == true)
             #expect(request.url?.query?.contains("limit=200") == true)
 
-            let response = HTTPURLResponse(
-                url: try #require(request.url),
+            let response = try HTTPURLResponse(
+                url: #require(request.url),
                 statusCode: 200,
                 httpVersion: nil,
                 headerFields: nil

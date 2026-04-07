@@ -70,7 +70,7 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             break
         }
     }
-    
+
     func pause() {
         playbackController.pause()
         if case .playing = playbackState {
@@ -102,7 +102,7 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             } catch {
                 guard let self else { return }
                 guard direction == .next else { return }
-                self.stopCurrentPlayback()
+                stopCurrentPlayback()
                 withAnimation {
                     self.playbackState = .paused
                 }
@@ -123,8 +123,8 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             _ = queue.currentItem
         } onChangeAsync: { [weak self] in
             guard let self else { return }
-            await self.observeQueue()
-            await self.syncWithQueue()
+            await observeQueue()
+            await syncWithQueue()
         }
     }
 
@@ -135,9 +135,9 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             _ = playbackController.observableEvent
         } onChangeAsync: { [weak self] in
             guard let self else { return }
-            await self.observePlayback()
-            guard let event = await self.playbackController.observableEvent else { return }
-            await self.handlePlaybackEvent(event)
+            await observePlayback()
+            guard let event = await playbackController.observableEvent else { return }
+            await handlePlaybackEvent(event)
         }
     }
 
@@ -149,14 +149,14 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             elapsed = 0
             duration = nil
         }
-        
+
         guard let song else {
             withAnimation {
                 playbackState = .idle
             }
             return
         }
-        
+
         withAnimation {
             playbackState = .loading
         }
@@ -180,23 +180,23 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
             Task {
                 try? await interactionService.markPlayed(currentSong)
             }
-            
+
             if playbackState == .loading {
                 withAnimation {
                     playbackState = .playing
                 }
             }
-            
+
         case let .progress(currentElapsed, totalDuration):
             guard totalDuration > 0 else { return }
             duration = totalDuration
             elapsed = currentElapsed
             progress = currentElapsed / totalDuration
-            
+
         case .didFinishPlaying:
             playbackState = .paused
             handlePlaybackEnded()
-            
+
         case .failed:
             failCurrentSongLoad()
         }
@@ -211,10 +211,10 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
                 pause()
                 seek(to: 0)
             }
-            
+
         case .current:
             restartCurrentSong()
-            
+
         case .all:
             if queue.has(.next) {
                 move(to: .next)

@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import MoisesChallenge
 import Observation
 import Testing
-@testable import MoisesChallenge
 
 @MainActor
 struct AlbumViewModelImplTests {
-
     @Test func onAppear_loadsAlbumWhenAlbumWasNotLoadedYet() async {
         // ARRANGE
         let service = AlbumServiceSpy(results: [.success(TestData.album)])
@@ -168,5 +167,4 @@ private actor AlbumServiceSpy {
 }
 
 @MainActor
-private final class IoCContainerStub: IoCContainer {
-}
+private final class IoCContainerStub: IoCContainer {}

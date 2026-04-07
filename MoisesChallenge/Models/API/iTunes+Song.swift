@@ -10,7 +10,7 @@ extension Song {
         guard let trackId = r.trackId,
               !checkWrapperType || r.wrapperType == .track
         else { return nil }
-        
+
         self = Song(
             id: String(trackId),
             title: r.trackName,

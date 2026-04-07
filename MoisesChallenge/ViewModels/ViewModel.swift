@@ -8,5 +8,4 @@
 import Observation
 
 @MainActor
-protocol ViewModel: AnyObject, Sendable, Observable {
-}
+protocol ViewModel: AnyObject, Sendable, Observable {}
