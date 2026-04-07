@@ -122,7 +122,7 @@ struct FocusedSongPlayerView: View {
             }
         }
         .buttonStyle(.adaptivePlain)
-        .disabled(!viewModel.has(direction) || viewModel.isLoading(direction))
+        .disabled(viewModel.isLoading(direction))
         .accessibilityLabel(
             String(
                 localized: direction == .previous ? .playerPreviousAccessibilityLabel : .playerNextAccessibilityLabel

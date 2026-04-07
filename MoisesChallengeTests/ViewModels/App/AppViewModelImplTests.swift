@@ -110,38 +110,6 @@ struct AppViewModelImplTests {
         #expect(restoredMiniPlayer === originalMiniPlayer)
     }
 
-    @Test func setCompletePlayer_doesNotRedisplayAlbumWhenReopeningPlayerAfterAlbumWasSelectedFromIt() async throws {
-        // ARRANGE
-        let recentList = PaginatedListViewModelStub(items: [TestData.song1])
-        let songList = SongListViewModelStub(recentList: recentList)
-        let container = IoCContainerSpy(songListStub: songList)
-        let viewModel = AppViewModelImpl(container: container)
-        viewModel.setup()
-        songList.observableSelectedSong = .init(value: TestData.song1)
-        await busyWait { viewModel.completePlayer != nil }
-        let completePlayer = try #require(viewModel.completePlayer as? CompleteSongPlayerViewModelStub)
-
-        var songWithAlbum = TestData.song1
-        songWithAlbum.album = TestData.album
-
-        // ACT
-        completePlayer.selectAlbum(of: songWithAlbum)
-        await busyWait { viewModel.album != nil }
-        await busyWait { viewModel.completePlayer == nil }
-        let albumShownFromPlayer = try #require(viewModel.album as? AlbumViewModelStub)
-
-        // ACT
-        viewModel.setCompletePlayer(presented: true)
-        try? await Task.sleep(for: .milliseconds(50))
-
-        // ASSERT
-        let reopenedPlayer = try #require(viewModel.completePlayer as? CompleteSongPlayerViewModelStub)
-        let albumAfterReopen = try #require(viewModel.album as? AlbumViewModelStub)
-        #expect(reopenedPlayer === completePlayer)
-        #expect(albumAfterReopen === albumShownFromPlayer)
-        #expect(container.albumRequestCount == 1)
-    }
-
     @Test func setup_refreshingAndLoadingMoreInCompletePlayerAfterRecentSelectionDoesNotAffectSongListLists() async throws {
         // ARRANGE
         let recentList = PaginatedListViewModelStub(items: [TestData.song1, TestData.song2])

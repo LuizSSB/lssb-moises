@@ -8,7 +8,7 @@
 import Observation
 
 @Observable
-final class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: PlaybackQueue {
+final class PaginatedListPlaybackQueue<Item: Identifiable & Equatable & Hashable & Sendable>: PlaybackQueue {
     // MARK: - Private State
     
     private var currentItemChangeCount = 0
@@ -33,7 +33,7 @@ final class PaginatedListPlaybackQueue<Item: Equatable & Hashable & Sendable>: P
     var currentIndex: Int? {
         get {
             guard let currentItem else { return nil }
-            return list.items.firstIndex { $0 == currentItem }
+            return list.items.firstIndex(where: { $0.id == currentItem.id })
         }
         set {
             guard let newValue else {

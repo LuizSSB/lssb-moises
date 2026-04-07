@@ -28,7 +28,7 @@ protocol IoCContainer: AnyObject, Sendable {
     ) -> any PaginatedListViewModel<Item>
     
     // Controllers
-    func playbackQueue<Item: Equatable & Hashable & Sendable>(
+    func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(
         ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
     ) -> any PlaybackQueue<Item>
@@ -97,7 +97,7 @@ extension IoCContainer {
         }
     }
     
-    func playbackQueue<Item: Equatable & Hashable & Sendable>(
+    func playbackQueue<Item: Identifiable & Equatable & Hashable & Sendable>(
         ofKind kind: PlaybackQueueDependencyKind<Item>,
         selectedItem: Item
     ) -> any PlaybackQueue<Item> {

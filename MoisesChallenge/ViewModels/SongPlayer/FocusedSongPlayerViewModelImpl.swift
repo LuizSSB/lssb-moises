@@ -98,6 +98,7 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
         Task { [weak self] in
             do {
                 try await self?.queue.move(to: direction)
+                // NOTE: what happens when user tries to move to .next at the end of the queue, or to .previous at the beginning? In principle, we may think that, if the repeat mode is .all, then the current song would circle forward/backward, however, queues are meant to have some sort of pagination, so how do we handle move(to: .previous) at queue.currentIndex == 0? Do we load EVERYTHING and then circle backwards? What if the list has no end? So, to avoid different behaviors, let's just make it so that nothing happens in either direction
             } catch {
                 guard let self else { return }
                 guard direction == .next else { return }
