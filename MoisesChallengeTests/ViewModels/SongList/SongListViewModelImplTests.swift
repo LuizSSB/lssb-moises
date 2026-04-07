@@ -267,7 +267,7 @@ private final class IoCContainerStub: IoCContainer {
         }
 
         switch kind {
-        case let .dynamic(fetch):
+        case let .dynamic(fetch, _):
             return PaginatedListViewModelImpl(fetch: fetch)
         case .static:
             fatalError("Unexpected static paginated list request in SongListViewModelImplTests")

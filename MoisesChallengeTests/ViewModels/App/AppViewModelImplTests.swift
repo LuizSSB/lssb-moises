@@ -263,7 +263,7 @@ private final class IoCContainerSpy: IoCContainer {
                 lastStaticSongListItems = songs
             }
             return PaginatedListViewModelStub<Item>(items: items)
-        case let .dynamic(fetch):
+        case let .dynamic(fetch, _):
             if PaginationParams.self == NullPaginationParams.self,
                let items = nextRecentSongsListItems as? [Item] {
                 return PaginatedListViewModelStub<Item>(items: items)
