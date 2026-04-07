@@ -175,9 +175,9 @@ final class FocusedSongPlayerViewModelImpl: FocusedSongPlayerViewModel {
     private func handlePlaybackEvent(_ event: SongPlaybackControllerEvent) {
         switch event {
         case .readyToPlay:
-            guard let song = currentSong else { return }
+            guard let currentSong else { return }
             Task {
-                try? await interactionService.markPlayed(song)
+                try? await interactionService.markPlayed(currentSong)
             }
             
             if playbackState == .loading {

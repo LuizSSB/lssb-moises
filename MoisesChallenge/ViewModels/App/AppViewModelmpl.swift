@@ -72,7 +72,10 @@ final class AppViewModelImpl: AppViewModel {
             let list = if await self.songList.currentQuery.isEmpty {
                 await self.container.recentSongsPaginatedListViewModel()
             } else {
-                await self.container.songSearchPaginatedListViewModel(params: .init(searchTerm: self.songList.currentQuery))
+                await self.container.songSearchPaginatedListViewModel(
+                    params: .init(searchTerm: self.songList.currentQuery),
+                    initialEntries: self.songList.searchList?.items ?? []
+                )
             }
             await self.handlePlaybackRequired(songList: list, selectedSong: song)
         }

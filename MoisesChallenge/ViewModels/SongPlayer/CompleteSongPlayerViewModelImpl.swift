@@ -27,8 +27,7 @@ final class CompleteSongPlayerViewModelImpl: CompleteSongPlayerViewModel {
         selectedSong: Song,
         container: any IoCContainer
     ) {
-        let queue = container.playbackQueue(ofKind: .paginated(songList), selectedItem: selectedSong)
-        self.queue = queue
+        self.queue = container.playbackQueue(ofKind: .paginated(songList), selectedItem: selectedSong)
         self.actualPlayer = container.focusedSongPlayerViewModel(queue: queue)
         self.songList = songList
     }

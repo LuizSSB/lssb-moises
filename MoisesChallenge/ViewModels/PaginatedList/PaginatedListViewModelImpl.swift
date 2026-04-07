@@ -35,7 +35,7 @@ final class PaginatedListViewModelImpl<
 
     // MARK: - Private State
 
-    private(set) var latestResult: Pagination<PaginationParams>.Page<Item>?
+    private var latestResult: Pagination<PaginationParams>.Page<Item>?
     private var activeFetchTask: Task<Void, Never>?
     private var lastFailedLoadMode: LoadMode?
 
@@ -45,8 +45,13 @@ final class PaginatedListViewModelImpl<
 
     // MARK: - Lifecycle
 
-    init(fetch: @escaping PageFetch) {
+    init(fetch: @escaping PageFetch, initialPage: Pagination<PaginationParams>.Page<Item>? = nil) {
         self.fetch = fetch
+        
+        if let initialPage {
+            self.items = initialPage.entries
+            self.latestResult = initialPage
+        }
     }
 
     // MARK: - Actions

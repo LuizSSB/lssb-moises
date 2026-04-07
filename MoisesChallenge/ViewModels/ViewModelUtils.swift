@@ -14,12 +14,21 @@ struct ViewModelConstants {
 extension IoCContainer {
     func songSearchPaginatedListViewModel(
         params: SongSearchParams,
+        initialEntries: [Song],
         limit: Int = ViewModelConstants.defaultSizePage
     ) -> any PaginatedListViewModel<Song> {
         let service = songSearchService()
-        return paginatedListViewModel(ofKind: .dynamic {
-            try await service.search($0 ?? .first(params: params, limit: limit))
-        })
+        return paginatedListViewModel(
+            ofKind: .dynamic(
+                {
+                    try await service.search($0 ?? .first(params: params, limit: limit))
+                },
+                initialPage: .init(
+                    entries: initialEntries,
+                    pagination: .first(params: params, limit: initialEntries.count)
+                )
+            )
+        )
     }
     
     func recentSongsPaginatedListViewModel(

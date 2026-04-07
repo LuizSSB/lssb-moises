@@ -19,7 +19,8 @@ extension PlaybackQueueDependencyKind {
 enum PaginatedListViewModelDependencyKind<Item: Hashable & Sendable, PaginationParams: Hashable & Sendable> {
     case `static`([Item])
     case dynamic(
-        @Sendable (_ page: Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>
+        @Sendable (_ page: Pagination<PaginationParams>?) async throws -> Pagination<PaginationParams>.Page<Item>,
+        initialPage: Pagination<PaginationParams>.Page<Item>? = nil
     )
 }
 

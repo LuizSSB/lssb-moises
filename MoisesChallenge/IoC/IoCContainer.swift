@@ -90,8 +90,10 @@ extension IoCContainer {
         ofKind kind: PaginatedListViewModelDependencyKind<Item, PaginationParams>
     ) -> any PaginatedListViewModel<Item> {
         switch kind {
-        case let .static(items): return PaginatedListViewModelImpl(staticItems: items)
-        case let .dynamic(fetch): return PaginatedListViewModelImpl(fetch: fetch)
+        case let .static(items):
+            return PaginatedListViewModelImpl(staticItems: items)
+        case let .dynamic(fetch, initialPage):
+            return PaginatedListViewModelImpl(fetch: fetch, initialPage: initialPage)
         }
     }
     
