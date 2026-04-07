@@ -16,7 +16,7 @@ final class AlbumViewModelImpl: AlbumViewModel {
 
     // MARK: - Private State
 
-    private var activeLoadTask: Task<Void, Never>?
+    @ObservationIgnored private var activeLoadTask: Task<Void, Never>?
 
     // MARK: - Dependencies
 

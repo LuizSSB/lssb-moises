@@ -11,9 +11,9 @@ import Observation
 final class PaginatedListPlaybackQueue<Item: Identifiable & Equatable & Hashable & Sendable>: PlaybackQueue {
     // MARK: - Private State
 
-    private var currentItemChangeCount = 0
-    private var nextIndexBeingLoaded: Int?
-    private let list: any PaginatedListViewModel<Item>
+    @ObservationIgnored private var currentItemChangeCount = 0
+    @ObservationIgnored private var nextIndexBeingLoaded: Int?
+    @ObservationIgnored private let list: any PaginatedListViewModel<Item>
 
     // MARK: - Lifecycle
 

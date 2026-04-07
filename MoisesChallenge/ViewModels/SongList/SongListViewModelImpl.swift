@@ -26,8 +26,8 @@ final class SongListViewModelImpl: SongListViewModel {
 
     // MARK: - Private State
 
-    private var shouldRefreshRecent = true
-    private var recentSongsUpdatedTask: Task<Void, Never>? // Haven't found a way to properly dispose of it :/
+    @ObservationIgnored private var shouldRefreshRecent = true
+    @ObservationIgnored private var recentSongsUpdatedTask: Task<Void, Never>? // Haven't found a way to properly dispose of it :/
 
     // MARK: - Dependencies
 

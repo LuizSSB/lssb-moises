@@ -182,7 +182,8 @@ private struct CompleteSongPlayerSongListView: View {
                 SongRowView(song: song)
 
                 if playerViewModel.currentSong?.id == song.id,
-                   playerViewModel.playbackState == .playing {
+                   playerViewModel.playbackState == .playing
+                {
                     Image(systemName: "speaker.wave.2.fill")
                         .foregroundStyle(.tint)
                         .accessibilityHidden(true)

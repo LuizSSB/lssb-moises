@@ -36,9 +36,9 @@ final class PaginatedListViewModelImpl<
 
     // MARK: - Private State
 
-    private(set) var latestResult: Pagination<PaginationParams>.Page<Item>?
-    private var activeFetchTask: Task<Void, Never>?
-    private var lastFailedLoadMode: LoadMode?
+    @ObservationIgnored private(set) var latestResult: Pagination<PaginationParams>.Page<Item>?
+    @ObservationIgnored private var activeFetchTask: Task<Void, Never>?
+    @ObservationIgnored private var lastFailedLoadMode: LoadMode?
 
     // MARK: - Dependencies
 

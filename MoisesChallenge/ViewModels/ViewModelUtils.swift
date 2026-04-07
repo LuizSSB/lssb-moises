@@ -12,6 +12,7 @@ struct ViewModelConstants {
 }
 
 extension IoCContainer {
+    @MainActor
     func songSearchPaginatedListViewModel(
         params: SongSearchParams,
         initialEntries: [Song],
@@ -31,6 +32,7 @@ extension IoCContainer {
         )
     }
 
+    @MainActor
     func recentSongsPaginatedListViewModel(
         limit: Int = ViewModelConstants.defaultSizePage
     ) -> any PaginatedListViewModel<Song> {
